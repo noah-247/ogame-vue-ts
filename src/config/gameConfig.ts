@@ -1095,8 +1095,8 @@ export const SHIPS: Record<ShipType, ShipConfig> = {
     cost: { metal: 0, crystal: 1000, deuterium: 0, darkMatter: 0, energy: 0 },
     buildTime: 5,
     cargoCapacity: 5,
-    attack: 0,
-    shield: 0,
+    attack: 5, // OGame 原版数值（原为 0，探测器应有微弱攻击力）
+    shield: 10, // OGame 原版数值（原为 0）
     armor: 100,
     speed: 100000000,
     fuelConsumption: 1,
