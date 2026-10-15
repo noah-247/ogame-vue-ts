@@ -6,13 +6,13 @@
  * 核心规则：
  * 1. 每轮开始时双方护盾完全恢复；一轮内护盾承受的伤害会累积。
  * 2. 攻击方全体先开火，之后防守方全体开火；每艘船每轮开火一次，
- *    目标在敌方所有存活单位中均匀随机选取（受损船只火力不衰减）。
+ *    目标在敌方轮初存活单位中均匀随机选取；本轮被击毁的单位仍开火且仍可被选中。
  * 3. 护盾吸收：攻击力 <= 护盾 → 护盾全吸收，船体无伤；
  *    攻击力 > 护盾 → 护盾吸收等量伤害，剩余伤害打到船体。
- * 4. 护盾穿透下限：攻击力 < 护盾 1% 时，99% 概率完全未命中（跳弹）。
+ * 4. 护盾穿透下限：攻击力 < 本轮当前护盾 1% 时，100% 跳弹，无伤害。
  * 5. 船体 = (金属+晶体造价) × 10%，科技每级 +10%。
- *    船体受损但未被击毁时，若剩余船体 < 70% 上限，每轮有 (1 - 剩余/上限) 概率爆炸。
- * 6. 连击 (Rapid Fire)：击毁目标后，若对该目标类型有连击值 RF，
+ *    每次造成船体伤害时，若未被击毁且剩余船体 < 70% 上限，有 (1 - 剩余/上限) 概率爆炸。
+ * 6. 连击 (Rapid Fire)：每次射击后，无论是否击毁，若对该目标类型有连击值 RF，
  *    以 (RF-1)/RF 概率立即再开火一次，可连锁触发。
  * 7. 经典模式 6 轮后双方仍有存活 → 平局。
  */
@@ -78,6 +78,7 @@ function buildUnits(side: BattleSideData, isDefender: boolean): CombatUnit[] {
   if (isDefender && side.defense) {
     for (const [defenseType, count] of Object.entries(side.defense)) {
       if (!count || count <= 0) continue
+      if (defenseType === DefenseType.AntiBallisticMissile || defenseType === DefenseType.InterplanetaryMissile) continue
       const config = DEFENSES[defenseType as DefenseType]
       if (!config) continue
       const maxHull = hullFor(config.cost.metal, config.cost.crystal, armorTech)
@@ -102,14 +103,14 @@ function buildUnits(side: BattleSideData, isDefender: boolean): CombatUnit[] {
   return units
 }
 
-/** 随机数生成器类型（默认 Math.random；测试可注入种子 RNG 以保证确定性） */
+/** 随机数生成器类型，必须返回 [0, 1)（默认 Math.random；测试可注入种子 RNG 以保证确定性） */
 export type Rng = () => number
 
 /** Fisher-Yates 洗牌 */
 function shuffle<T>(arr: T[], rng: Rng): T[] {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1))
-    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    const j = Math.min(Math.floor(rng() * (i + 1)), i)
+    ;[arr[i], arr[j]] = [arr[j]!, arr[i]!]
   }
   return arr
 }
@@ -118,12 +119,10 @@ function shuffle<T>(arr: T[], rng: Rng): T[] {
  * 单次射击结算，返回目标是否被击毁
  */
 function resolveShot(shooter: CombatUnit, target: CombatUnit, rng: Rng): boolean {
+  if (!target.alive) return false
   const power = shooter.attack
 
-  // 护盾穿透下限：攻击力不足护盾 1% 时 99% 跳弹
-  if (power < target.shield * 0.01) {
-    if (rng() > 0.01) return false
-  }
+  if (power < target.shield * 0.01) return false
 
   if (power > target.shield) {
     // 护盾吸收等量伤害，剩余打船体
@@ -152,27 +151,23 @@ function resolveShot(shooter: CombatUnit, target: CombatUnit, rng: Rng): boolean
 }
 
 /**
- * 一艘船开火（含连击连锁）：在敌方存活单位中随机选目标，
- * 击毁且有连击值时以 (RF-1)/RF 概率再射一次
+ * 一艘船开火（含连击连锁）：在敌方轮初存活单位中随机选目标（含本轮已击毁单位），
+ * 每次射击后有连击值时以 (RF-1)/RF 概率再射一次
  */
 function fireWithRapidFire(shooter: CombatUnit, enemies: CombatUnit[], rng: Rng): CombatUnit[] {
   const destroyed: CombatUnit[] = []
-  // 存活敌方单位索引池（击毁后剔除，避免重复随机到尸体）
-  let pool = enemies.filter(e => e.alive)
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    if (pool.length === 0) break
-    const target = pool[Math.floor(rng() * pool.length)]
+    if (enemies.length === 0) break
+    const target = enemies[Math.min(Math.floor(rng() * enemies.length), enemies.length - 1)]!
     const killed = resolveShot(shooter, target, rng)
     if (killed) {
       destroyed.push(target)
-      pool = pool.filter(e => e.alive)
-      const rf = shooter.rapidFire[target.type]
-      // 连击判定：击毁目标后 (RF-1)/RF 概率再开火
-      if (rf && rf > 1 && rng() < (rf - 1) / rf) {
-        continue
-      }
+    }
+    const rf = shooter.rapidFire[target.type]
+    if (rf && rf > 1 && rng() < (rf - 1) / rf) {
+      continue
     }
     break
   }
@@ -203,9 +198,7 @@ function recordLoss(losses: RoundLosses, unit: CombatUnit): void {
  * 一方全体开火
  */
 function sideVolley(firing: CombatUnit[], enemies: CombatUnit[], losses: RoundLosses, rng: Rng): void {
-  for (const shooter of shuffle(firing.filter(u => u.alive), rng)) {
-    if (!shooter.alive) continue
-    if (!enemies.some(e => e.alive)) break
+  for (const shooter of shuffle([...firing], rng)) {
     const destroyed = fireWithRapidFire(shooter, enemies, rng)
     for (const unit of destroyed) recordLoss(losses, unit)
   }
@@ -241,7 +234,9 @@ export function simulateBattle(
   }
 
   for (let round = 0; round < maxRounds; round++) {
-    if (!attackerUnits.some(u => u.alive) || !defenderUnits.some(u => u.alive)) break
+    const attackerFiring = attackerUnits.filter(u => u.alive)
+    const defenderFiring = defenderUnits.filter(u => u.alive)
+    if (attackerFiring.length === 0 || defenderFiring.length === 0) break
     rounds++
 
     // 每轮开始护盾完全恢复（OGame 原规则）
@@ -252,8 +247,8 @@ export function simulateBattle(
     const attackerLosses = emptyLosses()
     const defenderLosses = emptyLosses()
 
-    sideVolley(attackerUnits, defenderUnits, defenderLosses, rng)
-    sideVolley(defenderUnits, attackerUnits, attackerLosses, rng)
+    sideVolley(attackerFiring, defenderFiring, defenderLosses, rng)
+    sideVolley(defenderFiring, attackerFiring, attackerLosses, rng)
 
     const attackerPower = attackerUnits
       .filter(u => u.alive)
@@ -281,7 +276,10 @@ export function simulateBattle(
   // 防御设施 70% 概率修复（保留原游戏规则）
   const repairedDefense: Partial<Record<DefenseType, number>> = {}
   for (const [defenseType, count] of Object.entries(totalDefenderDefenseLosses)) {
-    const repaired = Math.floor((count ?? 0) * 0.7)
+    let repaired = 0
+    for (let destroyedIndex = 0; destroyedIndex < (count ?? 0); destroyedIndex++) {
+      if (rng() < 0.7) repaired++
+    }
     if (repaired > 0) {
       repairedDefense[defenseType as DefenseType] = repaired
       totalDefenderDefenseLosses[defenseType as DefenseType] = (count ?? 0) - repaired
@@ -320,7 +318,7 @@ export function simulateBattle(
   } else if (!defenderAlive) {
     winner = 'attacker'
   } else if (maxRounds > 6) {
-    // 战斗到底模式：按剩余船体总和判定
+    // 战斗到底模式：按剩余船体总和判定，属于本项目自创规则，非 OGame 原版
     const attackerHull = attackerUnits.filter(u => u.alive).reduce((s, u) => s + u.hull, 0)
     const defenderHull = defenderUnits.filter(u => u.alive).reduce((s, u) => s + u.hull, 0)
     if (attackerHull > defenderHull * 1.2) winner = 'attacker'
