@@ -17,6 +17,25 @@
 
 OGame Vue TS is a single-player, browser-based space strategy game inspired by the classic OGame. Build your empire across the galaxy, research technologies, construct ships, and engage in epic space battles. This project is built with modern web technologies, offering a smooth and responsive gaming experience entirely in your browser with local data persistence.
 
+## What This Fork Changes
+
+> Upstream: https://github.com/setube/ogame-vue-ts | Play online: https://ogame-combat-demo.pagi.workers.dev
+
+After playing it for a while, three things bugged me enough to fix:
+
+### ⚔️ Combat: rewritten to match real OGame
+The original combat was simplified — no rapid fire, shields never regenerated, ships never exploded. It just didn't feel right. So I rewrote it against the real OGame rules (`src/workers/battleEngine.ts`):
+- Shields fully regenerate each round; if your attack can't break the shield it only scratches the paint, and attacks below 1% of shield strength just bounce off
+- Hull is 10% of build cost; a ship below 70% hull can explode on the spot
+- Rapid fire finally works: destroy a ship and you may immediately fire again — very satisfying
+- Covered by 18 deterministic tests, checked against classic OGame battle examples
+
+### 🔧 Fixed a data bug along the way
+The espionage probe had 0 attack and 0 shield, which doesn't match real OGame. Restored to 5 / 10.
+
+### ⏩ No more idling in the late game: fast-forward
+- Game speed cap raised from 10x to 100x
+- One-click time skip (+1h / +8h / +24h) on the overview page — resources, build queues and fleets all resolve at once, with a single summary notification instead of a spam storm
 ## Features
 
 - **Building Management** - Construct and upgrade various buildings on planets and moons

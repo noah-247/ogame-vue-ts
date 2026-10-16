@@ -17,6 +17,25 @@
 
 OGame Vue TS es un juego de estrategia espacial basado en navegador, versión offline, inspirado en el clásico OGame. Construye tu imperio en la galaxia, investiga tecnologías, construye naves y participa en épicas batallas espaciales. Este proyecto está construido con tecnologías web modernas, se ejecuta completamente en el navegador, ofrece una experiencia de juego fluida y responsiva, y todos los datos se almacenan localmente.
 
+## Qué cambia este fork
+
+> Original: https://github.com/setube/ogame-vue-ts | Jugar online: https://ogame-combat-demo.pagi.workers.dev
+
+Después de jugar un tiempo, hubo tres cosas que no pude aguantar y las arreglé:
+
+### ⚔️ Combate: reescrito según el OGame real
+El combate original estaba simplificado — sin fuego rápido, sin regeneración de escudos, sin explosiones. No se sentía bien. Ahora sigue las reglas reales de OGame (`src/workers/battleEngine.ts`):
+- Los escudos se regeneran por completo cada ronda; si el ataque no rompe el escudo solo lo araña, y los ataques por debajo del 1 % del escudo simplemente rebotan
+- El casco es el 10 % del coste de construcción; una nave por debajo del 70 % del casco puede explotar en el acto
+- El fuego rápido por fin funciona: destruyes una nave y puedes disparar de nuevo al instante
+- Cubierto con 18 pruebas deterministas, verificadas con ejemplos clásicos de batallas de OGame
+
+### 🔧 Un bug de datos arreglado de paso
+La sonda de espionaje tenía ataque y escudo a 0, lo que no coincide con el OGame real. Restaurado a 5 / 10.
+
+### ⏩ Adiós a la espera en el late game: avance rápido
+- Velocidad de juego máxima de 10x a 100x
+- Avance de tiempo en un clic (+1 h / +8 h / +24 h) en la vista general — recursos, colas de construcción y flotas se resuelven de golpe, con una sola notificación resumen en vez de una avalancha
 ## Características Principales
 
 - **Gestión de Edificios** - Construye y mejora varios edificios en planetas y lunas
