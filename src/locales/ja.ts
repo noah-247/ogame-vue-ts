@@ -993,6 +993,7 @@ export default {
     importConfirmTitle: 'インポート確認',
     importConfirmMessage: 'インポートすると現在のゲームの進行状況が上書きされます。この操作は元に戻せません。続行しますか？',
     importFailed: 'インポートに失敗しました。ファイル形式を確認してください',
+    saveLockedNotice: 'Save could not be read (or version unsupported). Auto-save has been paused.',
     clearData: 'データクリア',
     clearDataDesc: 'すべてのゲームデータを削除してリセット',
     clear: 'クリア',

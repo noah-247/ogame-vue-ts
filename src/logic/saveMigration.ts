@@ -4,6 +4,8 @@ export interface SaveData extends Record<string, unknown> {
   version: number
 }
 
+export type MigrationRegistry = Record<number, (save: Record<string, unknown>) => SaveData>
+
 export class SaveError extends Error {
   constructor(message: string) {
     super(message)
@@ -23,18 +25,18 @@ const isSaveObject = (value: unknown): value is Record<string, unknown> => {
 
 const migrateV0ToV1 = (save: Record<string, unknown>): SaveData => ({ ...save, version: 1 })
 
-const migrations: Record<number, (save: Record<string, unknown>) => SaveData> = {
+const migrations: MigrationRegistry = {
   0: migrateV0ToV1
 }
 
-export const migrateSave = (raw: unknown): SaveData => {
+export const migrateSave = (raw: unknown, registry: MigrationRegistry = migrations, target: number = SAVE_VERSION): SaveData => {
   if (!isSaveObject(raw)) {
     throw new SaveValidationError('Save data must be a plain object')
   }
 
   const rawVersion = Object.prototype.hasOwnProperty.call(raw, 'version') ? raw.version : 0
-  if (typeof rawVersion !== 'number' || !Number.isInteger(rawVersion) || rawVersion < 0 || rawVersion > SAVE_VERSION) {
-    throw new SaveVersionError(`Unsupported save version ${String(rawVersion)}; current version is ${SAVE_VERSION}`)
+  if (typeof rawVersion !== 'number' || !Number.isInteger(rawVersion) || rawVersion < 0 || rawVersion > target) {
+    throw new SaveVersionError(`Unsupported save version ${String(rawVersion)}; current version is ${target}`)
   }
 
   let version = rawVersion
@@ -45,12 +47,15 @@ export const migrateSave = (raw: unknown): SaveData => {
     throw new SaveValidationError('Save data must be JSON-serializable')
   }
 
-  while (version < SAVE_VERSION) {
-    const migrate = migrations[version]
+  while (version < target) {
+    const migrate = registry[version]
     if (!migrate) {
       throw new SaveVersionError(`No migration registered for save version ${version}`)
     }
     save = migrate(save)
+    if (save.version !== version + 1) {
+      throw new SaveVersionError(`Migration from save version ${version} expected version ${version + 1}, got ${String(save.version)}`)
+    }
     version = save.version as number
   }
 

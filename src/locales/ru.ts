@@ -971,6 +971,7 @@ export default {
     importConfirmTitle: 'Подтвердить импорт',
     importConfirmMessage: 'Импорт перезапишет текущий прогресс игры. Это действие невозможно отменить. Продолжить?',
     importFailed: 'Импорт не удался, проверьте формат файла',
+    saveLockedNotice: 'Save could not be read (or version unsupported). Auto-save has been paused.',
     clearData: 'Очистить данные',
     clearDataDesc: 'Удалить все игровые данные и сбросить',
     clear: 'Очистить',

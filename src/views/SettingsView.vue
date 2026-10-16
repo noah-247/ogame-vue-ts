@@ -392,6 +392,7 @@
   import { toast } from 'vue-sonner'
   import { Capacitor } from '@capacitor/core'
   import { decryptData, encryptData } from '@/utils/crypto'
+  import { parseSave } from '@/logic/saveIo'
   import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
   import pkg from '../../package.json'
   import { checkLatestVersion, canCheckVersion } from '@/utils/versionCheck'
@@ -716,7 +717,15 @@
 
             if (importData.data) {
               const data = decryptData(importData.data)
-              localStorage.setItem(pkg.name, encryptData(data.game))
+              const gameCiphertext = encryptData(data.game)
+              try {
+                parseSave(gameCiphertext)
+              } catch (error) {
+                const message = error instanceof Error ? error.message : String(error)
+                toast.error(t('settings.importFailed') + ': ' + message)
+                return
+              }
+              localStorage.setItem(pkg.name, gameCiphertext)
               localStorage.setItem(`${pkg.name}-universe`, encryptData(data.universe))
               localStorage.setItem(`${pkg.name}-npcs`, encryptData(data.npcs))
               setTimeout(() => window.location.reload(), 1000)
@@ -725,6 +734,13 @@
 
             // 兼容旧版本：如果是旧格式（直接是字符串），只导入游戏数据
             if (typeof importData === 'string' || !importData.game) {
+              try {
+                parseSave(result)
+              } catch (error) {
+                const message = error instanceof Error ? error.message : String(error)
+                toast.error(t('settings.importFailed') + ': ' + message)
+                return
+              }
               localStorage.setItem(pkg.name, result)
               toast.success(t('settings.importSuccess'))
               setTimeout(() => window.location.reload(), 1000)
@@ -733,6 +749,13 @@
 
             // 新格式：分别导入游戏数据和地图数据
             if (importData.game) {
+              try {
+                parseSave(importData.game)
+              } catch (error) {
+                const message = error instanceof Error ? error.message : String(error)
+                toast.error(t('settings.importFailed') + ': ' + message)
+                return
+              }
               localStorage.setItem(pkg.name, importData.game)
             }
 

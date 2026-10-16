@@ -1032,6 +1032,7 @@ export default {
     importConfirmTitle: 'Confirm Import',
     importConfirmMessage: 'Importing will overwrite current game progress. This action cannot be undone. Continue?',
     importFailed: 'Import failed, please check file format',
+    saveLockedNotice: 'Save could not be read (or version unsupported). Auto-save has been paused.',
     clearData: 'Clear Data',
     clearDataDesc: 'Delete all game data and reset',
     clear: 'Clear',

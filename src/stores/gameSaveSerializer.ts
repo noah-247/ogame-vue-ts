@@ -1,13 +1,34 @@
 import pkg from '../../package.json'
+import { toast } from 'vue-sonner'
+import type { StateTree } from 'pinia'
 import { parseSave, serializeSave } from '@/logic/saveIo'
-import type { SaveData } from '@/logic/saveMigration'
+import { SaveError } from '@/logic/saveMigration'
+import { detectBrowserLocale, getLocale } from '@/locales'
 
-export const serializeGameSave = serializeSave
+let saveLocked = false
+let lockNotified = false
 
-export const deserializeGameSave = (ciphertext: string): SaveData | Record<string, never> => {
+export const isSaveLocked = (): boolean => saveLocked
+
+export const resetSaveLock = (): void => {
+  saveLocked = false
+  lockNotified = false
+}
+
+export const serializeGameSave = (state: StateTree): string => {
+  if (saveLocked) {
+    throw new SaveError('Save is locked after a failed hydration; refusing to overwrite the stored save')
+  }
+  return serializeSave(state)
+}
+
+export const deserializeGameSave = (ciphertext: string): Record<string, unknown> => {
   try {
-    return parseSave(ciphertext)
+    const save = parseSave(ciphertext)
+    const { version: _version, ...state } = save
+    return state
   } catch (error) {
+    saveLocked = true
     const backupKey = `${pkg.name}.corrupted.${Date.now()}`
     try {
       let availableKey = backupKey
@@ -19,6 +40,11 @@ export const deserializeGameSave = (ciphertext: string): SaveData | Record<strin
       console.error(`[${pkg.name}] Failed to load save; original ciphertext preserved at ${availableKey}`, error)
     } catch (backupError) {
       console.error(`[${pkg.name}] Failed to load save and back up original ciphertext`, error, backupError)
+    }
+    if (!lockNotified) {
+      lockNotified = true
+      const locale = typeof navigator === 'undefined' ? 'zh-CN' : detectBrowserLocale()
+      toast.error(getLocale(locale).settings.saveLockedNotice)
     }
     return {}
   }

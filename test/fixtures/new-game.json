@@ -25,7 +25,631 @@
     "points": 0,
     "bonusPoints": 0,
     "isGMEnabled": false,
-    "lastVersionCheckTime": 0
+    "lastVersionCheckTime": 0,
+    "achievementStats": {
+      "totalMetalProduced": 0,
+      "totalCrystalProduced": 0,
+      "totalDeuteriumProduced": 0,
+      "totalDarkMatterProduced": 0,
+      "totalMetalConsumed": 0,
+      "totalCrystalConsumed": 0,
+      "totalDeuteriumConsumed": 0,
+      "totalDarkMatterConsumed": 0,
+      "buildingsUpgraded": 0,
+      "maxBuildingLevel": {
+        "metalMine": 0,
+        "crystalMine": 0,
+        "deuteriumSynthesizer": 0,
+        "solarPlant": 0,
+        "fusionReactor": 0,
+        "roboticsFactory": 0,
+        "naniteFactory": 0,
+        "shipyard": 0,
+        "hangar": 0,
+        "researchLab": 0,
+        "metalStorage": 0,
+        "crystalStorage": 0,
+        "deuteriumTank": 0,
+        "darkMatterCollector": 0,
+        "darkMatterTank": 0,
+        "missileSilo": 0,
+        "terraformer": 0,
+        "lunarBase": 0,
+        "sensorPhalanx": 0,
+        "jumpGate": 0,
+        "planetDestroyerFactory": 0,
+        "geoResearchStation": 0,
+        "deepDrillingFacility": 0,
+        "university": 0
+      },
+      "researchCompleted": 0,
+      "maxTechnologyLevel": {
+        "energyTechnology": 0,
+        "laserTechnology": 0,
+        "ionTechnology": 0,
+        "hyperspaceTechnology": 0,
+        "plasmaTechnology": 0,
+        "computerTechnology": 0,
+        "espionageTechnology": 0,
+        "combustionDrive": 0,
+        "impulseDrive": 0,
+        "hyperspaceDrive": 0,
+        "weaponsTechnology": 0,
+        "shieldingTechnology": 0,
+        "armourTechnology": 0,
+        "astrophysics": 0,
+        "gravitonTechnology": 0,
+        "darkMatterTechnology": 0,
+        "terraformingTechnology": 0,
+        "planetDestructionTech": 0,
+        "miningTechnology": 0,
+        "intergalacticResearchNetwork": 0,
+        "mineralResearch": 0,
+        "crystalResearch": 0,
+        "fuelResearch": 0
+      },
+      "shipsProduced": {
+        "lightFighter": 0,
+        "heavyFighter": 0,
+        "cruiser": 0,
+        "battleship": 0,
+        "battlecruiser": 0,
+        "bomber": 0,
+        "destroyer": 0,
+        "smallCargo": 0,
+        "largeCargo": 0,
+        "colonyShip": 0,
+        "recycler": 0,
+        "espionageProbe": 0,
+        "solarSatellite": 0,
+        "darkMatterHarvester": 0,
+        "deathstar": 0
+      },
+      "totalShipsProduced": 0,
+      "defensesBuilt": {
+        "rocketLauncher": 0,
+        "lightLaser": 0,
+        "heavyLaser": 0,
+        "gaussCannon": 0,
+        "ionCannon": 0,
+        "plasmaTurret": 0,
+        "smallShieldDome": 0,
+        "largeShieldDome": 0,
+        "antiBallisticMissile": 0,
+        "interplanetaryMissile": 0,
+        "planetaryShield": 0
+      },
+      "totalDefensesBuilt": 0,
+      "attacksLaunched": 0,
+      "attacksWon": 0,
+      "attacksLost": 0,
+      "fleetLostInAttack": {
+        "lightFighter": 0,
+        "heavyFighter": 0,
+        "cruiser": 0,
+        "battleship": 0,
+        "battlecruiser": 0,
+        "bomber": 0,
+        "destroyer": 0,
+        "smallCargo": 0,
+        "largeCargo": 0,
+        "colonyShip": 0,
+        "recycler": 0,
+        "espionageProbe": 0,
+        "solarSatellite": 0,
+        "darkMatterHarvester": 0,
+        "deathstar": 0
+      },
+      "totalFleetLostInAttack": 0,
+      "debrisCreatedFromAttacks": 0,
+      "defensesSuccessful": 0,
+      "defensesFailed": 0,
+      "fleetLostInDefense": {
+        "lightFighter": 0,
+        "heavyFighter": 0,
+        "cruiser": 0,
+        "battleship": 0,
+        "battlecruiser": 0,
+        "bomber": 0,
+        "destroyer": 0,
+        "smallCargo": 0,
+        "largeCargo": 0,
+        "colonyShip": 0,
+        "recycler": 0,
+        "espionageProbe": 0,
+        "solarSatellite": 0,
+        "darkMatterHarvester": 0,
+        "deathstar": 0
+      },
+      "totalFleetLostInDefense": 0,
+      "defenseLostInDefense": {
+        "rocketLauncher": 0,
+        "lightLaser": 0,
+        "heavyLaser": 0,
+        "gaussCannon": 0,
+        "ionCannon": 0,
+        "plasmaTurret": 0,
+        "smallShieldDome": 0,
+        "largeShieldDome": 0,
+        "antiBallisticMissile": 0,
+        "interplanetaryMissile": 0,
+        "planetaryShield": 0
+      },
+      "totalDefenseLostInDefense": 0,
+      "enemyFleetDestroyedInDefense": {
+        "lightFighter": 0,
+        "heavyFighter": 0,
+        "cruiser": 0,
+        "battleship": 0,
+        "battlecruiser": 0,
+        "bomber": 0,
+        "destroyer": 0,
+        "smallCargo": 0,
+        "largeCargo": 0,
+        "colonyShip": 0,
+        "recycler": 0,
+        "espionageProbe": 0,
+        "solarSatellite": 0,
+        "darkMatterHarvester": 0,
+        "deathstar": 0
+      },
+      "totalEnemyFleetDestroyedInDefense": 0,
+      "debrisCreatedFromDefenses": 0,
+      "totalFlightMissions": 0,
+      "transportMissions": 0,
+      "transportedResources": 0,
+      "colonizations": 0,
+      "spyMissions": 0,
+      "deployments": 0,
+      "expeditionsTotal": 0,
+      "expeditionsSuccessful": 0,
+      "recyclingMissions": 0,
+      "recycledResources": 0,
+      "planetDestructions": 0,
+      "fuelConsumed": 0,
+      "friendlyNPCCount": 0,
+      "hostileNPCCount": 0,
+      "giftsSent": 0,
+      "giftResourcesTotal": 0,
+      "attackedByNPC": 0,
+      "spiedByNPC": 0,
+      "debrisRecycledByNPC": 0,
+      "debrisResourcesLostToNPC": 0
+    },
+    "achievements": {
+      "metalCollector": {
+        "id": "metalCollector",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "crystalCollector": {
+        "id": "crystalCollector",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "deuteriumCollector": {
+        "id": "deuteriumCollector",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "darkMatterCollector": {
+        "id": "darkMatterCollector",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "resourceConsumer": {
+        "id": "resourceConsumer",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "masterBuilder": {
+        "id": "masterBuilder",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "researcher": {
+        "id": "researcher",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "shipwright": {
+        "id": "shipwright",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "fortifier": {
+        "id": "fortifier",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "warmonger": {
+        "id": "warmonger",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "conqueror": {
+        "id": "conqueror",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "defender": {
+        "id": "defender",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "fleetDestroyer": {
+        "id": "fleetDestroyer",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "debrisCreator": {
+        "id": "debrisCreator",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "fleetSacrifice": {
+        "id": "fleetSacrifice",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "defenseSacrifice": {
+        "id": "defenseSacrifice",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "pilot": {
+        "id": "pilot",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "transporter": {
+        "id": "transporter",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "cargoMaster": {
+        "id": "cargoMaster",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "colonizer": {
+        "id": "colonizer",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "spy": {
+        "id": "spy",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "deployer": {
+        "id": "deployer",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "explorer": {
+        "id": "explorer",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "luckyExplorer": {
+        "id": "luckyExplorer",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "recycler": {
+        "id": "recycler",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "scavenger": {
+        "id": "scavenger",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "destroyer": {
+        "id": "destroyer",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "fuelBurner": {
+        "id": "fuelBurner",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "diplomat": {
+        "id": "diplomat",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "nemesis": {
+        "id": "nemesis",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "generous": {
+        "id": "generous",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "philanthropist": {
+        "id": "philanthropist",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "target": {
+        "id": "target",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "watched": {
+        "id": "watched",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "robbed": {
+        "id": "robbed",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      },
+      "lostToNPC": {
+        "id": "lostToNPC",
+        "currentTier": null,
+        "currentValue": 0,
+        "tierUnlocks": {
+          "bronze": null,
+          "silver": null,
+          "gold": null,
+          "platinum": null,
+          "diamond": null
+        }
+      }
+    }
   },
   "currentPlanetId": "",
   "isDark": "",
@@ -34,7 +658,11 @@
     "browser": false,
     "inApp": true,
     "suppressInFocus": false,
-    "types": { "construction": true, "research": true, "unlock": true }
+    "types": {
+      "construction": true,
+      "research": true,
+      "unlock": true
+    }
   },
   "webdavConfig": null
 }

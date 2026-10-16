@@ -1006,6 +1006,7 @@ export default {
     importConfirmTitle: '確認匯入資料',
     importConfirmMessage: '匯入資料將覆蓋目前遊戲進度，此操作不可撤銷。確定要繼續嗎？',
     importFailed: '匯入失敗，請檢查檔案格式',
+    saveLockedNotice: '存檔無法讀取/版本過新，已暫停自動存檔',
     clearData: '清除資料',
     clearDataDesc: '刪除所有遊戲資料並重置遊戲',
     clear: '清除',

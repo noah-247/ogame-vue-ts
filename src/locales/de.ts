@@ -971,6 +971,7 @@ export default {
     importConfirmMessage:
       'Beim Importieren wird der aktuelle Spielfortschritt überschrieben. Diese Aktion kann nicht rückgängig gemacht werden. Fortfahren?',
     importFailed: 'Import fehlgeschlagen, bitte Dateiformat überprüfen',
+    saveLockedNotice: 'Save could not be read (or version unsupported). Auto-save has been paused.',
     clearData: 'Daten löschen',
     clearDataDesc: 'Alle Spieldaten löschen und zurücksetzen',
     clear: 'Löschen',

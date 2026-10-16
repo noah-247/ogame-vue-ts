@@ -12,13 +12,57 @@ import {
   validateSave
 } from '@/logic/saveMigration'
 import { decryptData, encryptData } from '@/utils/crypto'
+import type { MigrationRegistry, SaveData } from '@/logic/saveMigration'
+import type { Player } from '@/types/game'
+import type { FixturePlayer } from '../fixtures/types'
 import newGame from '../fixtures/new-game.json'
 import legacyGame from '../fixtures/new-game-v0.json'
 import midGame from '../fixtures/mid-game.json'
 
+const _newGamePlayer: FixturePlayer = newGame.player
+const _newGamePlayerExact: Record<Exclude<keyof typeof newGame.player, keyof Player>, never> = _newGamePlayer
+const _legacyGamePlayer: FixturePlayer = legacyGame.player
+const _legacyGamePlayerExact: Record<Exclude<keyof typeof legacyGame.player, keyof Player>, never> = _legacyGamePlayer
+const _midGamePlayer: FixturePlayer = midGame.player
+const _midGamePlayerExact: Record<Exclude<keyof typeof midGame.player, keyof Player>, never> = _midGamePlayer
+void _newGamePlayerExact
+void _legacyGamePlayerExact
+void _midGamePlayerExact
+
 afterEach(() => vi.restoreAllMocks())
 
 describe('save migrations', () => {
+  it('runs every step of an injected migration chain through its target version', () => {
+    const registry: MigrationRegistry = {
+      0: save => ({ ...save, version: 1, step0: true }),
+      1: save => ({ ...save, version: 2, step1: true }),
+      2: save => ({ ...save, version: 3, step2: true })
+    }
+
+    expect(migrateSave({ version: 0 }, registry, 3)).toEqual({ version: 3, step0: true, step1: true, step2: true })
+  })
+
+  it('rejects a migration that forgets to bump the version', () => {
+    const registry: MigrationRegistry = { 0: save => ({ ...save }) as SaveData }
+
+    expect(() => migrateSave({ version: 0 }, registry, 1)).toThrow(SaveVersionError)
+    expect(() => migrateSave({ version: 0 }, registry, 1)).toThrow('expected version 1, got 0')
+  })
+
+  it('rejects a migration that skips a version', () => {
+    const registry: MigrationRegistry = { 0: save => ({ ...save, version: 2 }) }
+
+    expect(() => migrateSave({ version: 0 }, registry, 1)).toThrow(SaveVersionError)
+    expect(() => migrateSave({ version: 0 }, registry, 1)).toThrow('expected version 1, got 2')
+  })
+
+  it('rejects a missing step in an injected migration chain', () => {
+    const registry: MigrationRegistry = { 0: save => ({ ...save, version: 1 }) }
+
+    expect(() => migrateSave({ version: 0 }, registry, 2)).toThrow(SaveVersionError)
+    expect(() => migrateSave({ version: 0 }, registry, 2)).toThrow('No migration registered for save version 1')
+  })
+
   it('migrates v0 to v1 and preserves every business field', () => {
     const migrated = migrateSave(legacyGame)
 

@@ -1002,6 +1002,7 @@ export default {
     importConfirmTitle: '确认导入数据',
     importConfirmMessage: '导入数据将覆盖当前游戏进度，此操作不可撤销。确定要继续吗？',
     importFailed: '导入失败，请检查文件格式',
+    saveLockedNotice: '存档无法读取/版本过新，已暂停自动存档',
     clearData: '清除数据',
     clearDataDesc: '删除所有游戏数据并重置游戏',
     clear: '清除',

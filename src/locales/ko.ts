@@ -948,6 +948,7 @@ export default {
     importConfirmTitle: '가져오기 확인',
     importConfirmMessage: '가져오기를 하면 현재 게임 진행 상황이 덮어쓰기됩니다. 이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?',
     importFailed: '가져오기 실패, 파일 형식을 확인해주세요',
+    saveLockedNotice: 'Save could not be read (or version unsupported). Auto-save has been paused.',
     clearData: '데이터 지우기',
     clearDataDesc: '모든 게임 데이터 삭제 및 초기화',
     clear: '지우기',

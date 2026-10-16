@@ -4,7 +4,10 @@ import type { SaveData } from '@/logic/saveMigration'
 
 export const serializeSave = (state: Record<string, unknown>): string => {
   const ciphertext = encryptData({ ...state, version: SAVE_VERSION })
-  if (!ciphertext) throw new SaveError('Failed to encrypt save data')
+  if (!ciphertext) {
+    console.error('[ogame-vue-ts] Failed to encrypt save data')
+    throw new SaveError('Failed to encrypt save data')
+  }
   return ciphertext
 }
 

@@ -1,17 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import pkg from '../../package.json'
 import { SaveDecryptError, SaveValidationError, SaveVersionError } from '@/logic/saveMigration'
-import { deserializeGameSave, serializeGameSave } from '@/stores/gameSaveSerializer'
+import { deserializeGameSave, resetSaveLock, serializeGameSave } from '@/stores/gameSaveSerializer'
 import { encryptData } from '@/utils/crypto'
+import type { Player } from '@/types/game'
+import type { FixturePlayer } from '../fixtures/types'
 import { restore, setNow } from '../utils/time'
 import legacyGame from '../fixtures/new-game-v0.json'
 import newGame from '../fixtures/new-game.json'
 import midGame from '../fixtures/mid-game.json'
 
+const _newGamePlayer: FixturePlayer = newGame.player
+const _newGamePlayerExact: Record<Exclude<keyof typeof newGame.player, keyof Player>, never> = _newGamePlayer
+const _legacyGamePlayer: FixturePlayer = legacyGame.player
+const _legacyGamePlayerExact: Record<Exclude<keyof typeof legacyGame.player, keyof Player>, never> = _legacyGamePlayer
+const _midGamePlayer: FixturePlayer = midGame.player
+const _midGamePlayerExact: Record<Exclude<keyof typeof midGame.player, keyof Player>, never> = _midGamePlayer
+void _newGamePlayerExact
+void _legacyGamePlayerExact
+void _midGamePlayerExact
+
+vi.mock('vue-sonner', () => ({ toast: { error: vi.fn(), success: vi.fn(), warning: vi.fn(), info: vi.fn() } }))
+
 const timestamp = 1792108800000
 let entries: Map<string, string>
 
 beforeEach(() => {
+  resetSaveLock()
   entries = new Map()
   vi.stubGlobal('localStorage', {
     getItem: (key: string) => entries.get(key) ?? null,
@@ -75,14 +90,16 @@ describe('game store persistence serializer', () => {
 
   it('migrates old AES ciphertext to v1 without making a corrupted backup', () => {
     const ciphertext = encryptData(legacyGame)
+    const { version: _version, ...state } = newGame
 
-    expect(deserializeGameSave(ciphertext)).toEqual(newGame)
+    expect(deserializeGameSave(ciphertext)).toEqual(state)
     expect(entries.size).toBe(0)
     expect(console.error).not.toHaveBeenCalled()
   })
 
   it.each([newGame, midGame])('round-trips valid v1 state through the exact store adapter', state => {
-    expect(deserializeGameSave(serializeGameSave(state))).toEqual(state)
+    const { version: _version, ...expected } = state
+    expect(deserializeGameSave(serializeGameSave(state))).toEqual(expected)
     expect(entries.size).toBe(0)
     expect(console.error).not.toHaveBeenCalled()
   })
