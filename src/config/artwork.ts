@@ -1,6 +1,5 @@
 /**
  * Vite 的 base 为 './'，图片路径使用相对路径，确保部署到子目录时正确加载。
- * 建筑图片例外：hangar 对应 images/buildings/allianceDepot.webp。
  */
 import type { ShipType, DefenseType, BuildingType, OfficerType } from '@/types/game'
 
@@ -45,7 +44,7 @@ export const BUILDING_ARTWORK: Record<BuildingType, string> = {
   roboticsFactory: 'images/buildings/roboticsFactory.webp',
   naniteFactory: 'images/buildings/naniteFactory.webp',
   shipyard: 'images/buildings/shipyard.webp',
-  hangar: 'images/buildings/allianceDepot.webp',
+  hangar: 'images/buildings/hangar.webp',
   researchLab: 'images/buildings/researchLab.webp',
   metalStorage: 'images/buildings/metalStorage.webp',
   crystalStorage: 'images/buildings/crystalStorage.webp',
@@ -70,15 +69,4 @@ export const OFFICER_ARTWORK: Record<OfficerType, string> = {
   geologist: 'images/officers/geologist.webp',
   technocrat: 'images/officers/technocrat.webp',
   darkMatterSpecialist: 'images/officers/darkMatterSpecialist.webp',
-}
-
-export function artworkFor(kind: 'ship' | 'defense' | 'building' | 'officer', key: string): string | undefined {
-  const artwork: Partial<Record<string, string>> = {
-    ship: SHIP_ARTWORK,
-    defense: DEFENSE_ARTWORK,
-    building: BUILDING_ARTWORK,
-    officer: OFFICER_ARTWORK,
-  }[kind]
-
-  return Object.prototype.hasOwnProperty.call(artwork, key) ? artwork[key] : undefined
 }
