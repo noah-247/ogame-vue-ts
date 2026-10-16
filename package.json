@@ -9,7 +9,7 @@
   },
   "private": true,
   "version": "1.6.5",
-  "buildDate": "10/16/2026, 10:13:57 AM",
+  "buildDate": "10/16/2026, 4:51:55 AM",
   "main": "dist-electron/main.js",
   "type": "module",
   "scripts": {

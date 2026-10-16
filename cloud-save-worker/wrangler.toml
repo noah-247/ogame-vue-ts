@@ -1,0 +1,7 @@
+name = "ogame-save"
+compatibility_date = "2026-10-01"
+main = "worker.js"
+
+[[kv_namespaces]]
+binding = "SAVES"
+id = "f352bf8f2640457d95ccc487996fc1e0"

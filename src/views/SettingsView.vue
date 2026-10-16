@@ -80,6 +80,8 @@
       </CardContent>
     </Card>
 
+    <CloudSaveSettings />
+
     <!-- 游戏设置 -->
     <Card>
       <CardHeader>
@@ -398,6 +400,7 @@
   import PrivacyDialog from '@/components/dialogs/PrivacyDialog.vue'
   import WebDAVConfigDialog from '@/components/settings/WebDAVConfigDialog.vue'
   import WebDAVFileListDialog from '@/components/settings/WebDAVFileListDialog.vue'
+  import CloudSaveSettings from '@/components/settings/CloudSaveSettings.vue'
   import { useHints } from '@/composables/useHints'
   import { uploadToWebDAV, downloadFromWebDAV } from '@/services/webdavService'
 
