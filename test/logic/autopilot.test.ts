@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { AutopilotPlanetConfig, EmpireResearchAutopilot, Planet, Player, WaitingQueueItem } from '@/types/game'
 import { BuildingType, TechnologyType } from '@/types/game'
 import {
+  applyBlueprintToPlanet,
+  AUTOPILOT_BLUEPRINTS,
   checkEnergySafeWorstOrder,
   createAutopilotResearchTarget,
   createAutopilotTarget,
@@ -10,6 +12,7 @@ import {
   createDefaultPlanetAutopilot,
   expandPrerequisiteChain,
   expandResearchPrerequisiteChain,
+  getAutopilotBlueprint,
   planAllSteps,
   planEnergyRescue,
   planTargetSteps,
@@ -745,5 +748,40 @@ describe('planTargetSteps', () => {
     // floor(15 * 1.5^5 / 3) = floor(113.9/3) = 37
     expect(step!.buildTime).toBe(37)
     expect(step!.cost).toEqual({ metal: 455, crystal: 113, deuterium: 0, darkMatter: 0, energy: 0 })
+  })
+})
+
+describe('blueprints', () => {
+  it('ships exactly the economy and balanced presets', () => {
+    expect(AUTOPILOT_BLUEPRINTS.map(b => b.id).sort()).toEqual(['balanced', 'economy'])
+    const economy = getAutopilotBlueprint('economy')!
+    expect(economy.targets.find(t => t.buildingType === BuildingType.MetalMine)?.targetLevel).toBe(12)
+    expect(economy.targets.find(t => t.buildingType === BuildingType.RoboticsFactory)?.targetLevel).toBe(4)
+    const balanced = getAutopilotBlueprint('balanced')!
+    expect(balanced.targets.find(t => t.buildingType === BuildingType.ResearchLab)?.targetLevel).toBe(5)
+    expect(balanced.targets.find(t => t.buildingType === BuildingType.DeuteriumSynthesizer)?.targetLevel).toBe(8)
+  })
+
+  it('returns undefined for an unknown blueprint id', () => {
+    expect(getAutopilotBlueprint('nope')).toBeUndefined()
+  })
+
+  it('applyBlueprintToPlanet replaces targets, enables and records the decision', () => {
+    const config = createDefaultPlanetAutopilot()
+    config.targets.push(createAutopilotTarget(BuildingType.MetalMine, 3, 0, 1000))
+
+    expect(applyBlueprintToPlanet(config, 'economy', 2000)).toBe(true)
+    expect(config.enabled).toBe(true)
+    expect(config.paused).toBe(false)
+    expect(config.targets).toHaveLength(getAutopilotBlueprint('economy')!.targets.length)
+    expect(config.targets.every(t => t.id.startsWith('apt_'))).toBe(true)
+    expect(config.lastDecision).toBe('autopilot.decisionBlueprintApplied')
+  })
+
+  it('applyBlueprintToPlanet returns false for an unknown blueprint id and keeps the config', () => {
+    const config = createDefaultPlanetAutopilot()
+    expect(applyBlueprintToPlanet(config, 'nope')).toBe(false)
+    expect(config.targets).toHaveLength(0)
+    expect(config.enabled).toBe(false)
   })
 })
