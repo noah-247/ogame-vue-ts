@@ -389,7 +389,7 @@ export interface EnergyCheckResult {
   consumption: number
 }
 
-const pendingEnergyDelta = (
+export const pendingEnergyDelta = (
   planet: Planet,
   item: Pick<BuildQueueItem, 'type' | 'itemType' | 'targetLevel'>,
   energyProductionBonus = 0

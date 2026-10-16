@@ -15,7 +15,7 @@ import * as buildingValidation from './buildingValidation'
 import * as researchValidation from './researchValidation'
 import * as shipValidation from './shipValidation'
 import { getGameNow } from './gameTime'
-import { checkEnergySafeWorstOrder } from './autopilotLogic'
+import { checkEnergySafeWorstOrder, pendingEnergyDelta } from './autopilotLogic'
 
 /**
  * 获取等待队列最大容量
@@ -238,11 +238,13 @@ export const processPlanetWaitingQueue = (
   planet: Planet,
   player: Player,
   officers: Record<OfficerType, Officer>,
-  energyProductionBonus = officerLogic.calculateActiveBonuses(officers, getGameNow()).energyProductionBonus
+  energyProductionBonus = officerLogic.calculateActiveBonuses(officers, getGameNow()).energyProductionBonus,
+  energyBonusExpiresAt?: number
 ): { executed: WaitingQueueItem[]; messages: string[] } => {
   const executed: WaitingQueueItem[] = []
   const messages: string[] = []
-  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
+  const now = getGameNow()
+  const bonuses = officerLogic.calculateActiveBonuses(officers, now)
 
   for (const item of [...(planet.waitingBuildQueue || [])]) {
     if (item.type === 'building' && item.targetLevel !== undefined &&
@@ -271,7 +273,17 @@ export const processPlanetWaitingQueue = (
 
     // 根据类型执行不同处理
     if (waitingItem.type === 'building') {
-      if (waitingItem.source === 'autopilot' && !checkEnergySafeWorstOrder(planet, energyProductionBonus, [waitingItem]).safe) continue
+      if (waitingItem.source === 'autopilot') {
+        const energyHorizon = Math.max(
+          now,
+          ...planet.buildQueue
+            .filter(item => item.type === 'building' || item.type === 'demolish')
+            .map(item => item.endTime || 0)
+        )
+        const bonus = energyBonusExpiresAt !== undefined && energyBonusExpiresAt < energyHorizon ? 0 : energyProductionBonus
+        const { consDelta, prodDelta } = pendingEnergyDelta(planet, waitingItem, bonus)
+        if (!(consDelta <= 0 && prodDelta >= 0) && !checkEnergySafeWorstOrder(planet, bonus, [waitingItem]).safe) continue
+      }
       const result = tryExecuteBuildingWaitingItem(planet, waitingItem, player.technologies, officers)
       if (result.success && result.queueItem) {
         planet.buildQueue.push(result.queueItem)
@@ -550,10 +562,11 @@ export const processAllWaitingQueues = (player: Player, now: number): { executed
   const allExecuted: WaitingQueueItem[] = []
   const allMessages: string[] = []
   const { energyProductionBonus } = officerLogic.calculateActiveBonuses(player.officers, now)
+  const energyBonusExpiresAt = officerLogic.getEnergyBonusExpiresAt(player.officers, now)
 
   // 处理所有星球的建筑等待队列
   for (const planet of player.planets) {
-    const result = processPlanetWaitingQueue(planet, player, player.officers, energyProductionBonus)
+    const result = processPlanetWaitingQueue(planet, player, player.officers, energyProductionBonus, energyBonusExpiresAt)
     allExecuted.push(...result.executed)
     allMessages.push(...result.messages)
   }

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import type { AutopilotPlanetConfig, EmpireResearchAutopilot, Planet, Player, WaitingQueueItem } from '@/types/game'
-import { BuildingType, TechnologyType } from '@/types/game'
+import { BuildingType, OfficerType, TechnologyType } from '@/types/game'
 import {
   applyBlueprintToPlanet,
   AUTOPILOT_BLUEPRINTS,
@@ -28,6 +28,7 @@ import { setNow, restore, jump, HOUR } from '../utils/time'
 import * as waitingQueueLogic from '@/logic/waitingQueueLogic'
 import * as buildingLogic from '@/logic/buildingLogic'
 import * as resourceLogic from '@/logic/resourceLogic'
+import * as gameLogic from '@/logic/gameLogic'
 import { getGameNow, setTimeOffset } from '@/logic/gameTime'
 import { BUILDINGS } from '@/config/gameConfig'
 
@@ -927,6 +928,66 @@ describe('P0-1 target-level energy validation and promotion', () => {
     ]
     expect(waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers, 0).executed).toHaveLength(0)
     expect(waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers, 100).executed).toHaveLength(2)
+  })
+
+  it('promotes and completes solar rescue on a deficit planet across game and autopilot ticks', () => {
+    setNow(NOW)
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 1, [BuildingType.MetalMine]: 10 })
+    const player = makePlayer([planet])
+    enableAutopilot(planet, [[BuildingType.MetalMine, 11]])
+    expect(checkEnergySafeWorstOrder(planet, 0).safe).toBe(false)
+    let solarPromoted = false
+
+    for (let tick = 0; tick < 100; tick++) {
+      gameLogic.processGameUpdate(player, getGameNow())
+      solarPromoted ||= planet.buildQueue.some(item => item.itemType === BuildingType.SolarPlant)
+      tickAutopilotPlanet(player, planet, getGameNow(), ctx)
+      jump(HOUR)
+    }
+
+    expect(solarPromoted).toBe(true)
+    expect(planet.buildings[BuildingType.SolarPlant]).toBeGreaterThanOrEqual(2)
+    expect(planet.buildings[BuildingType.MetalMine]).toBe(11)
+    expect(planet.waitingBuildQueue.filter(item => item.source === 'autopilot')).toHaveLength(0)
+  })
+
+  it.each([
+    [NOW - 1, 0],
+    [NOW + HOUR / 2, 0],
+    [NOW + HOUR, 2]
+  ])('uses a conservative bonus expiring at %s for promotion', (expiresAt, executedCount) => {
+    setNow(NOW)
+    const planet = tightPlanet()
+    const player = makePlayer([planet])
+    planet.buildQueue = [{
+      id: 'pending-robotics', type: 'building', itemType: BuildingType.RoboticsFactory,
+      targetLevel: 1, startTime: NOW, endTime: NOW + HOUR
+    }]
+    planet.waitingBuildQueue = [BuildingType.MetalMine, BuildingType.CrystalMine].map(buildingType => ({
+      ...waitingQueueLogic.createBuildingWaitingItem(buildingType, 9, planet.id), source: 'autopilot' as const
+    }))
+
+    const result = waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers, 100, expiresAt)
+
+    expect(result.executed).toHaveLength(executedCount)
+  })
+
+  it('passes the active energy officer expiry through processAllWaitingQueues', () => {
+    setNow(NOW)
+    const planet = tightPlanet()
+    const player = makePlayer([planet])
+    player.officers[OfficerType.Engineer] = { type: OfficerType.Engineer, active: true, expiresAt: NOW + HOUR / 2 }
+    planet.buildQueue = [{
+      id: 'pending-robotics', type: 'building', itemType: BuildingType.RoboticsFactory,
+      targetLevel: 1, startTime: NOW, endTime: NOW + HOUR
+    }]
+    planet.waitingBuildQueue = [BuildingType.MetalMine, BuildingType.CrystalMine].map(buildingType => ({
+      ...waitingQueueLogic.createBuildingWaitingItem(buildingType, 9, planet.id), source: 'autopilot' as const
+    }))
+    expect(checkEnergySafeWorstOrder(planet, 10).safe).toBe(true)
+
+    expect(waitingQueueLogic.processAllWaitingQueues(player, getGameNow()).executed).toHaveLength(0)
+    expect(planet.waitingBuildQueue).toHaveLength(2)
   })
 
   it.each([10, 20])('sums three mine upgrades from their targetLevel at level %s regardless of queue order', current => {
