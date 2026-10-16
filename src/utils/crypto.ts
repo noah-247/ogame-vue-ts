@@ -13,12 +13,13 @@ export const encryptData = (data: any): string => {
 }
 
 // 数据解密
-export const decryptData = (data: string): any => {
+export const decryptData = (data: string, options: { throwOnError?: boolean } = {}): any => {
   try {
     const bytes = CryptoJS.AES.decrypt(data, pkg.name)
     const decryptedStr = bytes.toString(CryptoJS.enc.Utf8)
     return JSON.parse(decryptedStr)
   } catch (error) {
+    if (options.throwOnError) throw error
     console.error(error)
     return {}
   }

@@ -19,7 +19,7 @@ import { TechnologyType, OfficerType } from '@/types/game'
 import { initializeAchievementStats, initializeAchievements } from '@/logic/achievementLogic'
 import type { Locale } from '@/locales'
 import pkg from '../../package.json'
-import { encryptData, decryptData } from '@/utils/crypto'
+import { serializeGameSave, deserializeGameSave } from '@/stores/gameSaveSerializer'
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -91,8 +91,8 @@ export const useGameStore = defineStore('game', {
     key: pkg.name,
     storage: localStorage,
     serializer: {
-      serialize: state => encryptData(state),
-      deserialize: value => decryptData(value)
+      serialize: state => serializeGameSave(state),
+      deserialize: value => deserializeGameSave(value)
     }
   }
 })

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "gameTime": 1792108800000,
+  "isPaused": false,
+  "gameSpeed": 1,
+  "battleToFinish": true,
+  "player": {
+    "id": "player1",
+    "name": "",
+    "planets": [],
+    "technologies": {},
+    "officers": {},
+    "researchQueue": [],
+    "waitingResearchQueue": [],
+    "fleetMissions": [],
+    "missileAttacks": [],
+    "battleReports": [],
+    "spyReports": [],
+    "spiedNotifications": [],
+    "npcActivityNotifications": [],
+    "missionReports": [],
+    "incomingFleetAlerts": [],
+    "giftNotifications": [],
+    "giftRejectedNotifications": [],
+    "points": 0,
+    "bonusPoints": 0,
+    "isGMEnabled": false,
+    "lastVersionCheckTime": 0
+  },
+  "currentPlanetId": "",
+  "isDark": "",
+  "locale": "zh-CN",
+  "notificationSettings": {
+    "browser": false,
+    "inApp": true,
+    "suppressInFocus": false,
+    "types": { "construction": true, "research": true, "unlock": true }
+  },
+  "webdavConfig": null
+}

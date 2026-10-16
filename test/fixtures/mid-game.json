@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "gameTime": 1792108800000,
+  "isPaused": false,
+  "gameSpeed": 1,
+  "battleToFinish": true,
+  "player": {
+    "id": "player1",
+    "name": "Commander",
+    "planets": [
+      {
+        "id": "planet1",
+        "name": "Home Planet",
+        "ownerId": "player1",
+        "position": { "galaxy": 1, "system": 1, "position": 1 },
+        "resources": { "metal": 8500, "crystal": 5200, "deuterium": 1600, "darkMatter": 0, "energy": 0 },
+        "buildings": {
+          "metalMine": 12,
+          "crystalMine": 10,
+          "deuteriumSynthesizer": 6,
+          "solarPlant": 8,
+          "roboticsFactory": 4,
+          "researchLab": 3,
+          "metalStorage": 2,
+          "crystalStorage": 1,
+          "deuteriumTank": 1
+        },
+        "fleet": {},
+        "defense": {},
+        "buildQueue": [
+          {
+            "id": "build-metal-13",
+            "type": "building",
+            "itemType": "metalMine",
+            "targetLevel": 13,
+            "startTime": 1792108800000,
+            "endTime": 1792109189000
+          },
+          {
+            "id": "build-solar-9",
+            "type": "building",
+            "itemType": "solarPlant",
+            "targetLevel": 9,
+            "startTime": 1792108800000,
+            "endTime": 1792108876000
+          }
+        ],
+        "waitingBuildQueue": [],
+        "lastUpdate": 1792108800000,
+        "maxSpace": 200,
+        "maxFleetStorage": 100,
+        "isMoon": false,
+        "temperature": { "min": 200, "max": 240 }
+      }
+    ],
+    "technologies": { "energyTechnology": 3, "computerTechnology": 2, "combustionDrive": 2 },
+    "officers": {},
+    "researchQueue": [],
+    "waitingResearchQueue": [],
+    "fleetMissions": [],
+    "missileAttacks": [],
+    "battleReports": [],
+    "spyReports": [],
+    "spiedNotifications": [],
+    "npcActivityNotifications": [],
+    "missionReports": [],
+    "incomingFleetAlerts": [],
+    "giftNotifications": [],
+    "giftRejectedNotifications": [],
+    "points": 125,
+    "bonusPoints": 0,
+    "isGMEnabled": false,
+    "lastVersionCheckTime": 0
+  },
+  "currentPlanetId": "planet1",
+  "isDark": "dark",
+  "locale": "zh-CN",
+  "notificationSettings": {
+    "browser": false,
+    "inApp": true,
+    "suppressInFocus": false,
+    "types": { "construction": true, "research": true, "unlock": true }
+  },
+  "webdavConfig": null
+}
