@@ -18,7 +18,6 @@ import {
   planTargetSteps,
   planWarehouseRescue,
   reconcileTargets,
-  pruneAutopilotWaiting,
   resumeAutoMode,
   tickAutopilotPlanet,
   tickEmpireResearch,
@@ -834,6 +833,104 @@ describe('BLK-2 waiting queue counted in energy check', () => {
     expect(
       result.blockers.some(b => b.reason === 'autopilot.blockedEnergy' || b.reason === 'autopilot.blockedEnergyRescue')
     ).toBe(true)
+  })
+})
+
+describe('P0-1 target-level energy validation and promotion', () => {
+  const tightPlanet = () => makePlanet({
+    [BuildingType.SolarPlant]: 6,
+    [BuildingType.MetalMine]: 8,
+    [BuildingType.CrystalMine]: 8,
+    [BuildingType.DeuteriumSynthesizer]: 5
+  })
+
+  it('blocks an autopilot step that is individually safe but unsafe with a player waiting step', () => {
+    setNow(NOW)
+    const planet = tightPlanet()
+    const player = makePlayer([planet])
+    const proposed = { type: 'building' as const, itemType: BuildingType.CrystalMine, targetLevel: 9 }
+    expect(checkEnergySafeWorstOrder(planet, 0, [proposed]).safe).toBe(true)
+    planet.waitingBuildQueue.push(waitingQueueLogic.createBuildingWaitingItem(BuildingType.MetalMine, 9, planet.id))
+    expect(checkEnergySafeWorstOrder(planet, 0).safe).toBe(true)
+    enableAutopilot(planet, [[BuildingType.CrystalMine, 9]])
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    expect(planet.waitingBuildQueue.some(item => item.itemType === BuildingType.CrystalMine)).toBe(false)
+    expect(result.blockers.some(blocker => blocker.reason === 'autopilot.blockedEnergyRescue')).toBe(true)
+  })
+
+  it('revalidates before promotion after a player adds an incompatible waiting step', () => {
+    setNow(NOW)
+    const planet = tightPlanet()
+    const player = makePlayer([planet])
+    const item = { ...waitingQueueLogic.createBuildingWaitingItem(BuildingType.MetalMine, 9, planet.id), source: 'autopilot' as const }
+    expect(checkEnergySafeWorstOrder(planet, 0, [item]).safe).toBe(true)
+    planet.waitingBuildQueue = [waitingQueueLogic.createBuildingWaitingItem(BuildingType.CrystalMine, 9, planet.id), item]
+
+    const result = waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers, 0)
+
+    expect(result.executed.map(entry => entry.itemType)).toEqual([BuildingType.CrystalMine])
+    expect(planet.waitingBuildQueue).toEqual([item])
+    expect(planet.buildQueue.some(entry => entry.itemType === BuildingType.MetalMine)).toBe(false)
+  })
+
+  it('counts a waiting promotion candidate only once and allows a safe promotion', () => {
+    setNow(NOW)
+    const planet = tightPlanet()
+    const player = makePlayer([planet])
+    const item = { ...waitingQueueLogic.createBuildingWaitingItem(BuildingType.MetalMine, 9, planet.id), source: 'autopilot' as const }
+    planet.waitingBuildQueue = [item]
+    expect(checkEnergySafeWorstOrder(planet, 0, [item]).margin).toBe(checkEnergySafeWorstOrder(planet, 0).margin)
+
+    expect(waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers, 0).executed).toEqual([item])
+    expect(planet.waitingBuildQueue).toHaveLength(0)
+  })
+
+  it('uses the supplied energy production bonus when revalidating promotion', () => {
+    setNow(NOW)
+    const planet = tightPlanet()
+    const player = makePlayer([planet])
+    planet.waitingBuildQueue = [
+      { ...waitingQueueLogic.createBuildingWaitingItem(BuildingType.MetalMine, 9, planet.id), source: 'autopilot' },
+      { ...waitingQueueLogic.createBuildingWaitingItem(BuildingType.CrystalMine, 9, planet.id), source: 'autopilot' }
+    ]
+    expect(waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers, 0).executed).toHaveLength(0)
+    expect(waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers, 100).executed).toHaveLength(2)
+  })
+
+  it.each([10, 20])('sums three mine upgrades from their targetLevel at level %s regardless of queue order', current => {
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 20, [BuildingType.MetalMine]: current })
+    const before = checkEnergySafeWorstOrder(planet, 0).margin
+    planet.waitingBuildQueue = [3, 1, 2].map(offset =>
+      waitingQueueLogic.createBuildingWaitingItem(BuildingType.MetalMine, current + offset, planet.id))
+
+    const delta = before - checkEnergySafeWorstOrder(planet, 0).margin
+    const consumptionAt = (level: number) => 10 * level * Math.pow(1.1, level)
+    const naiveDelta = 3 * (consumptionAt(current + 1) - consumptionAt(current))
+
+    expect(delta).toBeCloseTo(consumptionAt(current + 3) - consumptionAt(current), 8)
+    expect(delta).toBeGreaterThan(naiveDelta)
+    if (current === 20) {
+      expect(delta).toBeCloseTo(714.0, 0)
+      expect(naiveDelta).toBeCloseTo(625.7, 0)
+    } else {
+      expect(consumptionAt(11) - consumptionAt(10)).toBeCloseTo(54.47, 2)
+      expect(consumptionAt(12) - consumptionAt(11)).toBeCloseTo(62.77, 1)
+    }
+  })
+
+  it('accounts for all demolition sources using the post-demolition targetLevel and the correct sign', () => {
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 8 })
+    const before = checkEnergySafeWorstOrder(planet, 20).margin
+    planet.buildQueue = [{ id: 'demolish', type: 'demolish', itemType: BuildingType.SolarPlant, targetLevel: 7, startTime: NOW, endTime: NOW + 1000 }]
+    planet.waitingBuildQueue = [
+      waitingQueueLogic.createDemolishWaitingItem(BuildingType.SolarPlant, 6, planet.id),
+      { ...waitingQueueLogic.createDemolishWaitingItem(BuildingType.SolarPlant, 5, planet.id), source: 'autopilot' }
+    ]
+
+    const productionAt = (level: number) => 50 * level * Math.pow(1.1, level) * 1.2
+    expect(before - checkEnergySafeWorstOrder(planet, 20).margin).toBeCloseTo(productionAt(8) - productionAt(5), 8)
   })
 })
 

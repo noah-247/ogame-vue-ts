@@ -15,6 +15,7 @@ import * as buildingValidation from './buildingValidation'
 import * as researchValidation from './researchValidation'
 import * as shipValidation from './shipValidation'
 import { getGameNow } from './gameTime'
+import { checkEnergySafeWorstOrder } from './autopilotLogic'
 
 /**
  * 获取等待队列最大容量
@@ -236,7 +237,8 @@ export const removeFromResearchWaitingQueue = (player: Player, itemId: string): 
 export const processPlanetWaitingQueue = (
   planet: Planet,
   player: Player,
-  officers: Record<OfficerType, Officer>
+  officers: Record<OfficerType, Officer>,
+  energyProductionBonus = officerLogic.calculateActiveBonuses(officers, getGameNow()).energyProductionBonus
 ): { executed: WaitingQueueItem[]; messages: string[] } => {
   const executed: WaitingQueueItem[] = []
   const messages: string[] = []
@@ -269,6 +271,7 @@ export const processPlanetWaitingQueue = (
 
     // 根据类型执行不同处理
     if (waitingItem.type === 'building') {
+      if (waitingItem.source === 'autopilot' && !checkEnergySafeWorstOrder(planet, energyProductionBonus, [waitingItem]).safe) continue
       const result = tryExecuteBuildingWaitingItem(planet, waitingItem, player.technologies, officers)
       if (result.success && result.queueItem) {
         planet.buildQueue.push(result.queueItem)
@@ -543,13 +546,14 @@ const tryExecuteResearchWaitingItem = (
 /**
  * 处理所有等待队列（在 gameLoop 中调用）
  */
-export const processAllWaitingQueues = (player: Player, _now: number): { executed: WaitingQueueItem[]; messages: string[] } => {
+export const processAllWaitingQueues = (player: Player, now: number): { executed: WaitingQueueItem[]; messages: string[] } => {
   const allExecuted: WaitingQueueItem[] = []
   const allMessages: string[] = []
+  const { energyProductionBonus } = officerLogic.calculateActiveBonuses(player.officers, now)
 
   // 处理所有星球的建筑等待队列
   for (const planet of player.planets) {
-    const result = processPlanetWaitingQueue(planet, player, player.officers)
+    const result = processPlanetWaitingQueue(planet, player, player.officers, energyProductionBonus)
     allExecuted.push(...result.executed)
     allMessages.push(...result.messages)
   }

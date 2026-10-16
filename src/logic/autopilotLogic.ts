@@ -391,27 +391,26 @@ export interface EnergyCheckResult {
   consumption: number
 }
 
-/** 单个待完工建筑对能源的影响（升级 +1 / 拆除 -1）。
- * extraLevels：同一建筑在待完工集合里排了多级时，累计已算过的级数（BLK-2 附带修正），
- * 避免每级都按 current+1 低估增量。 */
 const pendingEnergyDelta = (
   planet: Planet,
-  item: Pick<BuildQueueItem, 'type' | 'itemType'>,
-  extraLevels = 0,
+  item: Pick<BuildQueueItem, 'type' | 'itemType' | 'targetLevel'>,
   energyProductionBonus = 0
 ): { prodDelta: number; consDelta: number } => {
   const buildingType = item.itemType as BuildingType
   if (!isBuildingKey(item.itemType as string)) return { prodDelta: 0, consDelta: 0 }
   const config = BUILDINGS[buildingType]
   if (!config) return { prodDelta: 0, consDelta: 0 }
-  const current = (planet.buildings[buildingType] || 0) + extraLevels
-  const hypothetical = { ...planet.buildings, [buildingType]: item.type === 'demolish' ? Math.max(0, current - 1) : current + 1 }
+  const current = planet.buildings[buildingType] || 0
+  const target = item.targetLevel ?? (item.type === 'demolish' ? Math.max(0, current - 1) : current + 1)
+  const previous = item.type === 'demolish' ? target + 1 : Math.max(0, target - 1)
+  const beforePlanet = { ...planet, buildings: { ...planet.buildings, [buildingType]: previous } } as Planet
+  const hypothetical = { ...planet.buildings, [buildingType]: target }
   const probe = { ...planet, buildings: hypothetical } as Planet
   // 用完整公式算差值，避免手写分项公式漂移（Minor-1）
   const bonuses = { energyProductionBonus }
   const before = {
-    prod: resourceLogic.calculateEnergyProduction(planet, bonuses),
-    cons: resourceLogic.calculateEnergyConsumption(planet)
+    prod: resourceLogic.calculateEnergyProduction(beforePlanet, bonuses),
+    cons: resourceLogic.calculateEnergyConsumption(beforePlanet)
   }
   const after = {
     prod: resourceLogic.calculateEnergyProduction(probe, bonuses),
@@ -431,26 +430,20 @@ const pendingEnergyDelta = (
 export const checkEnergySafeWorstOrder = (
   planet: Planet,
   energyProductionBonus: number,
-  extraItems: Array<Pick<BuildQueueItem, 'type' | 'itemType'>> = []
+  extraItems: Array<Pick<BuildQueueItem, 'type' | 'itemType' | 'targetLevel'>> = []
 ): EnergyCheckResult => {
   const bonuses = { energyProductionBonus }
   const production = resourceLogic.calculateEnergyProduction(planet, bonuses)
   const consumption = resourceLogic.calculateEnergyConsumption(planet)
   let consGain = 0
   let prodLoss = 0
-  // BLK-2：待完工集合必须包含等待队列——等待项转正时不做能源检查，
-  // 同一 tick 连排两项、或跨 tick 排入未转正的项都会漏算。
-  const pending: Array<Pick<BuildQueueItem, 'type' | 'itemType'>> = [
+  const pending = new Set<Pick<BuildQueueItem, 'type' | 'itemType' | 'targetLevel'>>([
     ...planet.buildQueue.filter(i => i.type === 'building' || i.type === 'demolish'),
     ...(planet.waitingBuildQueue || []).filter(i => i.type === 'building' || i.type === 'demolish'),
     ...extraItems
-  ]
-  // 同一建筑排了多级时，后一级按 current+k-1 为基准累计（BLK-2 附带修正）
-  const bumpedLevels = new Map<BuildingType, number>()
+  ])
   for (const item of pending) {
-    const bumped = bumpedLevels.get(item.itemType as BuildingType) || 0
-    const { prodDelta, consDelta } = pendingEnergyDelta(planet, item, bumped, energyProductionBonus)
-    bumpedLevels.set(item.itemType as BuildingType, bumped + (item.type === 'demolish' ? -1 : 1))
+    const { prodDelta, consDelta } = pendingEnergyDelta(planet, item, energyProductionBonus)
     if (consDelta > 0) consGain += consDelta
     if (prodDelta < 0) prodLoss += -prodDelta
   }
@@ -476,7 +469,7 @@ const toStep = (
   const robotics = planet.buildings[BuildingType.RoboticsFactory] || 0
   const nanite = planet.buildings[BuildingType.NaniteFactory] || 0
   const buildTime = buildingLogic.calculateBuildingTime(buildingType, nextLevel, ctx.buildSpeedBonus, robotics, nanite)
-  const { prodDelta, consDelta } = pendingEnergyDelta(planet, { type: 'building', itemType: buildingType }, 0, ctx.energyProductionBonus)
+  const { prodDelta, consDelta } = pendingEnergyDelta(planet, { type: 'building', itemType: buildingType, targetLevel: nextLevel }, ctx.energyProductionBonus)
   return {
     buildingType,
     nextLevel,
@@ -872,7 +865,7 @@ export const tickAutopilotPlanet = (
       ctx.energyBonusExpiresAt !== undefined && ctx.energyBonusExpiresAt < energyHorizon
         ? 0
         : ctx.energyProductionBonus
-    const energyCheck = checkEnergySafeWorstOrder(planet, energyBonus, [{ type: 'building', itemType: step.buildingType }])
+    const energyCheck = checkEnergySafeWorstOrder(planet, energyBonus, [{ type: 'building', itemType: step.buildingType, targetLevel: step.nextLevel }])
     if (!energyCheck.safe) {
       const rescue = planEnergyRescue(planet, technologies, ctx)
       // Minor-2：救援步骤同样受自主模式工时门槛约束；排入失败不再记「已救援」
@@ -1189,15 +1182,18 @@ export const getAutopilotBlueprint = (id: string): AutopilotBlueprint | undefine
 /**
  * 应用蓝图：用预设替换当前目标清单（已完成/已开工的工作不受影响，
  * 下次 tick 从实际等级重推）。同时启用副官。
+ * filter 可选：Minor-8，月球上过滤 planetOnly 建筑等场景。
  */
 export const applyBlueprintToPlanet = (
   config: AutopilotPlanetConfig,
   blueprintId: string,
-  now: number = Date.now()
+  now: number = Date.now(),
+  filter?: (t: AutopilotBlueprintTarget) => boolean
 ): boolean => {
   const blueprint = getAutopilotBlueprint(blueprintId)
   if (!blueprint) return false
-  config.targets = blueprint.targets.map(t => createAutopilotTarget(t.buildingType, t.targetLevel, t.priority, now))
+  const targets = filter ? blueprint.targets.filter(filter) : blueprint.targets
+  config.targets = targets.map(t => createAutopilotTarget(t.buildingType, t.targetLevel, t.priority, now))
   config.enabled = true
   config.paused = false
   config.lastDecision = 'autopilot.decisionBlueprintApplied'
