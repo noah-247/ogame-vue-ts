@@ -14,6 +14,7 @@ import * as officerLogic from './officerLogic'
 import * as buildingValidation from './buildingValidation'
 import * as researchValidation from './researchValidation'
 import * as shipValidation from './shipValidation'
+import { getGameNow } from './gameTime'
 
 /**
  * 获取等待队列最大容量
@@ -138,7 +139,7 @@ export const canAddToBuildWaitingQueue = (
   item: WaitingQueueItem,
   officers: Record<OfficerType, Officer>
 ): { canAdd: boolean; reason?: string } => {
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
   const maxQueue = getMaxBuildWaitingQueue(planet, bonuses.additionalBuildQueue)
   const waitingQueue = planet.waitingBuildQueue || []
 
@@ -176,6 +177,13 @@ export const canAddToResearchWaitingQueue = (player: Player, _item: WaitingQueue
 }
 
 /**
+ * 等待队列排序：玩家手动项永远在副官项前面（MAJ-3：玩家优先，副官不抢资源/槽位），
+ * 同来源内再按 priority 升序（数字越小越靠前）。
+ */
+const compareWaitingItems = (a: WaitingQueueItem, b: WaitingQueueItem): number =>
+  (a.source === 'autopilot' ? 1 : 0) - (b.source === 'autopilot' ? 1 : 0) || a.priority - b.priority
+
+/**
  * 添加到建筑等待队列
  */
 export const addToBuildWaitingQueue = (planet: Planet, item: WaitingQueueItem): void => {
@@ -184,8 +192,7 @@ export const addToBuildWaitingQueue = (planet: Planet, item: WaitingQueueItem): 
     planet.waitingBuildQueue = []
   }
   planet.waitingBuildQueue.push(item)
-  // 按优先级排序（数字越小越靠前）
-  planet.waitingBuildQueue.sort((a, b) => a.priority - b.priority)
+  planet.waitingBuildQueue.sort(compareWaitingItems)
 }
 
 /**
@@ -197,8 +204,7 @@ export const addToResearchWaitingQueue = (player: Player, item: WaitingQueueItem
     player.waitingResearchQueue = []
   }
   player.waitingResearchQueue.push(item)
-  // 按优先级排序
-  player.waitingResearchQueue.sort((a, b) => a.priority - b.priority)
+  player.waitingResearchQueue.sort(compareWaitingItems)
 }
 
 /**
@@ -234,7 +240,15 @@ export const processPlanetWaitingQueue = (
 ): { executed: WaitingQueueItem[]; messages: string[] } => {
   const executed: WaitingQueueItem[] = []
   const messages: string[] = []
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
+
+  for (const item of [...(planet.waitingBuildQueue || [])]) {
+    if (item.type === 'building' && item.targetLevel !== undefined &&
+        (planet.buildings[item.itemType as BuildingType] || 0) >= item.targetLevel) {
+      removeFromBuildWaitingQueue(planet, item.id)
+      messages.push('errors.levelAlreadyReached')
+    }
+  }
 
   // 检查正式队列是否为空
   const maxBuildQueue = publicLogic.getMaxBuildQueue(planet, bonuses.additionalBuildQueue)
@@ -302,6 +316,14 @@ export const processResearchWaitingQueue = (
 ): { executed: WaitingQueueItem[]; messages: string[] } => {
   const executed: WaitingQueueItem[] = []
   const messages: string[] = []
+
+  for (const item of [...(player.waitingResearchQueue || [])]) {
+    if (item.type === 'technology' && item.targetLevel !== undefined &&
+        (player.technologies[item.itemType as TechnologyType] || 0) >= item.targetLevel) {
+      removeFromResearchWaitingQueue(player, item.id)
+      messages.push('errors.levelAlreadyReached')
+    }
+  }
 
   // 检查正式队列是否为空
   const maxResearchQueue = publicLogic.getMaxResearchQueue(player.technologies)

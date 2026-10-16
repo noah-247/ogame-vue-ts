@@ -684,6 +684,7 @@ export interface WaitingQueueItem {
   addedTime: number // 添加到等待队列的时间戳
   planetId?: string // 建造队列需要标识目标星球
   source?: 'autopilot' | 'player' // B11：副官排入的等待项来源标记；缺省视为玩家手动
+  targetId?: string // 副官目标/前置链归属（MAJ-1/MAJ-6：删除目标或接管时精准撤回）
 }
 
 // ===== 自动成长副官（Autopilot，方案 A「目标等级清单」）=====

@@ -113,6 +113,8 @@ export interface AutopilotContext {
   additionalBuildQueue: number
   /** 能源产出加成百分比 */
   energyProductionBonus: number
+  /** 能源加成最早到期时间（毫秒，缺省=稳定；MAJ-7） */
+  energyBonusExpiresAt?: number
   /** 仓储加成百分比 */
   storageCapacityBonus: number
   /** 研究速度加成百分比 */
@@ -199,6 +201,8 @@ export const reconcileTargets = (
   const completed: AutopilotTarget[] = []
   config.targets = config.targets.filter(target => {
     const current = planet.buildings[target.buildingType] || 0
+    // BLK-4 防御：非法目标等级（NaN/非正数）不判完成，留待 UI 修正
+    if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) return true
     if (current >= target.targetLevel) {
       completed.push(target)
       return false
@@ -215,6 +219,8 @@ export const reconcileResearchTargets = (
   const completed: AutopilotResearchTarget[] = []
   config.targets = config.targets.filter(target => {
     const current = technologies[target.technology] || 0
+    // BLK-4 防御：非法目标等级不判完成，留待 UI 修正
+    if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) return true
     if (current >= target.targetLevel) {
       completed.push(target)
       return false
@@ -283,7 +289,12 @@ export const expandPrerequisiteChain = (
   }
 
   const need = (type: BuildingType, level: number, depth: number): void => {
-    if (depth > 24 || level <= 0) return
+    // Minor-6：深度截断时告警，避免链静默缺段
+    if (depth > 24) {
+      console.warn(`[autopilot] prerequisite chain truncated at depth 24 for ${type}:${level}`)
+      return
+    }
+    if (level <= 0) return
     const current = planet.buildings[type] || 0
     if (current >= level) return
     const alreadyPlanned = seen.get(type) || 0
@@ -380,26 +391,32 @@ export interface EnergyCheckResult {
   consumption: number
 }
 
-/** 单个待完工建筑对能源的影响（升级 +1 / 拆除 -1） */
+/** 单个待完工建筑对能源的影响（升级 +1 / 拆除 -1）。
+ * extraLevels：同一建筑在待完工集合里排了多级时，累计已算过的级数（BLK-2 附带修正），
+ * 避免每级都按 current+1 低估增量。 */
 const pendingEnergyDelta = (
   planet: Planet,
-  item: Pick<BuildQueueItem, 'type' | 'itemType'>
+  item: Pick<BuildQueueItem, 'type' | 'itemType'>,
+  extraLevels = 0,
+  energyProductionBonus = 0
 ): { prodDelta: number; consDelta: number } => {
   const buildingType = item.itemType as BuildingType
   if (!isBuildingKey(item.itemType as string)) return { prodDelta: 0, consDelta: 0 }
   const config = BUILDINGS[buildingType]
   if (!config) return { prodDelta: 0, consDelta: 0 }
-  const current = planet.buildings[buildingType] || 0
+  const current = (planet.buildings[buildingType] || 0) + extraLevels
   const hypothetical = { ...planet.buildings, [buildingType]: item.type === 'demolish' ? Math.max(0, current - 1) : current + 1 }
   const probe = { ...planet, buildings: hypothetical } as Planet
-  // 用完整公式算差值，避免手写分项公式漂移
-  const prodOf = (p: Planet): number => {
-    const solar = (p.buildings[BuildingType.SolarPlant] || 0)
-    const fusion = (p.buildings[BuildingType.FusionReactor] || 0)
-    return solar * 50 * Math.pow(1.1, solar) + fusion * 150 * Math.pow(1.15, fusion)
+  // 用完整公式算差值，避免手写分项公式漂移（Minor-1）
+  const bonuses = { energyProductionBonus }
+  const before = {
+    prod: resourceLogic.calculateEnergyProduction(planet, bonuses),
+    cons: resourceLogic.calculateEnergyConsumption(planet)
   }
-  const before = { prod: prodOf(planet), cons: resourceLogic.calculateEnergyConsumption(planet) }
-  const after = { prod: prodOf(probe), cons: resourceLogic.calculateEnergyConsumption(probe) }
+  const after = {
+    prod: resourceLogic.calculateEnergyProduction(probe, bonuses),
+    cons: resourceLogic.calculateEnergyConsumption(probe)
+  }
   return { prodDelta: after.prod - before.prod, consDelta: after.cons - before.cons }
 }
 
@@ -421,12 +438,19 @@ export const checkEnergySafeWorstOrder = (
   const consumption = resourceLogic.calculateEnergyConsumption(planet)
   let consGain = 0
   let prodLoss = 0
+  // BLK-2：待完工集合必须包含等待队列——等待项转正时不做能源检查，
+  // 同一 tick 连排两项、或跨 tick 排入未转正的项都会漏算。
   const pending: Array<Pick<BuildQueueItem, 'type' | 'itemType'>> = [
     ...planet.buildQueue.filter(i => i.type === 'building' || i.type === 'demolish'),
+    ...(planet.waitingBuildQueue || []).filter(i => i.type === 'building' || i.type === 'demolish'),
     ...extraItems
   ]
+  // 同一建筑排了多级时，后一级按 current+k-1 为基准累计（BLK-2 附带修正）
+  const bumpedLevels = new Map<BuildingType, number>()
   for (const item of pending) {
-    const { prodDelta, consDelta } = pendingEnergyDelta(planet, item)
+    const bumped = bumpedLevels.get(item.itemType as BuildingType) || 0
+    const { prodDelta, consDelta } = pendingEnergyDelta(planet, item, bumped, energyProductionBonus)
+    bumpedLevels.set(item.itemType as BuildingType, bumped + (item.type === 'demolish' ? -1 : 1))
     if (consDelta > 0) consGain += consDelta
     if (prodDelta < 0) prodLoss += -prodDelta
   }
@@ -452,7 +476,7 @@ const toStep = (
   const robotics = planet.buildings[BuildingType.RoboticsFactory] || 0
   const nanite = planet.buildings[BuildingType.NaniteFactory] || 0
   const buildTime = buildingLogic.calculateBuildingTime(buildingType, nextLevel, ctx.buildSpeedBonus, robotics, nanite)
-  const { prodDelta, consDelta } = pendingEnergyDelta(planet, { type: 'building', itemType: buildingType })
+  const { prodDelta, consDelta } = pendingEnergyDelta(planet, { type: 'building', itemType: buildingType }, 0, ctx.energyProductionBonus)
   return {
     buildingType,
     nextLevel,
@@ -641,6 +665,59 @@ const hasResourcesAfterReserve = (available: Resources, reserve: AutopilotReserv
   available.deuterium - reserve.deuterium >= cost.deuterium &&
   available.darkMatter >= cost.darkMatter
 
+/**
+ * MAJ-1：清理过期的副官等待项。
+ * 副官排入等待后，若玩家手动先把该建筑建到目标等级（或更高），等待项转正时会判
+ * levelAlreadyReached 且不移除，永久卡住队列、虚增 B7 槽位计数、挡住该建筑后续规划。
+ * 每 tick 在重推目标后执行，只移除已过期（targetLevel <= 当前等级）的副官建筑等待项。
+ */
+export const pruneAutopilotWaiting = (planet: Planet): number => {
+  const before = planet.waitingBuildQueue.length
+  planet.waitingBuildQueue = planet.waitingBuildQueue.filter(item => {
+    if (item.source !== 'autopilot' || item.type !== 'building') return true
+    const cur = planet.buildings[item.itemType as BuildingType] || 0
+    return (item.targetLevel ?? cur + 1) > cur
+  })
+  return before - planet.waitingBuildQueue.length
+}
+
+/**
+ * MAJ-6：撤回副官的建筑等待项（接管/删除目标时调用）。
+ * 不传 targetId 则撤回该星球全部副官建筑等待项；传 targetId 只撤回归属该目标的项。
+ * 已开工（正式队列）的项不受影响。
+ */
+export const withdrawAutopilotWaiting = (planet: Planet, targetId?: string): number => {
+  const before = planet.waitingBuildQueue.length
+  planet.waitingBuildQueue = planet.waitingBuildQueue.filter(item => {
+    if (item.source !== 'autopilot' || item.type !== 'building') return true
+    if (targetId !== undefined && item.targetId !== targetId) return true
+    return false
+  })
+  return before - planet.waitingBuildQueue.length
+}
+
+/** MAJ-1（研究）：清理过期的副官研究等待项 */
+export const pruneAutopilotResearchWaiting = (player: Player): number => {
+  const before = player.waitingResearchQueue.length
+  player.waitingResearchQueue = player.waitingResearchQueue.filter(item => {
+    if (item.source !== 'autopilot' || item.type !== 'technology') return true
+    const cur = player.technologies[item.itemType as TechnologyType] || 0
+    return (item.targetLevel ?? cur + 1) > cur
+  })
+  return before - player.waitingResearchQueue.length
+}
+
+/** MAJ-6（研究）：撤回副官的研究等待项 */
+export const withdrawAutopilotResearchWaiting = (player: Player, targetId?: string): number => {
+  const before = player.waitingResearchQueue.length
+  player.waitingResearchQueue = player.waitingResearchQueue.filter(item => {
+    if (item.source !== 'autopilot' || item.type !== 'technology') return true
+    if (targetId !== undefined && item.targetId !== targetId) return true
+    return false
+  })
+  return before - player.waitingResearchQueue.length
+}
+
 const subtractCost = (resources: Resources, cost: Resources): Resources => ({
   metal: resources.metal - cost.metal,
   crystal: resources.crystal - cost.crystal,
@@ -667,11 +744,17 @@ export const tickAutopilotPlanet = (
 ): AutopilotTickResult => {
   const config = planet.autopilot
   if (!config || !config.enabled || config.paused) {
+    // Minor-4：停用/暂停时清理滞后恢复标记，避免 UI 显示过期状态
+    if (config) config.canResumeAuto = false
     return emptyResult('autopilot.decisionDisabled')
   }
 
   // B12：每 tick 从实际等级重推目标进度
   const completedTargets = reconcileTargets(config, planet)
+
+  // MAJ-1：清理过期的副官等待项（玩家手动先建好导致 targetLevel <= 当前等级），
+  // 避免 levelAlreadyReached 的死项永久占槽
+  pruneAutopilotWaiting(planet)
 
   const technologies = player.technologies
   const steps = planAllSteps(planet, technologies, config, ctx)
@@ -680,15 +763,19 @@ export const tickAutopilotPlanet = (
   let downgraded = false
 
   // B7：副官永远给玩家留一个建造槽
+  // MAJ-2：只计建筑槽位项（building/demolish），舰船/防御/拆船不占建筑槽
   const capacity = publicLogic.getMaxBuildQueue(planet, ctx.additionalBuildQueue)
+  const isBuildSlotItem = (i: { type: string }): boolean => i.type === 'building' || i.type === 'demolish'
   const autopilotPending = (): number =>
-    planet.buildQueue.length + planet.waitingBuildQueue.filter(i => i.source === 'autopilot').length
+    planet.buildQueue.filter(isBuildSlotItem).length +
+    planet.waitingBuildQueue.filter(i => i.source === 'autopilot' && isBuildSlotItem(i)).length
   const maxAutopilotPending = Math.max(0, capacity - 1)
 
   // 规划用资源快照：逐笔模拟扣款，避免等待队列超发（等待项开工时才真扣款）
   let planningResources: Resources = { ...planet.resources }
 
   const enqueueStep = (step: AutopilotStep): boolean => {
+    if (isBuildingBusy(planet, step.buildingType)) return false
     if (autopilotPending() >= maxAutopilotPending) {
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedNoSlot' })
       return false
@@ -716,7 +803,8 @@ export const tickAutopilotPlanet = (
       priority: step.priority,
       addedTime: now,
       planetId: planet.id,
-      source: 'autopilot' // B11
+      source: 'autopilot', // B11
+      targetId: step.targetId || undefined // MAJ-1/MAJ-6：目标归属，用于精准撤回
     }
     waitingQueueLogic.addToBuildWaitingQueue(planet, item)
     planningResources = subtractCost(planningResources, step.cost)
@@ -724,16 +812,8 @@ export const tickAutopilotPlanet = (
     return true
   }
 
-  /** 尝试排入一步：依次做工时门槛/资源/仓库/能源检查 */
+  /** 尝试排入一步：依次做阻塞检查 → 工时门槛 → 资源/仓库/能源检查 */
   const tryEnqueue = (step: AutopilotStep): 'enqueued' | 'blocked' | 'downgraded' => {
-    // 自主模式工时门槛（B8）：超限 → 降级为执行模式，停止自主挑步
-    if (config.mode === 'auto' && step.buildTime > config.workHourThreshold) {
-      config.mode = 'execute'
-      config.downgradeReason = 'autopilot.downgradeWorkTime'
-      config.canResumeAuto = false
-      downgraded = true
-      return 'downgraded'
-    }
     if (step.blockedBy) {
       pushBlocker(blockers, step.blockedBy)
       return 'blocked'
@@ -744,12 +824,28 @@ export const tickAutopilotPlanet = (
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedPrereq' })
       return 'blocked'
     }
+    // 自主模式工时门槛（B8）：超限 → 降级为执行模式，停止自主挑步。
+    // MAJ-4：只对「真要排入」的步骤做降级判定；被科技/前置挡住、或玩家手动在建的长工时步骤不触发降级。
+    if (config.mode === 'auto' && step.buildTime > config.workHourThreshold) {
+      config.mode = 'execute'
+      config.downgradeReason = 'autopilot.downgradeWorkTime'
+      config.canResumeAuto = false
+      downgraded = true
+      return 'downgraded'
+    }
     // 仓库救援：费用超过容量先扩仓库
     const warehouseStep = planWarehouseRescue(planet, step.cost, ctx.storageCapacityBonus, ctx)
     if (warehouseStep) {
+      // BLK-3：仓库本身已在途（等待/在建）时不再重复排入，否则同一 targetLevel 的
+      // 重复项转正后判 levelAlreadyReached 且不移除，永久卡住等待队列
+      if (isBuildingBusy(planet, warehouseStep.buildingType)) {
+        pushBlocker(blockers, { kind: 'building', itemType: warehouseStep.buildingType, level: warehouseStep.nextLevel, reason: 'autopilot.blockedWaitingWarehouse' })
+        return 'blocked'
+      }
       if (config.mode === 'auto' && warehouseStep.buildTime > config.workHourThreshold) {
         config.mode = 'execute'
         config.downgradeReason = 'autopilot.downgradeWorkTime'
+        config.canResumeAuto = false
         downgraded = true
         return 'downgraded'
       }
@@ -765,12 +861,25 @@ export const tickAutopilotPlanet = (
       return 'blocked'
     }
     // B1：最坏完工顺序能源验证（含本步）
-    const energyCheck = checkEnergySafeWorstOrder(planet, ctx.energyProductionBonus, [{ type: 'building', itemType: step.buildingType }])
+    // MAJ-7：若能源加成军官在待完工项最晚完工前到期，验证按无加成计算（保守）
+    const energyHorizon = Math.max(
+      now,
+      ...planet.buildQueue
+        .filter(i => i.type === 'building' || i.type === 'demolish')
+        .map(i => i.endTime || 0)
+    )
+    const energyBonus =
+      ctx.energyBonusExpiresAt !== undefined && ctx.energyBonusExpiresAt < energyHorizon
+        ? 0
+        : ctx.energyProductionBonus
+    const energyCheck = checkEnergySafeWorstOrder(planet, energyBonus, [{ type: 'building', itemType: step.buildingType }])
     if (!energyCheck.safe) {
       const rescue = planEnergyRescue(planet, technologies, ctx)
-      if (rescue && !isBuildingBusy(planet, rescue.buildingType) &&
-          hasResourcesAfterReserve(planningResources, config.reserve, rescue.cost)) {
-        enqueueStep(rescue)
+      // Minor-2：救援步骤同样受自主模式工时门槛约束；排入失败不再记「已救援」
+      if (rescue &&
+          !(config.mode === 'auto' && rescue.buildTime > config.workHourThreshold) &&
+          hasResourcesAfterReserve(planningResources, config.reserve, rescue.cost) &&
+          enqueueStep(rescue)) {
         pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedEnergyRescue' })
       } else {
         pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedEnergy' })
@@ -791,9 +900,12 @@ export const tickAutopilotPlanet = (
   }
 
   // B8 滞后恢复判定：执行模式下，若所有剩余步骤工时 < resumeThreshold，提示可恢复
+  // MAJ-4：排除在建/等待中的步骤（玩家手动在建的长工时项不应挡住恢复）；
+  // 若目标未完成但无可规划步骤（全在途），恢复自主同样安全
   if (config.mode === 'execute') {
-    const remaining = planAllSteps(planet, technologies, config, ctx).filter(s => !s.blockedBy)
-    config.canResumeAuto = remaining.length > 0 && remaining.every(s => s.buildTime < config.resumeThreshold)
+    const remaining = planAllSteps(planet, technologies, config, ctx)
+      .filter(s => !s.blockedBy && !isBuildingBusy(planet, s.buildingType))
+    config.canResumeAuto = config.targets.length > 0 && remaining.every(s => s.buildTime < config.resumeThreshold)
   } else {
     config.canResumeAuto = false
   }
@@ -900,6 +1012,8 @@ export const tickEmpireResearch = (
 ): EmpireResearchTickResult => {
   const config = player.empireResearchAutopilot
   if (!config || !config.enabled || config.paused) {
+    // Minor-4：停用/暂停时清理滞后恢复标记，避免 UI 显示过期状态
+    if (config) config.canResumeAuto = false
     return { ...emptyResult('autopilot.decisionDisabled'), completedTargets: [] }
   }
   if (!selectResearchPlanet(player)) {
@@ -911,6 +1025,10 @@ export const tickEmpireResearch = (
   }
 
   const completedTargets = reconcileResearchTargets(config, player.technologies)
+
+  // MAJ-1：清理过期的副官研究等待项
+  pruneAutopilotResearchWaiting(player)
+
   const steps = planResearchSteps(player, config, ctx)
   const blockers: AutopilotBlocker[] = []
   let enqueued = 0
@@ -926,19 +1044,15 @@ export const tickEmpireResearch = (
   const labPlanet = selectResearchPlanet(player)!
   let planningResources: Resources = { ...labPlanet.resources }
 
+  /** 该科技是否已有在途研究（研究队列/等待队列，任何来源） */
+  const isResearchBusy = (technology: TechnologyType): boolean =>
+    player.researchQueue.some(i => i.type === 'technology' && i.itemType === technology) ||
+    player.waitingResearchQueue.some(i => i.type === 'technology' && i.itemType === technology)
+
   let decision = ''
   for (const step of steps) {
     if (autopilotPending() >= maxAutopilotPending) {
       pushBlocker(blockers, { kind: 'technology', itemType: step.technology, level: step.nextLevel, reason: 'autopilot.blockedNoSlot' })
-      break
-    }
-    // 自主模式工时门槛（B8）：研究同样适用，超限降级为执行模式
-    if (config.mode === 'auto' && step.researchTime > config.workHourThreshold) {
-      config.mode = 'execute'
-      config.downgradeReason = 'autopilot.downgradeWorkTime'
-      config.canResumeAuto = false
-      downgraded = true
-      decision = 'autopilot.decisionDowngraded'
       break
     }
     if (step.blockedByBuilding) {
@@ -951,14 +1065,21 @@ export const tickEmpireResearch = (
       continue
     }
     // 去重：同一科技已在研究队列/等待队列（任何来源）则跳过
-    const busy =
-      player.researchQueue.some(i => i.type === 'technology' && i.itemType === step.technology) ||
-      player.waitingResearchQueue.some(i => i.type === 'technology' && i.itemType === step.technology)
-    if (busy) continue
+    if (isResearchBusy(step.technology)) continue
     // 前置满足检查（含等级门槛）
     if (!checkResearchLevelRequirements(step.technology, labPlanet.buildings, player.technologies, step.nextLevel)) {
       pushBlocker(blockers, { kind: 'technology', itemType: step.technology, level: step.nextLevel, reason: 'autopilot.blockedPrereq' })
       continue
+    }
+    // 自主模式工时门槛（B8）：研究同样适用，超限降级为执行模式。
+    // MAJ-4：只对「真要排入」的步骤做降级判定，被挡住/在建的长工时步骤不触发。
+    if (config.mode === 'auto' && step.researchTime > config.workHourThreshold) {
+      config.mode = 'execute'
+      config.downgradeReason = 'autopilot.downgradeWorkTime'
+      config.canResumeAuto = false
+      downgraded = true
+      decision = 'autopilot.decisionDowngraded'
+      break
     }
     // 资源检查（含预留），在研究星球的资源快照上模拟扣款
     if (!hasResourcesAfterReserve(planningResources, config.reserve, step.cost)) {
@@ -980,7 +1101,8 @@ export const tickEmpireResearch = (
       targetLevel: step.nextLevel,
       priority: step.priority,
       addedTime: now,
-      source: 'autopilot' // B11
+      source: 'autopilot', // B11
+      targetId: step.targetId || undefined // MAJ-1/MAJ-6：目标归属
     }
     waitingQueueLogic.addToResearchWaitingQueue(player, item)
     planningResources = subtractCost(planningResources, step.cost)
@@ -988,9 +1110,11 @@ export const tickEmpireResearch = (
   }
 
   // B8 滞后恢复判定
+  // MAJ-4：排除在建/等待中的步骤，玩家手动在建的长工时研究不应挡住恢复
   if (config.mode === 'execute') {
-    const remaining = planResearchSteps(player, config, ctx).filter(s => !s.blockedByBuilding)
-    config.canResumeAuto = remaining.length > 0 && remaining.every(s => s.researchTime < config.resumeThreshold)
+    const remaining = planResearchSteps(player, config, ctx)
+      .filter(s => !s.blockedByBuilding && !isResearchBusy(s.technology))
+    config.canResumeAuto = config.targets.length > 0 && remaining.every(s => s.researchTime < config.resumeThreshold)
   } else {
     config.canResumeAuto = false
   }
