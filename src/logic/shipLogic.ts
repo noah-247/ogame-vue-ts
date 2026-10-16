@@ -1,6 +1,7 @@
 import type { Resources, BuildQueueItem, Fleet } from '@/types/game'
 import { ShipType, DefenseType, BuildingType, TechnologyType } from '@/types/game'
 import { SHIPS, DEFENSES } from '@/config/gameConfig'
+import { getGameNow } from './gameTime'
 
 // 用于生成唯一ID的计数器
 let shipQueueIdCounter = 0
@@ -160,7 +161,7 @@ export const checkShieldDomeLimit = (
  * 创建舰船建造队列项
  */
 export const createShipQueueItem = (shipType: ShipType, quantity: number, buildTime: number): BuildQueueItem => {
-  const now = Date.now()
+  const now = getGameNow()
   shipQueueIdCounter++
   return {
     id: `ship_${now}_${shipQueueIdCounter}`,
@@ -176,7 +177,7 @@ export const createShipQueueItem = (shipType: ShipType, quantity: number, buildT
  * 创建防御设施建造队列项
  */
 export const createDefenseQueueItem = (defenseType: DefenseType, quantity: number, buildTime: number): BuildQueueItem => {
-  const now = Date.now()
+  const now = getGameNow()
   shipQueueIdCounter++
   return {
     id: `defense_${now}_${shipQueueIdCounter}`,
@@ -299,7 +300,7 @@ export const calculateShipScrapTime = (
  * 创建舰船拆除队列项
  */
 export const createShipScrapQueueItem = (shipType: ShipType, quantity: number, scrapTime: number): BuildQueueItem => {
-  const now = Date.now()
+  const now = getGameNow()
   shipQueueIdCounter++
   return {
     id: `scrap_ship_${now}_${shipQueueIdCounter}`,

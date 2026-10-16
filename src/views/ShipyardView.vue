@@ -201,6 +201,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { useGameStore } from '@/stores/gameStore'
   import { useDetailDialogStore } from '@/stores/detailDialogStore'
   import { useI18n } from '@/composables/useI18n'
@@ -412,7 +413,7 @@
     }
 
     // 检查等待队列是否已满
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxWaitingQueue = waitingQueueLogic.getMaxBuildWaitingQueue(planet.value, bonuses.additionalBuildQueue)
     const waitingQueue = planet.value.waitingBuildQueue || []
     if (waitingQueue.length >= maxWaitingQueue) {

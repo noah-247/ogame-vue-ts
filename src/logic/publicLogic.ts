@@ -10,6 +10,7 @@ import * as officerLogic from '@/logic/officerLogic'
 import * as resourceLogic from '@/logic/resourceLogic'
 import { scaleResources } from '@/utils/speed'
 import { BUILDINGS, TECHNOLOGIES, SHIPS, DEFENSES } from '@/config/gameConfig'
+import { getGameNow } from './gameTime'
 
 /**
  * 获取特定等级的升级条件
@@ -117,7 +118,7 @@ export const getResourceProduction = (
   }
 ): Resources => {
   // 计算当前激活的军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
   // 根据建筑等级和军官加成计算资源产量
   const base = resourceLogic.calculateResourceProduction(planet, bonuses, techBonuses)
   return scaleResources(base, resourceSpeed)
@@ -131,7 +132,7 @@ export const getResourceProduction = (
  */
 export const getResourceCapacity = (planet: Planet, officers: Record<OfficerType, Officer>): Resources => {
   // 计算当前激活的军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
   // 根据仓库建筑等级和军官加成计算存储容量
   return resourceLogic.calculateResourceCapacity(planet, bonuses.storageCapacityBonus)
 }

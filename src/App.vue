@@ -553,6 +553,7 @@
   } from 'lucide-vue-next'
   import * as gameLogic from '@/logic/gameLogic'
   import * as autopilotLogic from '@/logic/autopilotLogic'
+  import { getGameNow, setTimeOffset } from '@/logic/gameTime'
   import * as planetLogic from '@/logic/planetLogic'
   import * as officerLogic from '@/logic/officerLogic'
   import * as buildingValidation from '@/logic/buildingValidation'
@@ -581,6 +582,7 @@
 
   const router = useRouter()
   const gameStore = useGameStore()
+  watch(() => gameStore.timeOffset, offset => setTimeOffset(offset || 0), { immediate: true, flush: 'sync' })
   const universeStore = useUniverseStore()
   const npcStore = useNPCStore()
   const { isDark } = useTheme()
@@ -676,7 +678,7 @@
   // 使用直接计算，不再缓存
   const production = computed(() => {
     if (!planet.value) return null
-    const now = Date.now()
+    const now = getGameNow()
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
     const base = resourceLogic.calculateResourceProduction(planet.value, {
       resourceProductionBonus: bonuses.resourceProductionBonus,
@@ -688,7 +690,7 @@
 
   const capacity = computed(() => {
     if (!planet.value) return null
-    const now = Date.now()
+    const now = getGameNow()
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
     return resourceLogic.calculateResourceCapacity(planet.value, bonuses.storageCapacityBonus)
   })
@@ -829,7 +831,7 @@
   const initGame = async () => {
     const shouldInit = gameLogic.shouldInitializeGame(gameStore.player.planets)
     if (!shouldInit) {
-      const now = Date.now()
+      const now = getGameNow()
       // 迁移矿脉储量数据（为没有矿脉数据的星球初始化）
       gameStore.player.planets.forEach(planet => {
         oreDepositLogic.migrateOreDeposits(planet)
@@ -943,24 +945,31 @@
     gameStore.player.researchQueue = result.updatedResearchQueue
 
     // M1 自动成长副官 tick：在线 tick 与快转各推进一次（离线返回不追补，靠等待队列自然推进）
-    // try/catch 包裹：副官异常不得影响主更新流程
-    try {
+    // Minor-12：逐星球 try/catch，单星球异常不影响其他星球与帝国研究
+    {
       const officerBonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
       const autopilotCtx: autopilotLogic.AutopilotContext = {
         buildSpeedBonus: officerBonuses.buildingSpeedBonus,
         additionalBuildQueue: officerBonuses.additionalBuildQueue,
         energyProductionBonus: officerBonuses.energyProductionBonus,
+        energyBonusExpiresAt: officerLogic.getEnergyBonusExpiresAt(gameStore.player.officers, now), // MAJ-7
         storageCapacityBonus: officerBonuses.storageCapacityBonus,
         researchSpeedBonus: officerBonuses.researchSpeedBonus
       }
       gameStore.player.planets.forEach(planet => {
-        const tickResult = autopilotLogic.tickAutopilotPlanet(gameStore.player, planet, now, autopilotCtx)
-        autopilotTickResults.value.set(planet.id, tickResult)
+        try {
+          const tickResult = autopilotLogic.tickAutopilotPlanet(gameStore.player, planet, now, autopilotCtx)
+          autopilotTickResults.value.set(planet.id, tickResult)
+        } catch (error) {
+          console.error(`[autopilot] tick failed for planet ${planet.id}:`, error)
+        }
       })
-      const researchTickResult = autopilotLogic.tickEmpireResearch(gameStore.player, now, autopilotCtx)
-      autopilotTickResults.value.set('__empire__', researchTickResult)
-    } catch (error) {
-      console.error('[autopilot] tick failed:', error)
+      try {
+        const researchTickResult = autopilotLogic.tickEmpireResearch(gameStore.player, now, autopilotCtx)
+        autopilotTickResults.value.set('__empire__', researchTickResult)
+      } catch (error) {
+        console.error('[autopilot] empire research tick failed:', error)
+      }
     }
 
     // 处理舰队任务
@@ -1060,22 +1069,23 @@
   }
 
   const updateGame = async () => {
-    // B10 修复：快转后 gameTime/lastUpdate 已被推到未来，下一次 tick 必须从未来
-    // 虚拟时间继续推进；若用 Date.now() 会因 timeDiff<=0 被重置时间戳，
-    // 快转推进的时间等于被吃掉。
-    await updateGameAt(Math.max(Date.now(), gameStore.gameTime || 0))
+    // BLK-1：游戏时间 = Date.now() + timeOffset（虚拟时间），随真实时间持续推进；
+    // 快转只增加 timeOffset，不再把 gameTime 冻在未来。
+    await updateGameAt(getGameNow())
   }
 
   // 一键时间快转：立即结算未来 N 小时的游戏状态
-  // gameTime 会被推到未来时间点，星球 lastUpdate 同步跟进，后续每秒 tick 从未来时间继续，不会重复结算；
+  // BLK-1：只增加 timeOffset（持久化），后续每秒 tick 用 getGameNow() 继续推进，
+  // 不会冻结、不会倒退、不会重复结算；
   // 存档由 pinia-plugin-persistedstate 在状态变更时自动持久化到 localStorage，UI 通过 Vue 响应式自动刷新
   const timeSkip = async (hours: number) => {
     if (gameStore.isPaused) {
       toast.info(t('settings.gamePaused'))
       return
     }
-    const futureNow = Date.now() + hours * 3600 * 1000
-    await updateGameAt(futureNow, { silent: true, hours })
+    gameStore.timeOffset = (gameStore.timeOffset || 0) + hours * 3600 * 1000
+    setTimeOffset(gameStore.timeOffset)
+    await updateGameAt(getGameNow(), { silent: true, hours })
   }
 
   // 处理时间快转事件（总览页按钮派发）
@@ -1086,7 +1096,7 @@
     }
   }
 
-  const processMissionArrival = async (mission: FleetMission, now: number = Date.now()) => {
+  const processMissionArrival = async (mission: FleetMission, now: number = getGameNow()) => {
     // 从宇宙星球地图中查找目标星球
     const targetKey = gameLogic.generatePositionKey(
       mission.targetPosition.galaxy,
@@ -1652,7 +1662,7 @@
   }
 
   // NPC任务处理
-  const processNPCMissionArrival = (npc: NPC, mission: FleetMission, now: number = Date.now()) => {
+  const processNPCMissionArrival = (npc: NPC, mission: FleetMission, now: number = getGameNow()) => {
     if (mission.missionType === MissionType.Recycle) {
       // NPC回收任务到达
       const debrisId = mission.debrisFieldId
@@ -1805,7 +1815,7 @@
   }
 
   // 处理导弹攻击到达
-  const processMissileAttackArrival = async (missileAttack: MissileAttack, now: number = Date.now()) => {
+  const processMissileAttackArrival = async (missileAttack: MissileAttack, now: number = getGameNow()) => {
     // 动态导入导弹逻辑
     const missileLogic = await import('@/logic/missileLogic')
 
@@ -2487,6 +2497,8 @@
   // 初始化游戏
   onMounted(async () => {
     try {
+      // BLK-1：从存档恢复虚拟时间偏移（快转累积），之后 getGameNow() 全局一致
+      setTimeOffset(gameStore.timeOffset || 0)
       // 如果是首次访问（没有星球数据），使用浏览器语言自动检测
       const isFirstVisit = gameStore.player.planets.length === 0
       if (isFirstVisit) {

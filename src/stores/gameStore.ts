@@ -24,6 +24,9 @@ import { serializeGameSave, deserializeGameSave } from '@/stores/gameSaveSeriali
 export const useGameStore = defineStore('game', {
   state: () => ({
     gameTime: Date.now(),
+    // BLK-1 虚拟时间偏移（毫秒，持久化）：gameNow = Date.now() + timeOffset。
+    // 快转只增加 offset，游戏时钟随真实时间持续推进，不冻结、不倒退。
+    timeOffset: 0,
     isPaused: false,
     gameSpeed: 1,
     battleToFinish: true, // 战斗到底模式：false=经典模式(6回合平局)，true=战斗到底(最多100回合)

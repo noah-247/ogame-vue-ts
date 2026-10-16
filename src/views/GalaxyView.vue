@@ -914,11 +914,11 @@
                   </div>
                   <div>
                     <span class="text-muted-foreground">{{ t('galaxyView.phalanxArrival') }}:</span>
-                    <span class="ml-1">{{ formatTime(Math.max(0, Math.floor((fleet.arrivalTime - Date.now()) / 1000))) }}</span>
+                    <span class="ml-1">{{ formatTime(Math.max(0, Math.floor((fleet.arrivalTime - getGameNow()) / 1000))) }}</span>
                   </div>
                   <div v-if="fleet.returnTime">
                     <span class="text-muted-foreground">{{ t('galaxyView.phalanxReturn') }}:</span>
-                    <span class="ml-1">{{ formatTime(Math.max(0, Math.floor((fleet.returnTime - Date.now()) / 1000))) }}</span>
+                    <span class="ml-1">{{ formatTime(Math.max(0, Math.floor((fleet.returnTime - getGameNow()) / 1000))) }}</span>
                   </div>
                 </div>
               </div>
@@ -943,6 +943,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { useGameStore } from '@/stores/gameStore'
   import { useUniverseStore } from '@/stores/universeStore'
   import { useNPCStore } from '@/stores/npcStore'

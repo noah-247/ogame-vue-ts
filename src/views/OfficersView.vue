@@ -157,6 +157,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { useGameStore } from '@/stores/gameStore'
   import { computed, ref } from 'vue'
   import { OfficerType } from '@/types/game'
@@ -217,7 +218,7 @@
   // 检查军官是否激活
   const isOfficerActive = (officerType: OfficerType): boolean => {
     const officer = gameStore.player.officers[officerType]
-    const now = Date.now()
+    const now = getGameNow()
     return officer.active && (!officer.expiresAt || officer.expiresAt > now)
   }
 
@@ -231,7 +232,7 @@
   const getRemainingTime = (officerType: OfficerType): number => {
     const officer = gameStore.player.officers[officerType]
     if (!officer.expiresAt) return 0
-    const now = Date.now()
+    const now = getGameNow()
     return Math.max(0, Math.floor((officer.expiresAt - now) / 1000))
   }
 
@@ -285,7 +286,7 @@
     // 追踪资源消耗（在扣除前）
     gameLogic.trackResourceConsumption(gameStore.player, cost)
     resourceLogic.deductResources(gameStore.currentPlanet.resources, cost)
-    const now = Date.now()
+    const now = getGameNow()
     gameStore.player.officers[officerType] = officerLogic.renewOfficerExpiration(gameStore.player.officers[officerType], duration, now)
     return true
   }

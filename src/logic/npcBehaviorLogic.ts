@@ -24,6 +24,7 @@ export type { TradeOffer, IntelReport, JointAttackInvite, IntelType, AidNotifica
 import * as fleetLogic from './fleetLogic'
 import * as diplomaticLogic from './diplomaticLogic'
 import * as resourceLogic from './resourceLogic'
+import { getGameNow } from './gameTime'
 import { DIPLOMATIC_CONFIG, SHIPS, DEFENSES } from '@/config/gameConfig'
 
 // ========== 敌对NPC增强行为类型定义 ==========
@@ -447,19 +448,19 @@ const calculatePlayerTotalProduction = (player: Player): { metal: number; crysta
   const bonuses = player.officers
     ? {
         resourceProductionBonus: Object.values(player.officers).reduce((sum, officer) => {
-          if (officer.active && officer.expiresAt && officer.expiresAt > Date.now()) {
+          if (officer.active && officer.expiresAt && officer.expiresAt > getGameNow()) {
             return sum + (officer.bonuses?.resourceProductionBonus || 0)
           }
           return sum
         }, 0),
         darkMatterProductionBonus: Object.values(player.officers).reduce((sum, officer) => {
-          if (officer.active && officer.expiresAt && officer.expiresAt > Date.now()) {
+          if (officer.active && officer.expiresAt && officer.expiresAt > getGameNow()) {
             return sum + (officer.bonuses?.darkMatterProductionBonus || 0)
           }
           return sum
         }, 0),
         energyProductionBonus: Object.values(player.officers).reduce((sum, officer) => {
-          if (officer.active && officer.expiresAt && officer.expiresAt > Date.now()) {
+          if (officer.active && officer.expiresAt && officer.expiresAt > getGameNow()) {
             return sum + (officer.bonuses?.energyProductionBonus || 0)
           }
           return sum
@@ -660,7 +661,7 @@ export const sendDefenseFleet = (npc: NPC, _player: Player, targetPlanet: Planet
   const minSpeed = getFleetMinSpeed(defenseFleet)
   const flightTime = fleetLogic.calculateFlightTime(distance, minSpeed)
 
-  const currentTime = Date.now()
+  const currentTime = getGameNow()
   const arrivalTime = currentTime + flightTime
 
   // 创建协防任务
@@ -818,6 +819,7 @@ export const createNPCSpyMission = (
   const flightTime = fleetLogic.calculateFlightTime(distance, spyProbeSpeed)
 
   const now = Date.now()
+  const gameNow = getGameNow()
   const mission: FleetMission = {
     id: `npc-spy-${npc.id}-${now}`,
     playerId: npc.id,
@@ -829,8 +831,8 @@ export const createNPCSpyMission = (
     missionType: MissionType.Spy,
     fleet,
     cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-    departureTime: now,
-    arrivalTime: now + flightTime * 1000,
+    departureTime: gameNow,
+    arrivalTime: gameNow + flightTime * 1000,
     status: 'outbound'
   }
 
@@ -902,7 +904,7 @@ export const processNPCSpyArrival = (
 
   // 舰队返回
   mission.status = 'returning'
-  mission.returnTime = Date.now() + (mission.arrivalTime - mission.departureTime)
+  mission.returnTime = getGameNow() + (mission.arrivalTime - mission.departureTime)
 
   return { spiedNotification, spyReport }
 }
@@ -1053,6 +1055,7 @@ export const createNPCAttackMission = (
   const flightTime = fleetLogic.calculateFlightTime(distance, minSpeed)
 
   const now = Date.now()
+  const gameNow = getGameNow()
   const mission: FleetMission = {
     id: `npc-attack-${npc.id}-${now}`,
     playerId: npc.id,
@@ -1064,8 +1067,8 @@ export const createNPCAttackMission = (
     missionType: MissionType.Attack,
     fleet: attackFleet,
     cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-    departureTime: now,
-    arrivalTime: now + flightTime * 1000,
+    departureTime: gameNow,
+    arrivalTime: gameNow + flightTime * 1000,
     status: 'outbound'
   }
 
@@ -1487,7 +1490,7 @@ export const accelerateNPCMission = (npc: NPC, missionId: string, arriveInSecond
     return false
   }
 
-  const now = Date.now()
+  const now = getGameNow()
   const flightTime = arriveInSeconds * 1000 // 飞行时间（毫秒）
 
   // 同时修改 departureTime 和 arrivalTime，保持飞行时间为指定秒数
@@ -1514,7 +1517,7 @@ export const accelerateAllNPCMissions = (npc: NPC, arriveInSeconds = 5, player?:
     return 0
   }
 
-  const now = Date.now()
+  const now = getGameNow()
   const flightTime = arriveInSeconds * 1000
   let count = 0
 
@@ -1636,6 +1639,7 @@ export const createNPCRecycleMission = (npc: NPC, debris: DebrisField, player: P
   const flightTime = fleetLogic.calculateFlightTime(distance, recyclerSpeed)
 
   const now = Date.now()
+  const gameNow = getGameNow()
   const mission: FleetMission = {
     id: `npc-recycle-${npc.id}-${now}`,
     playerId: npc.id,
@@ -1647,8 +1651,8 @@ export const createNPCRecycleMission = (npc: NPC, debris: DebrisField, player: P
     missionType: MissionType.Recycle,
     fleet,
     cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-    departureTime: now,
-    arrivalTime: now + flightTime * 1000,
+    departureTime: gameNow,
+    arrivalTime: gameNow + flightTime * 1000,
     status: 'outbound'
   }
 
@@ -1814,6 +1818,7 @@ export const createNPCRevengeMission = (npc: NPC, allPlanets: Planet[], config: 
   const flightTime = fleetLogic.calculateFlightTime(distance, minSpeed)
 
   const now = Date.now()
+  const gameNow = getGameNow()
   const mission: FleetMission = {
     id: `npc-revenge-${npc.id}-${now}`,
     playerId: npc.id,
@@ -1825,8 +1830,8 @@ export const createNPCRevengeMission = (npc: NPC, allPlanets: Planet[], config: 
     missionType: MissionType.Attack,
     fleet: revengeFleet,
     cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-    departureTime: now,
-    arrivalTime: now + flightTime * 1000,
+    departureTime: gameNow,
+    arrivalTime: gameNow + flightTime * 1000,
     status: 'outbound'
   }
 
@@ -2152,6 +2157,7 @@ export const createHarassmentMission = (
   const flightTime = fleetLogic.calculateFlightTime(distance, fleetMinSpeed)
 
   const now = Date.now()
+  const gameNow = getGameNow()
   const mission: FleetMission = {
     id: `npc-harass-${harassmentType}-${npc.id}-${now}`,
     playerId: npc.id,
@@ -2163,8 +2169,8 @@ export const createHarassmentMission = (
     missionType,
     fleet,
     cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-    departureTime: now,
-    arrivalTime: now + flightTime * 1000,
+    departureTime: gameNow,
+    arrivalTime: gameNow + flightTime * 1000,
     status: 'outbound'
   }
 
@@ -2451,6 +2457,7 @@ export const executeEscalatedRevenge = (
   const revengeMinSpeed = getFleetMinSpeed(revengeFleet)
   const flightTime = fleetLogic.calculateFlightTime(distance, revengeMinSpeed)
 
+  const gameNow = getGameNow()
   const mission: FleetMission = {
     id: `npc-revenge-escalated-${revengeLevel.name}-${npc.id}-${now}`,
     playerId: npc.id,
@@ -2462,8 +2469,8 @@ export const executeEscalatedRevenge = (
     missionType: MissionType.Attack,
     fleet: revengeFleet,
     cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-    departureTime: now,
-    arrivalTime: now + flightTime * 1000,
+    departureTime: gameNow,
+    arrivalTime: gameNow + flightTime * 1000,
     status: 'outbound'
   }
 
@@ -2568,6 +2575,7 @@ export const callAlliesForRevenge = (
     const flightTime = fleetLogic.calculateFlightTime(distance, allyMinSpeed)
 
     const now = Date.now()
+  const gameNow = getGameNow()
     const mission: FleetMission = {
       id: `npc-ally-revenge-${allyNpc.id}-${now}`,
       playerId: allyNpc.id,
@@ -2579,8 +2587,8 @@ export const callAlliesForRevenge = (
       missionType: MissionType.Attack,
       fleet: allyFleet,
       cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-      departureTime: now,
-      arrivalTime: now + flightTime * 1000,
+      departureTime: gameNow,
+      arrivalTime: gameNow + flightTime * 1000,
       status: 'outbound'
     }
 
@@ -3703,6 +3711,7 @@ export const checkAllyMutualDefense = (
     const flightTime = fleetLogic.calculateFlightTime(distance, defenseMinSpeed)
 
     const now = Date.now()
+  const gameNow = getGameNow()
     const mission: FleetMission = {
       id: `npc-mutual-defense-${allyNpc.id}-${now}`,
       playerId: allyNpc.id,
@@ -3714,8 +3723,8 @@ export const checkAllyMutualDefense = (
       missionType: MissionType.Attack,
       fleet: defenseFleet,
       cargo: { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
-      departureTime: now,
-      arrivalTime: now + flightTime * 1000,
+      departureTime: gameNow,
+      arrivalTime: gameNow + flightTime * 1000,
       status: 'outbound'
     }
 

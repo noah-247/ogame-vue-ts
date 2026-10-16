@@ -1,3 +1,4 @@
+import { getGameNow } from './gameTime'
 import type { Planet, Resources } from '@/types/game'
 import { BuildingType, ShipType, DefenseType } from '@/types/game'
 import { MOON_CONFIG, FLEET_STORAGE_CONFIG } from '@/config/gameConfig'
@@ -118,7 +119,7 @@ export const tryGenerateMoon = (
     },
     buildQueue: [],
     waitingBuildQueue: [], // 等待队列
-    lastUpdate: Date.now(),
+    lastUpdate: getGameNow(),
     maxSpace: MOON_CONFIG.baseFields, // OGame规则：月球初始只有1格空间
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: true,

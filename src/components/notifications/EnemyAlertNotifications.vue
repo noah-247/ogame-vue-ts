@@ -147,6 +147,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useGameStore } from '@/stores/gameStore'
@@ -170,13 +171,13 @@
   const isOpen = ref(false)
   const detailDialogOpen = ref(false)
   const selectedAlert = ref<IncomingFleetAlert | null>(null)
-  const currentTime = ref(Date.now())
+  const currentTime = ref(getGameNow())
   let timeInterval: ReturnType<typeof setInterval> | null = null
 
   // 启动计时器，用于实时更新倒计时
   onMounted(() => {
     timeInterval = setInterval(() => {
-      currentTime.value = Date.now()
+      currentTime.value = getGameNow()
     }, 1000)
   })
 

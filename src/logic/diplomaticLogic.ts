@@ -24,6 +24,7 @@ import type {
   GiftRejectedNotification
 } from '@/types/game'
 import { RelationStatus as RS, DiplomaticEventType as DET } from '@/types/game'
+import { getGameNow } from './gameTime'
 
 /**
  * 获取翻译文本的辅助函数
@@ -722,7 +723,7 @@ export const acceptNPCGift = (player: Player, npc: NPC, giftNotification: GiftNo
     const mainPlanet = player.planets[0]
     if (mainPlanet) {
       // 计算军官加成
-      const bonuses = officerLogic.calculateActiveBonuses(player.officers, Date.now())
+      const bonuses = officerLogic.calculateActiveBonuses(player.officers, getGameNow())
       // 使用安全添加函数，超出容量的资源会丢失
       resourceLogic.addResourcesSafely(mainPlanet, giftNotification.resources, bonuses.storageCapacityBonus)
     }

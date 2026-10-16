@@ -288,6 +288,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { ref, computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { toast } from 'vue-sonner'
@@ -633,7 +634,7 @@
   Object.values(OfficerType).forEach(officer => {
     const officerData = gameStore.player.officers[officer]
     if (officerData && officerData.expiresAt) {
-      const daysLeft = Math.ceil((officerData.expiresAt - Date.now()) / (1000 * 60 * 60 * 24))
+      const daysLeft = Math.ceil((officerData.expiresAt - getGameNow()) / (1000 * 60 * 60 * 24))
       officerDays.value[officer] = Math.max(0, daysLeft)
     } else {
       officerDays.value[officer] = 0
@@ -791,7 +792,7 @@
       onButtonClick: (item, days) => {
         const officerType = item as OfficerType
         officerDays.value[officerType] = days
-        const now = Date.now()
+        const now = getGameNow()
         const expiresAt = now + days * 24 * 60 * 60 * 1000
         if (!gameStore.player.officers[officerType]) {
           gameStore.player.officers[officerType] = {
@@ -991,7 +992,7 @@
 
   // 一键完成所有队列和任务
   const completeAllQueues = () => {
-    const now = Date.now()
+    const now = getGameNow()
     let buildingCount = 0
     let researchCount = 0
     let missionCount = 0

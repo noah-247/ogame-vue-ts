@@ -580,6 +580,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { useGameStore } from '@/stores/gameStore'
   import { useUniverseStore } from '@/stores/universeStore'
   import { useNPCStore } from '@/stores/npcStore'
@@ -668,12 +669,12 @@
   const alertDialogCallback = ref<(() => void) | null>(null)
 
   // 当前时间（响应式）
-  const currentTime = ref(Date.now())
+  const currentTime = ref(getGameNow())
   let timeInterval: number | null = null
 
   // 计算最大舰队任务槽位
   const maxFleetMissions = computed(() => {
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const computerTechLevel = gameStore.player.technologies[TechnologyType.ComputerTechnology] || 0
     return publicLogic.getMaxFleetMissions(bonuses.additionalFleetSlots, computerTechLevel)
   })
@@ -854,7 +855,7 @@
   onMounted(() => {
     // 启动定时器更新当前时间
     timeInterval = window.setInterval(() => {
-      currentTime.value = Date.now()
+      currentTime.value = getGameNow()
     }, 1000) // 每秒更新一次
 
     const { galaxy, system, position, mission, gift } = route.query
@@ -1178,7 +1179,7 @@
 
   // 计算燃料消耗（包含货物重量影响）
   const getFuelConsumption = (): number => {
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     return shipLogic.calculateFleetFuelConsumption(selectedFleet.value, bonuses.fuelConsumptionReduction, cargo.value)
   }
 
@@ -1186,7 +1187,7 @@
   const getFlightTime = (): number => {
     if (!planet.value) return 0
     const distance = fleetLogic.calculateDistance(planet.value.position, targetPosition.value)
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const minSpeed = shipLogic.calculateFleetMinSpeed(selectedFleet.value, bonuses.fleetSpeedBonus)
     let flightTime = fleetLogic.calculateFlightTime(distance, minSpeed)
 
@@ -1286,7 +1287,7 @@
     const shouldDeductCargo = missionType === MissionType.Transport
     shipValidation.executeFleetDispatch(gameStore.currentPlanet, fleet, validation.fuelNeeded!, shouldDeductCargo, cargo)
     const distance = fleetLogic.calculateDistance(gameStore.currentPlanet.position, targetPosition)
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const minSpeed = shipLogic.calculateFleetMinSpeed(fleet, bonuses.fleetSpeedBonus)
     let flightTime = fleetLogic.calculateFlightTime(distance, minSpeed)
 
@@ -1373,7 +1374,7 @@
   const recallFleet = (missionId: string): boolean => {
     const mission = gameStore.player.fleetMissions.find(m => m.id === missionId)
     if (!mission) return false
-    return fleetLogic.recallFleetMission(mission, Date.now())
+    return fleetLogic.recallFleetMission(mission, getGameNow())
   }
 
   // 召回舰队

@@ -134,6 +134,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { computed, ref, onUnmounted, watch } from 'vue'
   import { ListOrdered, Inbox } from 'lucide-vue-next'
   import { Button } from '@/components/ui/button'
@@ -159,7 +160,7 @@
   const activeTab = ref('all')
 
   // 响应式时间戳，用于驱动时间和进度的动态更新
-  const currentTime = ref(Date.now())
+  const currentTime = ref(getGameNow())
   let timerInterval: ReturnType<typeof setInterval> | null = null
 
   // 当弹窗打开时启动计时器，关闭时停止
@@ -167,7 +168,7 @@
     if (open) {
       // 启动每秒更新的计时器
       timerInterval = setInterval(() => {
-        currentTime.value = Date.now()
+        currentTime.value = getGameNow()
       }, 1000)
     } else {
       // 停止计时器

@@ -187,6 +187,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { useGameStore } from '@/stores/gameStore'
   import { useDetailDialogStore } from '@/stores/detailDialogStore'
   import { useI18n } from '@/composables/useI18n'
@@ -412,7 +413,7 @@
     }
 
     // 检查建造队列是否已满（只计算建筑类型的队列项）
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxQueue = publicLogic.getMaxBuildQueue(planet.value, bonuses.additionalBuildQueue)
     const buildingQueueCount = planet.value.buildQueue.filter(item => item.type === 'building' || item.type === 'demolish').length
     if (buildingQueueCount >= maxQueue) {
@@ -445,7 +446,7 @@
   const getBuildingTime = (buildingType: BuildingType, targetLevel: number): number => {
     if (!planet.value) return 0
 
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
 
     // 获取机器人工厂和纳米工厂等级
     const roboticsFactoryLevel = planet.value.buildings[BuildingType.RoboticsFactory] || 0
@@ -501,7 +502,7 @@ ${refund.darkMatter ? `${t('resources.darkMatter')}: ${formatNumber(refund.darkM
     if (getBuildingLevel(buildingType) <= 0) return false
 
     // 检查建造队列是否已满（只计算建筑类型的队列项）
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxQueue = publicLogic.getMaxBuildQueue(planet.value, bonuses.additionalBuildQueue)
     const buildingQueueCount = planet.value.buildQueue.filter(item => item.type === 'building' || item.type === 'demolish').length
     if (buildingQueueCount >= maxQueue) {
@@ -555,7 +556,7 @@ ${refund.darkMatter ? `${t('resources.darkMatter')}: ${formatNumber(refund.darkM
 
     // 建筑可以多次排队（比如金属矿升级到2、3、4、5级）
     // 只需要检查等待队列是否已满
-    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, Date.now())
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxWaitingQueue = waitingQueueLogic.getMaxBuildWaitingQueue(planet.value, bonuses.additionalBuildQueue)
     if (waitingQueue.length >= maxWaitingQueue) {
       return false

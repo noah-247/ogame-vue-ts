@@ -23,6 +23,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { useGameStore } from '@/stores/gameStore'
@@ -42,7 +43,7 @@
   // 计算能量产量
   const energyProduction = computed(() => {
     if (!planet.value) return 0
-    const now = Date.now()
+    const now = getGameNow()
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
     return resourceLogic.calculateEnergyProduction(planet.value, { energyProductionBonus: bonuses.energyProductionBonus })
   })

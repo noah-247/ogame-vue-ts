@@ -2,8 +2,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Planet, Player } from '@/types/game'
 import { BuildingType } from '@/types/game'
 import { processGameUpdate } from '@/logic/gameLogic'
+import { getGameNow, setTimeOffset } from '@/logic/gameTime'
 import * as buildingLogic from '@/logic/buildingLogic'
-import { setNow, restore } from '../utils/time'
+import { setNow, jump, restore } from '../utils/time'
 
 afterEach(restore)
 
@@ -147,5 +148,55 @@ describe('processGameUpdate 逐事件结算 (B1)', () => {
     expect(planet.buildQueue).toHaveLength(0)
 
     expect(completions).toEqual(['solarPlant:7', 'crystalMine:9'])
+  })
+})
+
+describe('虚拟时间偏移 (BLK-1)', () => {
+  afterEach(() => setTimeOffset(0))
+
+  it('快转后连续 tick 资源持续增长（不冻结）', () => {
+    setNow(T0)
+    setTimeOffset(8 * HOUR) // 模拟一次 8h 快转
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 1, [BuildingType.MetalMine]: 1 })
+    const player = makePlayer([planet])
+    const now1 = getGameNow()
+    planet.lastUpdate = now1 - HOUR
+    processGameUpdate(player, now1, 1)
+    const metal1 = planet.resources.metal
+    expect(metal1).toBeGreaterThan(0)
+    // 真实时间 +1s：虚拟时间继续推进，产量继续累积（旧 Math.max 方案这里 timeDiff=0 冻结）
+    jump(1000)
+    processGameUpdate(player, getGameNow(), 1)
+    expect(planet.resources.metal).toBeGreaterThan(metal1)
+  })
+
+  it('快转后新开工的建造不会瞬间完工', () => {
+    setNow(T0)
+    setTimeOffset(8 * HOUR)
+    const item = buildingLogic.createBuildQueueItem(BuildingType.MetalMine, 2, 3600)
+    const now = getGameNow()
+    // startTime 必须用虚拟时间（≈ now），不能是墙钟时间（旧 bug：墙钟 startTime 落后 8h，下一 tick 即完工）
+    expect(item.startTime).toBeGreaterThanOrEqual(now - 1000)
+    expect(item.endTime).toBe(item.startTime + 3600 * 1000)
+    const planet = makePlanet(
+      { [BuildingType.SolarPlant]: 1, [BuildingType.MetalMine]: 1 },
+      { buildQueue: [item], lastUpdate: now - 1000 }
+    )
+    const player = makePlayer([planet])
+    jump(1000)
+    processGameUpdate(player, getGameNow(), 1)
+    expect(planet.buildings[BuildingType.MetalMine]).toBe(1) // 1h 工时，1s 后不应完工
+    expect(planet.buildQueue).toHaveLength(1)
+  })
+
+  it('重复快转只向前推进，不倒退', () => {
+    setNow(T0)
+    setTimeOffset(8 * HOUR)
+    const now1 = getGameNow()
+    setTimeOffset(9 * HOUR) // 冻结窗口内再快转 1h
+    const now2 = getGameNow()
+    // 旧 Math.max 方案：futureNow < gameTime 会回拨；新方案单调递增
+    expect(now2).toBeGreaterThan(now1)
+    expect(now2 - now1).toBe(HOUR)
   })
 })

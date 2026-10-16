@@ -238,6 +238,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { useGameStore } from '@/stores/gameStore'
   import { useI18n } from '@/composables/useI18n'
   import { useGameConfig } from '@/composables/useGameConfig'
@@ -304,7 +305,7 @@
   // 资源产量详细breakdown
   const productionBreakdown = computed(() => {
     if (!planet.value) return null
-    return resourceLogic.calculateProductionBreakdown(planet.value, gameStore.player.officers, Date.now(), gameStore.gameSpeed, techBonuses.value)
+    return resourceLogic.calculateProductionBreakdown(planet.value, gameStore.player.officers, getGameNow(), gameStore.gameSpeed, techBonuses.value)
   })
 
   // 资源消耗详细breakdown

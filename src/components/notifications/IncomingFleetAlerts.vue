@@ -23,6 +23,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { useGameStore } from '@/stores/gameStore'
   import { Button } from '@/components/ui/button'
@@ -38,12 +39,12 @@
   const { t } = useI18n()
 
   // 强制更新倒计时
-  const now = ref(Date.now())
+  const now = ref(getGameNow())
   let updateInterval: ReturnType<typeof setInterval> | null = null
 
   onMounted(() => {
     updateInterval = setInterval(() => {
-      now.value = Date.now()
+      now.value = getGameNow()
     }, 1000)
   })
 

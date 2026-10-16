@@ -2,6 +2,7 @@ import type { Resources, BuildQueueItem, Planet } from '@/types/game'
 import { TechnologyType, BuildingType } from '@/types/game'
 import { TECHNOLOGIES } from '@/config/gameConfig'
 import * as pointsLogic from './pointsLogic'
+import { getGameNow } from './gameTime'
 
 /**
  * 计算有效研究实验室等级（考虑星际研究网络）
@@ -153,7 +154,7 @@ export const checkTechnologyRequirements = (
  * 创建研究队列项
  */
 export const createResearchQueueItem = (techType: TechnologyType, targetLevel: number, researchTime: number): BuildQueueItem => {
-  const now = Date.now()
+  const now = getGameNow()
   researchQueueIdCounter++
   return {
     id: `research_${now}_${researchQueueIdCounter}`,

@@ -5,6 +5,7 @@ import * as resourceLogic from './resourceLogic'
 import * as publicLogic from './publicLogic'
 import * as officerLogic from './officerLogic'
 import { BUILDINGS } from '@/config/gameConfig'
+import { getGameNow } from './gameTime'
 
 /**
  * 验证建筑升级的所有条件
@@ -40,7 +41,7 @@ export const validateBuildingUpgrade = (
   }
 
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 检查建造队列是否已满（只计算建筑类型的队列项）
   const maxQueue = publicLogic.getMaxBuildQueue(planet, bonuses.additionalBuildQueue)
@@ -80,7 +81,7 @@ export const executeBuildingUpgrade = (
   const cost = buildingLogic.calculateBuildingCost(buildingType, targetLevel)
 
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 获取机器人工厂和纳米工厂等级
   const roboticsFactoryLevel = planet.buildings[BuildingType.RoboticsFactory] || 0
@@ -152,7 +153,7 @@ export const validateBuildingDemolish = (
   }
 
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 检查建造队列是否已满（只计算建筑类型的队列项）
   const maxQueue = publicLogic.getMaxBuildQueue(planet, bonuses.additionalBuildQueue)
@@ -175,7 +176,7 @@ export const executeBuildingDemolish = (
   const currentLevel = planet.buildings[buildingType] || 0
 
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 获取机器人工厂和纳米工厂等级
   const roboticsFactoryLevel = planet.buildings[BuildingType.RoboticsFactory] || 0

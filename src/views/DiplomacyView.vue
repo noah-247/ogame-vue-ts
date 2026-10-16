@@ -398,6 +398,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getGameNow } from '@/logic/gameTime'
   import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
   import { useGameStore } from '@/stores/gameStore'
@@ -533,7 +534,7 @@
   })
 
   const showNPCDiagnostic = () => {
-    const currentTime = Date.now()
+    const currentTime = getGameNow()
     npcDiagnostics.value = npcBehaviorLogic.diagnoseNPCBehavior(npcStore.npcs, gameStore.player, currentTime)
     diagnosticPage.value = 1 // 重置分页
     diagnosticSearchQuery.value = '' // 重置搜索

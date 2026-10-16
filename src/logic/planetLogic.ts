@@ -1,3 +1,4 @@
+import { getGameNow } from './gameTime'
 import type { Planet, Resources } from '@/types/game'
 import { ShipType, DefenseType, BuildingType } from '@/types/game'
 import { MOON_CONFIG, PLANET_CONFIG, FLEET_STORAGE_CONFIG } from '@/config/gameConfig'
@@ -53,7 +54,7 @@ export const createInitialPlanet = (playerId: string, planetName: string = 'Home
     },
     buildQueue: [],
     waitingBuildQueue: [], // 等待队列
-    lastUpdate: Date.now(),
+    lastUpdate: getGameNow(),
     maxSpace: 200,
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: false
@@ -126,7 +127,7 @@ export const createNPCPlanet = (
     },
     buildQueue: [],
     waitingBuildQueue: [], // 等待队列
-    lastUpdate: Date.now(),
+    lastUpdate: getGameNow(),
     maxSpace: 200,
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: false
@@ -220,7 +221,7 @@ export const createMoon = (
     },
     buildQueue: [],
     waitingBuildQueue: [], // 等待队列
-    lastUpdate: Date.now(),
+    lastUpdate: getGameNow(),
     maxSpace: MOON_CONFIG.baseFields, // OGame规则：月球初始只有1格空间
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: true,

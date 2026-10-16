@@ -5,6 +5,7 @@
 
 import type { Planet, MissileAttack, DefenseType, TechnologyType, Position, BuildQueueItem } from '@/types/game'
 import { DefenseType as DefenseTypes, BuildingType } from '@/types/game'
+import { getGameNow } from './gameTime'
 
 /**
  * 计算导弹发射井容量
@@ -113,7 +114,7 @@ export const createMissileAttack = (
   targetPlanetId: string | undefined,
   missileCount: number
 ): MissileAttack => {
-  const now = Date.now()
+  const now = getGameNow()
   const distance = calculateSystemDistance(originPlanet.position, targetPosition)
   const flightTime = calculateMissileFlightTime(distance) * 1000 // 转换为毫秒
 

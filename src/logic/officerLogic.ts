@@ -1,3 +1,4 @@
+import { getGameNow } from './gameTime'
 import type { Officer, Resources } from '@/types/game'
 import { OfficerType } from '@/types/game'
 import { OFFICERS } from '@/config/gameConfig'
@@ -21,7 +22,7 @@ export const isOfficerActive = (officer: Officer, now: number): boolean => {
  * 创建激活的军官
  */
 export const createActiveOfficer = (officerType: OfficerType, duration: number): Officer => {
-  const now = Date.now()
+  const now = getGameNow()
   return {
     type: officerType,
     active: true,
@@ -82,6 +83,27 @@ export const calculateActiveBonuses = (officers: Record<OfficerType, Officer>, n
   })
 
   return bonuses
+}
+
+/**
+ * MAJ-7：当前提供能源产出加成的军官中最早的到期时间（毫秒）。
+ * 没有「会到期」的能源军官时返回 undefined，视为加成稳定。
+ * （到期后加成只是部分下降也按整体归零处理：保守方向，只会更谨慎，不会更危险。）
+ */
+export const getEnergyBonusExpiresAt = (
+  officers: Record<OfficerType, Officer>,
+  now: number
+): number | undefined => {
+  let earliest: number | undefined
+  for (const officer of Object.values(officers)) {
+    if (!isOfficerActive(officer, now)) continue
+    const benefits = OFFICERS[officer.type]?.benefits
+    const epb = benefits?.energyProductionBonus
+    if (!(epb !== undefined && epb > 0)) continue
+    if (officer.expiresAt === undefined) continue
+    if (earliest === undefined || officer.expiresAt < earliest) earliest = officer.expiresAt
+  }
+  return earliest
 }
 
 /**

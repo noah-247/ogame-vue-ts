@@ -6,6 +6,7 @@ import * as resourceLogic from './resourceLogic'
 import * as officerLogic from './officerLogic'
 import * as publicLogic from './publicLogic'
 import * as fleetStorageLogic from './fleetStorageLogic'
+import { getGameNow } from './gameTime'
 
 /**
  * 验证舰船建造的所有条件
@@ -51,7 +52,7 @@ export const executeShipBuild = (
   const totalCost = shipLogic.calculateShipCost(shipType, quantity)
 
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 获取机器人工厂和纳米工厂等级
   const roboticsFactoryLevel = planet.buildings[BuildingType.RoboticsFactory] || 0
@@ -121,7 +122,7 @@ export const executeDefenseBuild = (
   const totalCost = shipLogic.calculateDefenseCost(defenseType, quantity)
 
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 获取机器人工厂和纳米工厂等级
   const roboticsFactoryLevel = planet.buildings[BuildingType.RoboticsFactory] || 0
@@ -158,7 +159,7 @@ export const validateFleetDispatch = (
   fuelNeeded?: number
 } => {
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 检查舰队任务槽位是否已满
   const computerTechLevel = technologies[TechnologyType.ComputerTechnology] || 0
@@ -238,7 +239,7 @@ export const executeShipScrap = (
   officers: Record<OfficerType, Officer>
 ): BuildQueueItem => {
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 获取机器人工厂和纳米工厂等级
   const roboticsFactoryLevel = planet.buildings[BuildingType.RoboticsFactory] || 0

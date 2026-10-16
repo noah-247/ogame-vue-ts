@@ -4,6 +4,7 @@ import * as researchLogic from './researchLogic'
 import * as resourceLogic from './resourceLogic'
 import * as publicLogic from './publicLogic'
 import * as officerLogic from './officerLogic'
+import { getGameNow } from './gameTime'
 
 /**
  * 验证科技研究的所有条件
@@ -61,7 +62,7 @@ export const executeTechnologyResearch = (
   const cost = researchLogic.calculateTechnologyCost(techType, targetLevel)
 
   // 计算军官加成
-  const bonuses = officerLogic.calculateActiveBonuses(officers, Date.now())
+  const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
   // 获取星际研究网络等级
   const intergalacticResearchNetworkLevel = technologies[TechnologyType.IntergalacticResearchNetwork] || 0

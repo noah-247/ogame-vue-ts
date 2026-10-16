@@ -12,6 +12,7 @@ import * as resourceLogic from './resourceLogic'
 import * as fleetStorageLogic from './fleetStorageLogic'
 import * as officerLogic from './officerLogic'
 import * as planetLogic from './planetLogic'
+import { getGameNow } from './gameTime'
 
 /**
  * 计算两个星球之间的距离
@@ -60,7 +61,7 @@ export const createFleetMission = (
   cargo: Resources,
   flightTime: number
 ): FleetMission => {
-  const now = Date.now()
+  const now = getGameNow()
   return {
     id: generateId('mission'),
     playerId,
@@ -453,7 +454,7 @@ export const processColonizeArrival = (
     },
     buildQueue: [],
     waitingBuildQueue: [], // 等待队列
-    lastUpdate: Date.now(),
+    lastUpdate: getGameNow(),
     maxSpace: 200,
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: false

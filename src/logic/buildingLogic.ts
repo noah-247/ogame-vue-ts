@@ -2,6 +2,7 @@ import type { Planet, Resources, BuildQueueItem } from '@/types/game'
 import { BuildingType, TechnologyType, ShipType, DefenseType } from '@/types/game'
 import { BUILDINGS } from '@/config/gameConfig'
 import * as pointsLogic from './pointsLogic'
+import { getGameNow } from './gameTime'
 
 // 用于生成唯一ID的计数器
 let queueIdCounter = 0
@@ -155,7 +156,7 @@ export const checkSpaceAvailable = (planet: Planet, buildingType: BuildingType):
  * 创建建造队列项
  */
 export const createBuildQueueItem = (buildingType: BuildingType, targetLevel: number, buildTime: number): BuildQueueItem => {
-  const now = Date.now()
+  const now = getGameNow()
   queueIdCounter++
   return {
     id: `build_${now}_${queueIdCounter}`,
@@ -280,7 +281,7 @@ export const calculateDemolishTime = (
  * @returns 拆除队列项
  */
 export const createDemolishQueueItem = (buildingType: BuildingType, currentLevel: number, demolishTime: number): BuildQueueItem => {
-  const now = Date.now()
+  const now = getGameNow()
   queueIdCounter++
   return {
     id: `demolish_${now}_${queueIdCounter}`,
