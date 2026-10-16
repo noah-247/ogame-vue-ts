@@ -29,3 +29,4 @@
   defineProps<Props>()
 
   const visible = ref(true)
+</script>
