@@ -63,7 +63,7 @@ describe('save migrations', () => {
     expect(() => migrateSave({ version: 0 }, registry, 2)).toThrow('No migration registered for save version 1')
   })
 
-  it('migrates v0 to v1 and preserves every business field', () => {
+  it('migrates v0 to v2 and preserves every business field', () => {
     const migrated = migrateSave(legacyGame)
 
     expect(migrated).toEqual(newGame)
@@ -85,12 +85,46 @@ describe('save migrations', () => {
     expect(original).not.toHaveProperty('version')
   })
 
-  it.each([newGame, midGame])('keeps a v1 save unchanged and is idempotent', state => {
+  it.each([newGame, midGame])('keeps a v2 save unchanged and is idempotent', state => {
     const migrated = migrateSave(state)
 
     expect(migrated).toEqual(state)
     expect(migrateSave(migrated)).toEqual(state)
     expect(migrated).not.toBe(state)
+  })
+
+  it('migrates an explicit v1 save to v2 with only the version bumped', () => {
+    const v1 = { ...newGame, version: 1 }
+    const migrated = migrateSave(v1)
+
+    expect(migrated.version).toBe(2)
+    const { version: _v, ...rest } = migrated
+    const { version: _v1, ...restV1 } = v1
+    void _v
+    void _v1
+    expect(rest).toEqual(restV1)
+    // 副官字段缺省即未启用：迁移不补字段
+    for (const planet of (migrated.player as typeof newGame.player).planets) {
+      expect(planet).not.toHaveProperty('autopilot')
+    }
+    expect(migrated.player).not.toHaveProperty('empireResearchAutopilot')
+  })
+
+  it('preserves autopilot config and waiting-queue source markers across v1→v2', () => {
+    const autopilot = { enabled: true, mode: 'auto', targets: [] }
+    const waitingBuildQueue = [{ id: 'w1', source: 'autopilot' }, { id: 'w2' }]
+    const player = {
+      ...newGame.player,
+      planets: [{ ...(newGame.player.planets[0] ?? {}), autopilot, waitingBuildQueue }]
+    }
+    const migrated = migrateSave({ ...newGame, version: 1, player })
+
+    expect(migrated.version).toBe(2)
+    const migratedPlayer = migrated.player as typeof player
+    expect(migratedPlayer.planets[0]!.autopilot).toEqual(autopilot)
+    // B11 交接语义：没有 source 的旧等待项保持缺失，视为玩家手动
+    expect(migratedPlayer.planets[0]!.waitingBuildQueue).toEqual(waitingBuildQueue)
+    expect(migratedPlayer.planets[0]!.waitingBuildQueue[1]).not.toHaveProperty('source')
   })
 
   it('also accepts an explicitly numbered v0 save', () => {

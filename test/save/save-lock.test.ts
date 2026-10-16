@@ -5,7 +5,7 @@ import { createApp } from 'vue'
 import { toast } from 'vue-sonner'
 import pkg from '../../package.json'
 import { parseSave } from '@/logic/saveIo'
-import { SaveError } from '@/logic/saveMigration'
+import { SaveError, SAVE_VERSION } from '@/logic/saveMigration'
 import { deserializeGameSave, isSaveLocked, resetSaveLock, serializeGameSave } from '@/stores/gameSaveSerializer'
 import { encryptData } from '@/utils/crypto'
 import legacyGame from '../fixtures/new-game-v0.json'
@@ -72,7 +72,7 @@ describe('failed hydration save lock with the real game store and persistence pl
     expect(toast.error).toHaveBeenCalledOnce()
   })
 
-  it('hydrates v0 without writing, then writes migrated v1 on the first mutation', () => {
+  it('hydrates v0 without writing, then writes migrated to current version on the first mutation', () => {
     const ciphertext = encryptData(legacyGame)
     storage.setItem(pkg.name, ciphertext)
 
@@ -87,7 +87,7 @@ describe('failed hydration save lock with the real game store and persistence pl
     store.$patch({ gameSpeed: 99 })
     const upgradedCiphertext = storage.getItem(pkg.name)!
     expect(upgradedCiphertext).not.toBe(ciphertext)
-    expect(parseSave(upgradedCiphertext).version).toBe(1)
+    expect(parseSave(upgradedCiphertext).version).toBe(SAVE_VERSION)
     expect(parseSave(upgradedCiphertext).gameSpeed).toBe(99)
   })
 })

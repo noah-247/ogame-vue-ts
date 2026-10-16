@@ -683,6 +683,74 @@ export interface WaitingQueueItem {
   priority: number // 排序优先级（数字越小优先级越高）
   addedTime: number // 添加到等待队列的时间戳
   planetId?: string // 建造队列需要标识目标星球
+  source?: 'autopilot' | 'player' // B11：副官排入的等待项来源标记；缺省视为玩家手动
+}
+
+// ===== 自动成长副官（Autopilot，方案 A「目标等级清单」）=====
+
+// 副官目标：单座建筑的目标等级；规划层自己持久保存（B3），不依赖等待项
+export interface AutopilotTarget {
+  id: string
+  buildingType: BuildingType
+  targetLevel: number
+  priority: number // 数字越小优先级越高
+}
+
+// 资源预留：规划层面的软性预留，不实际扣款；低优先级自动工作只能用预留之外的资源
+export interface AutopilotReserve {
+  metal: number
+  crystal: number
+  deuterium: number
+}
+
+export type AutopilotMode = 'auto' | 'execute'
+
+/** 单星球副官配置（存于 Planet.autopilot；缺省 = 未启用） */
+export interface AutopilotPlanetConfig {
+  enabled: boolean
+  mode: AutopilotMode // auto=自主挑下一步；execute=执行已批准清单（降级后）
+  paused: boolean // 玩家手动暂停：不再新增工作，已开工继续
+  targets: AutopilotTarget[]
+  reserve: AutopilotReserve
+  /** 单级工时上限（秒）：自主模式只排不超过此工时的下一步；默认 7200 */
+  workHourThreshold: number
+  /** 滞后恢复阈值（秒）：剩余步骤工时都低于此值才提示可恢复自主；默认 5400 */
+  resumeThreshold: number
+  /** 自主→执行降级原因（B8 滞后语义的记录） */
+  downgradeReason?: string
+  /** 引擎计算：是否已满足恢复自主条件，供 UI 提示玩家确认 */
+  canResumeAuto?: boolean
+  /** 是否允许自动补最低必要前置 */
+  allowPrereqAutoBuild: boolean
+  /** 空间预留（B5）：排建时至少保留的空闲空间 */
+  minFreeSpace: number
+  /** 最近一次决策摘要（供 UI 展示与回顾） */
+  lastDecision?: string
+  /** 上次规划时间戳（毫秒） */
+  lastPlannedAt?: number
+}
+
+/** 帝国层级研究目标（B6：研究授权放帝国层级，多殖民地不互抢） */
+export interface AutopilotResearchTarget {
+  id: string
+  technology: TechnologyType
+  targetLevel: number
+  priority: number
+}
+
+/** 帝国层级研究副官配置（存于 Player.empireResearchAutopilot；缺省 = 未启用） */
+export interface EmpireResearchAutopilot {
+  enabled: boolean
+  mode: AutopilotMode // auto=自主挑下一步；execute=执行已批准清单（降级后）
+  paused: boolean
+  targets: AutopilotResearchTarget[]
+  reserve: AutopilotReserve
+  workHourThreshold: number
+  resumeThreshold: number
+  downgradeReason?: string
+  canResumeAuto?: boolean
+  lastDecision?: string
+  lastPlannedAt?: number
 }
 
 // 星球
@@ -697,6 +765,7 @@ export interface Planet {
   defense: Record<DefenseType, number>
   buildQueue: BuildQueueItem[]
   waitingBuildQueue: WaitingQueueItem[] // 等待队列（建筑、舰船、防御）
+  autopilot?: AutopilotPlanetConfig // 自动成长副官配置（缺省 = 未启用）
   lastUpdate: number
   maxSpace: number // 最大空间
   maxFleetStorage: number // 舰队仓储上限
@@ -781,6 +850,7 @@ export interface Player {
   officers: Record<OfficerType, Officer>
   researchQueue: BuildQueueItem[]
   waitingResearchQueue: WaitingQueueItem[] // 研究等待队列
+  empireResearchAutopilot?: EmpireResearchAutopilot // 帝国层级研究副官（B6，缺省 = 未启用）
   fleetMissions: FleetMission[]
   missileAttacks: MissileAttack[] // 导弹攻击任务
   battleReports: BattleResult[]

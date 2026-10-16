@@ -1,4 +1,4 @@
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 
 export interface SaveData extends Record<string, unknown> {
   version: number
@@ -25,8 +25,17 @@ const isSaveObject = (value: unknown): value is Record<string, unknown> => {
 
 const migrateV0ToV1 = (save: Record<string, unknown>): SaveData => ({ ...save, version: 1 })
 
+/**
+ * v1 → v2：自动成长副官（M1）。
+ * - 副官配置缺省即「未启用」，旧存档无需补字段（引擎把缺失视为禁用）。
+ * - 等待项没有 source 标记的一律视为玩家手动（B11 交接语义），不做回填。
+ * 因此迁移只需抬升版本号并做一次结构深拷贝，保持幂等。
+ */
+const migrateV1ToV2 = (save: Record<string, unknown>): SaveData => ({ ...save, version: 2 })
+
 const migrations: MigrationRegistry = {
-  0: migrateV0ToV1
+  0: migrateV0ToV1,
+  1: migrateV1ToV2
 }
 
 export const migrateSave = (raw: unknown, registry: MigrationRegistry = migrations, target: number = SAVE_VERSION): SaveData => {
