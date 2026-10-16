@@ -404,7 +404,15 @@ export default {
     noConsumption: '當前無電力消耗',
     tabOverview: '概覽',
     tabProduction: '產量詳情',
-    tabConsumption: '消耗詳情'
+    tabConsumption: '消耗詳情',
+    timeSkip: '快轉',
+    timeSkipBuilding: '建造×{count}',
+    timeSkipResearch: '研究×{count}',
+    timeSkipShip: '艦船×{count}',
+    timeSkipDefense: '防禦×{count}',
+    timeSkipUnlock: '解鎖×{count}',
+    timeSkipNothing: '無新完成事項',
+    timeSkipSummary: '快轉 {hours} 小時：{details}'
   },
   buildingsView: {
     title: '建築',

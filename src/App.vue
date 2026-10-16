@@ -902,19 +902,40 @@
     }
   }
 
-  const updateGame = async () => {
-    const now = Date.now()
+  // 游戏主更新：推进到指定时间点（now 为虚拟游戏时间）
+  // silent 模式用于时间快转：通知按类型聚合为一条汇总 toast，NPC 行为决策跳过
+  const updateGameAt = async (now: number, opts?: { silent?: boolean; hours?: number }) => {
+    const silent = opts?.silent ?? false
     if (gameStore.isPaused) return
     gameStore.gameTime = now
     // 检查军官过期
     gameLogic.checkOfficersExpiration(gameStore.player.officers, now)
+
+    // 静默模式：收集完成计数与解锁项，结束后统一汇总（避免逐条 toast 轰炸）
+    const skipStats = { buildings: 0, researches: 0, ships: 0, defenses: 0, unlocks: 0 }
+    const aggregateNotification = (type: string, _itemType: string, _level?: number, quantity?: number) => {
+      if (type === 'building') skipStats.buildings += 1
+      else if (type === 'technology') skipStats.researches += 1
+      else if (type === 'ship') skipStats.ships += quantity ?? 0
+      else if (type === 'defense') skipStats.defenses += quantity ?? 0
+    }
+    const aggregateUnlockNotification = (unlockedItems: Array<{ type: 'building' | 'technology'; id: string; name: string }>) => {
+      skipStats.unlocks += unlockedItems.length
+    }
+
     // 处理游戏更新（建造队列、研究队列等）
-    const result = gameLogic.processGameUpdate(gameStore.player, now, gameStore.gameSpeed, handleNotification, handleUnlockNotification)
+    const result = gameLogic.processGameUpdate(
+      gameStore.player,
+      now,
+      gameStore.gameSpeed,
+      silent ? aggregateNotification : handleNotification,
+      silent ? aggregateUnlockNotification : handleUnlockNotification
+    )
     gameStore.player.researchQueue = result.updatedResearchQueue
     // 处理舰队任务
     gameStore.player.fleetMissions.forEach(mission => {
       if (mission.status === 'outbound' && now >= mission.arrivalTime) {
-        processMissionArrival(mission)
+        processMissionArrival(mission, now)
       } else if (mission.status === 'returning' && mission.returnTime && now >= mission.returnTime) {
         processMissionReturn(mission)
       }
@@ -924,7 +945,7 @@
     for (let i = gameStore.player.missileAttacks.length - 1; i >= 0; i--) {
       const missileAttack = gameStore.player.missileAttacks[i]
       if (missileAttack && missileAttack.status === 'flying' && now >= missileAttack.arrivalTime) {
-        await processMissileAttackArrival(missileAttack)
+        await processMissileAttackArrival(missileAttack, now)
         // 导弹攻击是单程的，到达后直接从数组中移除
         gameStore.player.missileAttacks.splice(i, 1)
       }
@@ -935,7 +956,7 @@
       if (npc.fleetMissions) {
         npc.fleetMissions.forEach(mission => {
           if (mission.status === 'outbound' && now >= mission.arrivalTime) {
-            processNPCMissionArrival(npc, mission)
+            processNPCMissionArrival(npc, mission, now)
           } else if (mission.status === 'returning' && mission.returnTime && now >= mission.returnTime) {
             processNPCMissionReturn(npc, mission)
           }
@@ -943,14 +964,18 @@
       }
     })
 
-    // NPC成长系统更新
-    updateNPCGrowth(1)
+    // NPC成长系统更新（快转时按跳跃时长一次性成长）
+    updateNPCGrowth(silent && opts?.hours ? opts.hours * 3600 : 1)
 
-    // NPC行为系统更新（侦查和攻击决策）
-    updateNPCBehavior(1)
+    // NPC行为系统更新（侦查和攻击决策）——快转时跳过，避免静默触发战斗与警报
+    if (!silent) {
+      updateNPCBehavior(1)
+    }
 
-    // 检查成就解锁
-    checkAchievementUnlocks()
+    // 检查成就解锁（快转时跳过，避免逐条 toast 轰炸；下个正常 tick 会补上）
+    if (!silent) {
+      checkAchievementUnlocks()
+    }
 
     // 检查战役任务进度
     if (gameStore.player.campaignProgress) {
@@ -989,9 +1014,45 @@
       // 从NPC列表中移除被消灭的NPC
       npcStore.npcs = npcStore.npcs.filter(npc => !eliminatedNpcIds.includes(npc.id))
     }
+
+    // 静默模式：一份汇总 toast 替代逐条通知
+    if (silent) {
+      const parts: string[] = []
+      if (skipStats.buildings > 0) parts.push(t('overview.timeSkipBuilding', { count: skipStats.buildings }))
+      if (skipStats.researches > 0) parts.push(t('overview.timeSkipResearch', { count: skipStats.researches }))
+      if (skipStats.ships > 0) parts.push(t('overview.timeSkipShip', { count: skipStats.ships }))
+      if (skipStats.defenses > 0) parts.push(t('overview.timeSkipDefense', { count: skipStats.defenses }))
+      if (skipStats.unlocks > 0) parts.push(t('overview.timeSkipUnlock', { count: skipStats.unlocks }))
+      const details = parts.length > 0 ? parts.join('、') : t('overview.timeSkipNothing')
+      toast.success(t('overview.timeSkipSummary', { hours: opts?.hours ?? 0, details }))
+    }
   }
 
-  const processMissionArrival = async (mission: FleetMission) => {
+  const updateGame = async () => {
+    await updateGameAt(Date.now())
+  }
+
+  // 一键时间快转：立即结算未来 N 小时的游戏状态
+  // gameTime 会被推到未来时间点，星球 lastUpdate 同步跟进，后续每秒 tick 从未来时间继续，不会重复结算；
+  // 存档由 pinia-plugin-persistedstate 在状态变更时自动持久化到 localStorage，UI 通过 Vue 响应式自动刷新
+  const timeSkip = async (hours: number) => {
+    if (gameStore.isPaused) {
+      toast.info(t('settings.gamePaused'))
+      return
+    }
+    const futureNow = Date.now() + hours * 3600 * 1000
+    await updateGameAt(futureNow, { silent: true, hours })
+  }
+
+  // 处理时间快转事件（总览页按钮派发）
+  const handleTimeSkipEvent = (event: CustomEvent) => {
+    const hours = event.detail?.hours
+    if (typeof hours === 'number' && hours > 0) {
+      void timeSkip(hours)
+    }
+  }
+
+  const processMissionArrival = async (mission: FleetMission, now: number = Date.now()) => {
     // 从宇宙星球地图中查找目标星球
     const targetKey = gameLogic.generatePositionKey(
       mission.targetPosition.galaxy,
@@ -1061,7 +1122,7 @@
       }
       gameStore.player.missionReports.push({
         id: `mission-report-${mission.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.Transport,
         originPlanetId: mission.originPlanetId,
         originPlanetName,
@@ -1143,7 +1204,7 @@
       }
       gameStore.player.missionReports.push({
         id: `mission-report-${mission.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.Colonize,
         originPlanetId: mission.originPlanetId,
         originPlanetName,
@@ -1185,7 +1246,7 @@
 
       gameStore.player.missionReports.push({
         id: `mission-report-${mission.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.Spy,
         originPlanetId: mission.originPlanetId,
         originPlanetName,
@@ -1222,7 +1283,7 @@
       }
       gameStore.player.missionReports.push({
         id: `mission-report-${mission.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.Deploy,
         originPlanetId: mission.originPlanetId,
         originPlanetName,
@@ -1272,7 +1333,7 @@
       }
       gameStore.player.missionReports.push({
         id: `mission-report-${mission.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.Recycle,
         originPlanetId: mission.originPlanetId,
         originPlanetName,
@@ -1365,7 +1426,7 @@
       }
       gameStore.player.missionReports.push({
         id: `mission-report-${mission.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.Destroy,
         originPlanetId: mission.originPlanetId,
         originPlanetName,
@@ -1469,7 +1530,6 @@
 
       // 确保返回时间正确设置（兼容旧版本任务数据）
       // 如果 returnTime 不存在或已过期，重新计算
-      const now = Date.now()
       if (!mission.returnTime || mission.returnTime <= now) {
         // 返回时间应该等于当前时间加上单程飞行时间
         const flightDuration = mission.arrivalTime - mission.departureTime
@@ -1524,7 +1584,7 @@
 
       gameStore.player.missionReports.push({
         id: `mission-report-${mission.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.Expedition,
         originPlanetId: mission.originPlanetId,
         originPlanetName,
@@ -1543,7 +1603,7 @@
       // 确保returnTime已设置（如果还没设置的话）
       if (!mission.returnTime) {
         const flightTime = mission.arrivalTime - mission.departureTime
-        mission.returnTime = Date.now() + flightTime
+        mission.returnTime = now + flightTime
       }
     }
   }
@@ -1558,14 +1618,14 @@
   }
 
   // NPC任务处理
-  const processNPCMissionArrival = (npc: NPC, mission: FleetMission) => {
+  const processNPCMissionArrival = (npc: NPC, mission: FleetMission, now: number = Date.now()) => {
     if (mission.missionType === MissionType.Recycle) {
       // NPC回收任务到达
       const debrisId = mission.debrisFieldId
       if (!debrisId) {
         console.warn('[NPC Mission] Recycle mission missing debrisFieldId')
         mission.status = 'returning'
-        mission.returnTime = Date.now() + (mission.arrivalTime - mission.departureTime)
+        mission.returnTime = now + (mission.arrivalTime - mission.departureTime)
         return
       }
 
@@ -1597,7 +1657,7 @@
       removeIncomingFleetAlertById(mission.id)
 
       // 设置返回时间
-      mission.returnTime = Date.now() + (mission.arrivalTime - mission.departureTime)
+      mission.returnTime = now + (mission.arrivalTime - mission.departureTime)
       return
     }
 
@@ -1711,7 +1771,7 @@
   }
 
   // 处理导弹攻击到达
-  const processMissileAttackArrival = async (missileAttack: MissileAttack) => {
+  const processMissileAttackArrival = async (missileAttack: MissileAttack, now: number = Date.now()) => {
     // 动态导入导弹逻辑
     const missileLogic = await import('@/logic/missileLogic')
 
@@ -1738,7 +1798,7 @@
       }
       gameStore.player.missionReports.push({
         id: `missile-report-${missileAttack.id}`,
-        timestamp: Date.now(),
+        timestamp: now,
         missionType: MissionType.MissileAttack,
         originPlanetId: missileAttack.originPlanetId,
         originPlanetName: gameStore.player.planets.find(p => p.id === missileAttack.originPlanetId)?.name || t('fleetView.unknownPlanet'),
@@ -1806,7 +1866,7 @@
 
     gameStore.player.missionReports.push({
       id: `missile-report-${missileAttack.id}`,
-      timestamp: Date.now(),
+      timestamp: now,
       missionType: MissionType.MissileAttack,
       originPlanetId: missileAttack.originPlanetId,
       originPlanetName: gameStore.player.planets.find(p => p.id === missileAttack.originPlanetId)?.name || t('fleetView.unknownPlanet'),
@@ -2409,6 +2469,8 @@
       // 添加队列取消事件监听
       window.addEventListener('cancel-build', handleCancelBuildEvent as EventListener)
       window.addEventListener('cancel-research', handleCancelResearchEvent as EventListener)
+      // 添加时间快转事件监听（总览页快转按钮派发）
+      window.addEventListener('time-skip', handleTimeSkipEvent as EventListener)
 
       // 首次检查版本（被动检测）
       const versionInfo = await checkLatestVersion(gameStore.player.lastVersionCheckTime || 0, (time: number) => {
@@ -2483,6 +2545,7 @@
     // 移除队列取消事件监听
     window.removeEventListener('cancel-build', handleCancelBuildEvent as EventListener)
     window.removeEventListener('cancel-research', handleCancelResearchEvent as EventListener)
+    window.removeEventListener('time-skip', handleTimeSkipEvent as EventListener)
     // 移除 Android 返回键监听
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.removeAllListeners()

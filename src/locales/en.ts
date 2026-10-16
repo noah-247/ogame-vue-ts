@@ -409,7 +409,15 @@ export default {
     noConsumption: 'No energy consumption',
     tabOverview: 'Overview',
     tabProduction: 'Production Details',
-    tabConsumption: 'Consumption Details'
+    tabConsumption: 'Consumption Details',
+    timeSkip: 'Fast Forward',
+    timeSkipBuilding: 'Buildings ×{count}',
+    timeSkipResearch: 'Research ×{count}',
+    timeSkipShip: 'Ships ×{count}',
+    timeSkipDefense: 'Defense ×{count}',
+    timeSkipUnlock: 'Unlocks ×{count}',
+    timeSkipNothing: 'Nothing new completed',
+    timeSkipSummary: 'Fast-forwarded {hours}h: {details}'
   },
   buildingsView: {
     title: 'Buildings',

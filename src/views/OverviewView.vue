@@ -28,6 +28,13 @@
           {{ t('planet.abandonColony') }}
         </Button>
       </div>
+      <!-- 时间快转 -->
+      <div class="mt-3 flex items-center justify-center gap-2 flex-wrap">
+        <span class="text-xs sm:text-sm text-muted-foreground">{{ t('overview.timeSkip') }}</span>
+        <Button @click="skipTime(1)" variant="outline" size="sm" :disabled="isSkipping">+1{{ t('resources.hour') }}</Button>
+        <Button @click="skipTime(8)" variant="outline" size="sm" :disabled="isSkipping">+8{{ t('resources.hour') }}</Button>
+        <Button @click="skipTime(24)" variant="outline" size="sm" :disabled="isSkipping">+24{{ t('resources.hour') }}</Button>
+      </div>
     </div>
 
     <!-- 放弃殖民地确认对话框 -->
@@ -263,6 +270,18 @@
   const { t } = useI18n()
   const { SHIPS } = useGameConfig()
   const planet = computed(() => gameStore.currentPlanet)
+
+  // 一键时间快转：派发事件，由 App.vue 的 timeSkip 统一结算未来 N 小时
+  const isSkipping = ref(false)
+  const skipTime = (hours: number) => {
+    if (isSkipping.value) return
+    isSkipping.value = true
+    window.dispatchEvent(new CustomEvent('time-skip', { detail: { hours } }))
+    // 结算以同步状态变更为主，短暂锁定按钮防止重复点击
+    setTimeout(() => {
+      isSkipping.value = false
+    }, 1500)
+  }
 
   // 获取科技加成
   const techBonuses = computed(() => ({
