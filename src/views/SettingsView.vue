@@ -97,7 +97,7 @@
             <div class="flex items-center gap-2 flex-1 sm:flex-initial">
               <Button @click="decreaseSpeed" variant="outline" size="sm" :disabled="gameStore.gameSpeed <= 0.5">-</Button>
               <span class="min-w-[60px] text-center font-medium">{{ gameStore.gameSpeed }}x</span>
-              <Button @click="increaseSpeed" variant="outline" size="sm" :disabled="gameStore.gameSpeed >= 10">+</Button>
+              <Button @click="increaseSpeed" variant="outline" size="sm" :disabled="gameStore.gameSpeed >= 100">+</Button>
             </div>
             <Button @click="resetSpeed" variant="ghost" size="sm">{{ t('settings.reset') }}</Button>
           </div>
@@ -782,8 +782,8 @@
 
   // 增加游戏倍率
   const increaseSpeed = () => {
-    if (gameStore.gameSpeed < 10) {
-      gameStore.gameSpeed = Math.min(10, gameStore.gameSpeed + 0.5)
+    if (gameStore.gameSpeed < 100) {
+      gameStore.gameSpeed = Math.min(100, gameStore.gameSpeed + 0.5)
       toast.success(t('settings.speedChanged', { speed: gameStore.gameSpeed }))
     }
   }
