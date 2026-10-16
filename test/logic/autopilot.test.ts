@@ -19,12 +19,17 @@ import {
   planWarehouseRescue,
   reconcileTargets,
   resumeAutoMode,
+  setAutopilotMode,
   tickAutopilotPlanet,
   tickEmpireResearch,
   withdrawAutopilotWaiting
 } from '@/logic/autopilotLogic'
-import { setNow, restore } from '../utils/time'
+import { setNow, restore, jump, HOUR } from '../utils/time'
 import * as waitingQueueLogic from '@/logic/waitingQueueLogic'
+import * as buildingLogic from '@/logic/buildingLogic'
+import * as resourceLogic from '@/logic/resourceLogic'
+import { getGameNow, setTimeOffset } from '@/logic/gameTime'
+import { BUILDINGS } from '@/config/gameConfig'
 
 afterEach(restore)
 
@@ -80,7 +85,7 @@ const ctx = createDefaultContext()
 const NOW = 1_700_000_000_000
 
 describe('reconcileTargets (B12)', () => {
-  it('marks a target complete when actual level reaches the target', () => {
+  it('marks a target complete when actual level reaches the target (target persists, Minor-9/E)', () => {
     const planet = makePlanet({ [BuildingType.MetalMine]: 10 })
     const config = enableAutopilot(planet, [[BuildingType.MetalMine, 10], [BuildingType.CrystalMine, 5]])
     setNow(NOW)
@@ -88,22 +93,28 @@ describe('reconcileTargets (B12)', () => {
     const completed = reconcileTargets(config, planet)
 
     expect(completed.map(t => t.buildingType)).toEqual([BuildingType.MetalMine])
-    expect(config.targets.map(t => t.buildingType)).toEqual([BuildingType.CrystalMine])
+    // Minor-9/E：达标不删除目标（达标=无工作可做），目标保留在清单中
+    expect(config.targets.map(t => t.buildingType)).toEqual([BuildingType.MetalMine, BuildingType.CrystalMine])
+    expect(config.targets[0]!.completed).toBe(true)
+    expect(config.targets[1]!.completed).toBe(false)
+    // 已达标的不再重复报告
+    expect(reconcileTargets(config, planet)).toHaveLength(0)
   })
 
   it('reopens progress when the player demolishes below the target', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 8, [BuildingType.MetalMine]: 10 })
     const config = enableAutopilot(planet, [[BuildingType.MetalMine, 10]])
     reconcileTargets(config, planet)
-    expect(config.targets).toHaveLength(0)
+    expect(config.targets).toHaveLength(1)
+    expect(config.targets[0]!.completed).toBe(true)
 
-    // 玩家拆除后等级回落：重新加入目标，下次 tick 从实际等级重推
-    config.targets = [createAutopilotTarget(BuildingType.MetalMine, 10, 0, 1000)]
+    // 玩家拆除后等级回落：目标变回未完成，下次 tick 从实际等级重推（Minor-9/E：达标前后行为一致）
     planet.buildings[BuildingType.MetalMine] = 8
     const completed = reconcileTargets(config, planet)
 
     expect(completed).toHaveLength(0)
     expect(config.targets).toHaveLength(1)
+    expect(config.targets[0]!.completed).toBe(false)
     const result = tickAutopilotPlanet(makePlayer([planet]), planet, NOW, ctx)
     expect(result.enqueued).toBeGreaterThan(0)
   })
@@ -595,7 +606,7 @@ describe('planEnergyRescue / planWarehouseRescue', () => {
     expect(rescue).toBeNull()
   })
 
-  it('returns null when the cost already fits capacity', () => {
+  it('returns an empty plan when the cost already fits capacity', () => {
     const planet = makePlanet(
       { [BuildingType.SolarPlant]: 1, [BuildingType.MetalStorage]: 2 },
       { resources: { metal: 50000, crystal: 50000, deuterium: 0, darkMatter: 0, energy: 100 } }
@@ -607,7 +618,25 @@ describe('planEnergyRescue / planWarehouseRescue', () => {
       ctx
     )
 
-    expect(rescue).toBeNull()
+    expect(rescue.step).toBeNull()
+    expect(rescue.blocked).toBeUndefined()
+  })
+
+  it('Minor-7: reports blockedWarehouseCap when even +12 warehouse levels cannot hold the cost', () => {
+    const planet = makePlanet({ [BuildingType.MetalStorage]: 0 })
+    const rescue = planWarehouseRescue(
+      planet,
+      { metal: 1e15, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 },
+      0,
+      ctx
+    )
+
+    expect(rescue.step).toBeNull()
+    expect(rescue.blocked).toMatchObject({
+      kind: 'building',
+      itemType: BuildingType.MetalStorage,
+      reason: 'autopilot.blockedWarehouseCap'
+    })
   })
 })
 
@@ -718,7 +747,7 @@ describe('tickEmpireResearch (B6)', () => {
     expect(config.mode).toBe('execute')
   })
 
-  it('marks research targets complete from actual tech levels', () => {
+  it('marks research targets complete from actual tech levels (target persists, Minor-9/E)', () => {
     const player = researchPlayer({ [TechnologyType.EnergyTechnology]: 2 })
     const config = enableResearchAutopilot(player, [[TechnologyType.EnergyTechnology, 2]])
     setNow(NOW)
@@ -726,7 +755,8 @@ describe('tickEmpireResearch (B6)', () => {
     const result = tickEmpireResearch(player, NOW, ctx)
 
     expect(result.completedTargets).toHaveLength(1)
-    expect(config.targets).toHaveLength(0)
+    expect(config.targets).toHaveLength(1)
+    expect(config.targets[0]!.completed).toBe(true)
   })
 })
 
@@ -1121,5 +1151,277 @@ describe('review fixes', () => {
     // 副官项 priority 更小，但玩家项必须排前面
     expect(planet.waitingBuildQueue[0]!.id).toBe('p1')
     expect(planet.waitingBuildQueue[1]!.id).toBe('a1')
+  })
+})
+
+describe('review patch round 2', () => {
+  it('BLK-1: resources keep growing across consecutive ticks after a 4h fast-forward', () => {
+    setNow(NOW)
+    try {
+      // 快转 4 小时：虚拟时间 = 真实时间 + 4h，之后每秒 tick 必须持续推进（不冻结）
+      setTimeOffset(4 * HOUR)
+      const planet = makePlanet(
+        { [BuildingType.SolarPlant]: 5, [BuildingType.MetalMine]: 5 },
+        { resources: { metal: 100, crystal: 100, deuterium: 0, darkMatter: 0, energy: 5000 } }
+      )
+      planet.lastUpdate = getGameNow()
+      const bonuses = {
+        resourceProductionBonus: 0,
+        darkMatterProductionBonus: 0,
+        energyProductionBonus: 0,
+        storageCapacityBonus: 0
+      }
+      const seen: number[] = [planet.resources.metal ?? 0]
+      for (let i = 0; i < 3; i++) {
+        jump(1000) // 每个 tick 间隔 1 真实秒
+        resourceLogic.updatePlanetResources(planet, getGameNow(), bonuses)
+        seen.push(planet.resources.metal ?? 0)
+      }
+      expect(seen[1]).toBeGreaterThan(seen[0]!)
+      expect(seen[2]).toBeGreaterThan(seen[1]!)
+      expect(seen[3]).toBeGreaterThan(seen[2]!)
+    } finally {
+      setTimeOffset(0)
+    }
+  })
+
+  it('BLK-2: two individually-safe targets that black out together enqueue only one per tick', () => {
+    // review 原例：太阳能 1（产 55）+ 金属 2 / 晶体 1（耗 35.2），余量 19.8；
+    // 金属 3（增耗 +15.7）与晶体 2（增耗 +13.2）各自单独验证都安全（余量 4.1 / 6.6），
+    // 合起来余量 -9.1 会断电 → 同一 tick 只允许排入一项
+    const planet = makePlanet({
+      [BuildingType.SolarPlant]: 1,
+      [BuildingType.MetalMine]: 2,
+      [BuildingType.CrystalMine]: 1
+    })
+    const player = makePlayer([planet])
+    setNow(NOW)
+    enableAutopilot(planet, [[BuildingType.MetalMine, 3], [BuildingType.CrystalMine, 2]])
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    // 优先级高的金属 3 先排入；合起来断电的晶体 2 不得排入
+    expect(
+      planet.waitingBuildQueue.some(i => i.itemType === BuildingType.MetalMine && i.source === 'autopilot')
+    ).toBe(true)
+    expect(
+      planet.waitingBuildQueue.some(i => i.itemType === BuildingType.CrystalMine && i.source === 'autopilot')
+    ).toBe(false)
+    expect(
+      result.blockers.some(b => b.reason === 'autopilot.blockedEnergy' || b.reason === 'autopilot.blockedEnergyRescue')
+    ).toBe(true)
+    // 最终在途组合不断电
+    expect(checkEnergySafeWorstOrder(planet, 0).safe).toBe(true)
+  })
+
+  it('BLK-3: warehouse rescue is not duplicated across ticks', () => {
+    const planet = makePlanet({
+      [BuildingType.SolarPlant]: 14,
+      [BuildingType.MetalMine]: 13,
+      [BuildingType.CrystalMine]: 10,
+      [BuildingType.DeuteriumSynthesizer]: 6,
+      [BuildingType.RoboticsFactory]: 2,
+      [BuildingType.MetalStorage]: 0
+    })
+    const player = makePlayer([planet])
+    setNow(NOW)
+    enableAutopilot(planet, [[BuildingType.MetalMine, 14]])
+
+    tickAutopilotPlanet(player, planet, NOW, ctx)
+    tickAutopilotPlanet(player, planet, NOW + 1000, ctx)
+
+    const warehouseItems = planet.waitingBuildQueue.filter(i => i.itemType === BuildingType.MetalStorage)
+    expect(warehouseItems).toHaveLength(1)
+  })
+
+  it('MAJ-1: a manually completed building expires the autopilot waiting item mid-flight', () => {
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 5, [BuildingType.MetalMine]: 5 })
+    const player = makePlayer([planet])
+    setNow(NOW)
+    const config = enableAutopilot(planet, [[BuildingType.MetalMine, 6]])
+
+    const r1 = tickAutopilotPlanet(player, planet, NOW, ctx)
+    expect(r1.enqueued).toBe(1)
+    const waitingId = planet.waitingBuildQueue.find(i => i.itemType === BuildingType.MetalMine)!.id
+
+    // 玩家手动把金属矿建到 6（副官的等待项过期）
+    planet.buildings[BuildingType.MetalMine] = 6
+    const r2 = tickAutopilotPlanet(player, planet, NOW + 1000, ctx)
+
+    expect(planet.waitingBuildQueue.find(i => i.id === waitingId)).toBeUndefined()
+    expect(config.targets[0]!.completed).toBe(true)
+    expect(r2.completedTargets.map(t => t.buildingType)).toEqual([BuildingType.MetalMine])
+
+    // 已达标不再重复报告
+    const r3 = tickAutopilotPlanet(player, planet, NOW + 2000, ctx)
+    expect(r3.completedTargets).toHaveLength(0)
+  })
+
+  it('MAJ-2: a truly full building queue blocks the autopilot with blockedNoSlot', () => {
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 2, [BuildingType.MetalMine]: 3 })
+    // 正式队列塞满 3 个建筑项（capacity 3）：副官槽位预算 = 3 - 1（给玩家留一槽）= 2 已用完
+    planet.buildQueue = [
+      { id: 'b1', type: 'building', itemType: BuildingType.CrystalMine, targetLevel: 2, startTime: 0, endTime: 999999 },
+      { id: 'b2', type: 'building', itemType: BuildingType.CrystalMine, targetLevel: 3, startTime: 0, endTime: 999999 },
+      { id: 'b3', type: 'building', itemType: BuildingType.CrystalMine, targetLevel: 4, startTime: 0, endTime: 999999 }
+    ] as unknown as Planet['buildQueue']
+    const player = makePlayer([planet])
+    setNow(NOW)
+    enableAutopilot(planet, [[BuildingType.MetalMine, 4]])
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    expect(result.enqueued).toBe(0)
+    expect(result.blockers.some(b => b.reason === 'autopilot.blockedNoSlot')).toBe(true)
+  })
+
+  it('MAJ-3: the player waiting item executes before the autopilot item', () => {
+    const planet = makePlanet(
+      { [BuildingType.SolarPlant]: 2, [BuildingType.MetalMine]: 1, [BuildingType.CrystalMine]: 1 },
+      // 资源只够一项：晶体 2（76m/38c）可建，金属 2（90m/22c）不够
+      { resources: { metal: 80, crystal: 50, deuterium: 0, darkMatter: 0, energy: 5000 } }
+    )
+    const player = makePlayer([planet])
+    setNow(NOW)
+    // 副官项 priority 更小，但玩家项必须先执行
+    waitingQueueLogic.addToBuildWaitingQueue(planet, {
+      id: 'a1', type: 'building', itemType: BuildingType.MetalMine,
+      targetLevel: 2, priority: 0, addedTime: 1, planetId: planet.id, source: 'autopilot'
+    } as WaitingQueueItem)
+    waitingQueueLogic.addToBuildWaitingQueue(planet, {
+      id: 'p1', type: 'building', itemType: BuildingType.CrystalMine,
+      targetLevel: 2, priority: Date.now(), addedTime: 2, planetId: planet.id
+    } as WaitingQueueItem)
+
+    const { executed } = waitingQueueLogic.processPlanetWaitingQueue(planet, player, player.officers)
+
+    expect(executed.map(i => i.id)).toEqual(['p1'])
+    expect(planet.waitingBuildQueue.map(i => i.id)).toEqual(['a1'])
+    expect(planet.buildQueue.some(q => q.itemType === BuildingType.CrystalMine)).toBe(true)
+  })
+
+  it('MAJ-4: a blocked long-time step does not trigger downgrade', () => {
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 1 }, { isMoon: true })
+    const player = makePlayer([planet])
+    setNow(NOW)
+    const config = enableAutopilot(planet, [[BuildingType.SolarPlant, 5]])
+    config.workHourThreshold = 1 // 极小阈值：任何可排步骤都会超限
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    // 太阳能是 planetOnly：月球上永久 blockedMoonIncompatible，不应触发降级
+    expect(result.downgraded).toBe(false)
+    expect(config.mode).toBe('auto')
+    expect(result.blockers.some(b => b.reason === 'autopilot.blockedMoonIncompatible')).toBe(true)
+  })
+
+  it('MAJ-8: a resource-blocked high-priority step soft-reserves its cost against lower priorities', () => {
+    const planet = makePlanet(
+      {
+        [BuildingType.SolarPlant]: 20,
+        [BuildingType.MetalMine]: 19,
+        [BuildingType.CrystalMine]: 15,
+        [BuildingType.RoboticsFactory]: 5,
+        [BuildingType.ResearchLab]: 3,
+        [BuildingType.MetalStorage]: 12,
+        [BuildingType.CrystalStorage]: 12,
+        [BuildingType.DeuteriumTank]: 12
+      },
+      // 金属 20（133010m/33252c）：晶体不够被挡；晶体 16（55339m/27670c）单独看可建
+      { resources: { metal: 200000, crystal: 30000, deuterium: 100000, darkMatter: 0, energy: 5000 } }
+    )
+    const player = makePlayer([planet])
+    setNow(NOW)
+    const config = enableAutopilot(planet, [[BuildingType.MetalMine, 20], [BuildingType.CrystalMine, 16]])
+    config.workHourThreshold = 1e12 // 关掉工时降级，单独验证软预留
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    expect(result.enqueued).toBe(0)
+    const reasons = result.blockers.map(b => `${b.itemType}:${b.reason}`)
+    expect(reasons).toContain(`${BuildingType.MetalMine}:autopilot.blockedNoResource`)
+    expect(reasons).toContain(`${BuildingType.CrystalMine}:autopilot.blockedNoResource`)
+  })
+
+  it('MAJ-8 (research): a resource-blocked high-priority research soft-reserves its cost', () => {
+    const planet = makePlanet(
+      {
+        [BuildingType.SolarPlant]: 2,
+        [BuildingType.ResearchLab]: 1,
+        [BuildingType.MetalMine]: 1,
+        [BuildingType.CrystalMine]: 1,
+        [BuildingType.DeuteriumSynthesizer]: 1
+      },
+      // 能源 4（6400c/3200d）：晶体不够被挡；激光 1（200m/100c）单独看可建
+      { resources: { metal: 50000, crystal: 5000, deuterium: 5000, darkMatter: 0, energy: 5000 } }
+    )
+    const player = makePlayer([planet], { [TechnologyType.EnergyTechnology]: 3 })
+    setNow(NOW)
+    const config = enableResearchAutopilot(player, [[TechnologyType.EnergyTechnology, 4], [TechnologyType.LaserTechnology, 1]])
+    config.workHourThreshold = 1e12 // 关掉工时降级，单独验证软预留
+
+    const result = tickEmpireResearch(player, NOW, ctx)
+
+    expect(result.enqueued).toBe(0)
+    expect(result.blockers.filter(b => b.reason === 'autopilot.blockedNoResource')).toHaveLength(2)
+  })
+
+  it('Minor-2: energy rescue is exempt from the minFreeSpace reserve', () => {
+    const planet = makePlanet({ [BuildingType.SolarPlant]: 1, [BuildingType.MetalMine]: 4, [BuildingType.CrystalMine]: 3 })
+    const player = makePlayer([planet])
+    setNow(NOW)
+    // 空间刚好卡住 B5 预留：没有豁免的话救援会被 blockedNoSpace 挡住
+    const usedSpace = buildingLogic.calculateUsedSpace(planet)
+    const solarSpace = BUILDINGS[BuildingType.SolarPlant].spaceUsage
+    planet.maxSpace = usedSpace + solarSpace + 5
+    const config = enableAutopilot(planet, [[BuildingType.MetalMine, 5]])
+    expect(usedSpace + solarSpace > planet.maxSpace - config.minFreeSpace).toBe(true)
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    // 金属 5 会断电 → 触发能源救援，豁免空间预留后成功排入
+    const rescue = planet.waitingBuildQueue.find(i => i.itemType === BuildingType.SolarPlant && i.source === 'autopilot')
+    expect(rescue).toBeDefined()
+    expect(result.blockers.some(b => b.reason === 'autopilot.blockedEnergyRescue')).toBe(true)
+  })
+
+  it('Minor-5: the research tick deducts the lab planet autopilot reserve from its snapshot', () => {
+    const planet = makePlanet(
+      {
+        [BuildingType.SolarPlant]: 2,
+        [BuildingType.ResearchLab]: 1,
+        [BuildingType.MetalMine]: 1,
+        [BuildingType.CrystalMine]: 1,
+        [BuildingType.DeuteriumSynthesizer]: 1
+      },
+      {
+        resources: { metal: 50000, crystal: 50000, deuterium: 5000, darkMatter: 0, energy: 5000 },
+        autopilot: { ...createDefaultPlanetAutopilot(), reserve: { metal: 49000, crystal: 49900, deuterium: 0 } }
+      }
+    )
+    const player = makePlayer([planet], {})
+    setNow(NOW)
+    const config = enableResearchAutopilot(player, [[TechnologyType.EnergyTechnology, 1]])
+    config.workHourThreshold = 1e12
+
+    const result = tickEmpireResearch(player, NOW, ctx)
+
+    // 能源 1（800m/400c）单独看资源充足，但扣掉星球副官预留（剩 1000m/100c）后不够 → 被挡
+    expect(result.enqueued).toBe(0)
+    expect(result.blockers.some(b => b.reason === 'autopilot.blockedNoResource')).toBe(true)
+  })
+
+  it('MAJ-5: setAutopilotMode refuses to bypass the resume guard', () => {
+    const config = createDefaultPlanetAutopilot()
+    config.mode = 'execute'
+    config.downgradeReason = 'autopilot.downgradeWorkTime'
+    config.canResumeAuto = false
+
+    expect(setAutopilotMode(config, 'auto')).toBe(false)
+    expect(config.mode).toBe('execute')
+
+    config.canResumeAuto = true
+    expect(setAutopilotMode(config, 'auto')).toBe(true)
+    expect(config.mode).toBe('auto')
+    expect(config.downgradeReason).toBeUndefined()
   })
 })

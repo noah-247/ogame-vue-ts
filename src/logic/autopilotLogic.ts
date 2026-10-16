@@ -170,7 +170,7 @@ export interface AutopilotTickResult<TTarget = AutopilotTarget> {
   enqueued: number
   /** 是否发生了自主→执行降级 */
   downgraded: boolean
-  /** 完成的目标（达到目标等级） */
+  /** 本 tick 新达标的目标（达标即保留在清单中，不再删除，见 Minor-9/E） */
   completedTargets: TTarget[]
   /** 本 tick 遇到的阻塞原因（去重后） */
   blockers: AutopilotBlocker[]
@@ -191,43 +191,41 @@ const emptyResult = (decision: string): AutopilotTickResult => ({
 // ---------------------------------------------------------------------------
 
 /**
- * 对照星球实际等级，移除已达标的目标，返回完成清单。
- * 玩家拆除导致等级回落时，目标保持未完成（下次 tick 会重新规划）。
+ * 对照星球实际等级重推目标进度（Minor-9/E：目标=期望状态，持久保存）。
+ * 达标不删除目标（达标=无工作可做）；玩家在达标前或达标后拆除到目标以下，
+ * 目标都会变回未完成，下次 tick 重新规划（行为一致）。
+ * 返回本 tick 新达标的目标（已达标的不再重复报告，避免决策摘要每 tick 刷屏）。
  */
 export const reconcileTargets = (
   config: AutopilotPlanetConfig,
   planet: Planet
 ): AutopilotTarget[] => {
-  const completed: AutopilotTarget[] = []
-  config.targets = config.targets.filter(target => {
+  const newlyCompleted: AutopilotTarget[] = []
+  for (const target of config.targets) {
     const current = planet.buildings[target.buildingType] || 0
     // BLK-4 防御：非法目标等级（NaN/非正数）不判完成，留待 UI 修正
-    if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) return true
-    if (current >= target.targetLevel) {
-      completed.push(target)
-      return false
-    }
-    return true
-  })
-  return completed
+    if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) continue
+    const wasCompleted = target.completed === true
+    target.completed = current >= target.targetLevel
+    if (target.completed && !wasCompleted) newlyCompleted.push(target)
+  }
+  return newlyCompleted
 }
 
 export const reconcileResearchTargets = (
   config: EmpireResearchAutopilot,
   technologies: Partial<Record<TechnologyType, number>>
 ): AutopilotResearchTarget[] => {
-  const completed: AutopilotResearchTarget[] = []
-  config.targets = config.targets.filter(target => {
+  const newlyCompleted: AutopilotResearchTarget[] = []
+  for (const target of config.targets) {
     const current = technologies[target.technology] || 0
     // BLK-4 防御：非法目标等级不判完成，留待 UI 修正
-    if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) return true
-    if (current >= target.targetLevel) {
-      completed.push(target)
-      return false
-    }
-    return true
-  })
-  return completed
+    if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) continue
+    const wasCompleted = target.completed === true
+    target.completed = current >= target.targetLevel
+    if (target.completed && !wasCompleted) newlyCompleted.push(target)
+  }
+  return newlyCompleted
 }
 
 // ---------------------------------------------------------------------------
@@ -593,33 +591,62 @@ export const planEnergyRescue = (
 /**
  * 规划仓库救援：若某步费用超过当前容量，返回对应仓库的下一步。
  * 仓库等级目标 = 刚好装下该笔费用的最小等级。
+ *
+ * Minor-7：仓库达到上限也装不下时（12 级都装不下 / 已到 maxLevel），
+ * 不再返回 null 让调用方误判为 blockedNoResource，而是给出明确的阻塞原因。
  */
+export interface WarehouseRescuePlan {
+  /** 可执行的仓库救援步骤；null = 无需救援，或需要救援但无法执行 */
+  step: AutopilotStep | null
+  /** step 为 null 且确实需要救援时，说明无法救援的明确原因 */
+  blocked?: AutopilotBlocker
+}
+
 export const planWarehouseRescue = (
   planet: Planet,
   cost: Resources,
   storageCapacityBonus: number,
   ctx: AutopilotContext
-): AutopilotStep | null => {
+): WarehouseRescuePlan => {
   const capacity = resourceLogic.calculateResourceCapacity(planet, storageCapacityBonus)
   for (const key of ['metal', 'crystal', 'deuterium'] as const) {
     if (cost[key] <= capacity[key]) continue
     const warehouse = WAREHOUSES[key]
     const current = planet.buildings[warehouse] || 0
     const config = BUILDINGS[warehouse]
-    if (config.maxLevel !== undefined && current + 1 > config.maxLevel) return null
+    if (config.maxLevel !== undefined && current + 1 > config.maxLevel) {
+      return {
+        step: null,
+        blocked: { kind: 'building', itemType: warehouse, level: config.maxLevel, reason: 'autopilot.blockedWarehouseCap' }
+      }
+    }
     // 找装下费用的最小仓库等级（上限 +12 级，避免无穷循环）
     for (let level = current + 1; level <= current + 12; level++) {
       const probe = { ...planet, buildings: { ...planet.buildings, [warehouse]: level } } as Planet
       const cap = resourceLogic.calculateResourceCapacity(probe, storageCapacityBonus)
       if (cap[key] >= cost[key]) {
-        if (!buildingLogic.checkBuildingRequirements(warehouse, planet, {}, level)) return null
-        if (!buildingLogic.checkSpaceAvailable(planet, warehouse)) return null
-        return toStep(planet, warehouse, current + 1, '', -1, 'warehouse', ctx)
+        if (!buildingLogic.checkBuildingRequirements(warehouse, planet, {}, level)) {
+          return {
+            step: null,
+            blocked: { kind: 'building', itemType: warehouse, level, reason: 'autopilot.blockedPrereq' }
+          }
+        }
+        if (!buildingLogic.checkSpaceAvailable(planet, warehouse)) {
+          return {
+            step: null,
+            blocked: { kind: 'building', itemType: warehouse, level, reason: 'autopilot.blockedNoSpace' }
+          }
+        }
+        return { step: toStep(planet, warehouse, current + 1, '', -1, 'warehouse', ctx) }
       }
     }
-    return null
+    // 12 级都装不下：明确报告仓库上限阻塞（Minor-7）
+    return {
+      step: null,
+      blocked: { kind: 'building', itemType: warehouse, level: current + 12, reason: 'autopilot.blockedWarehouseCap' }
+    }
   }
-  return null
+  return { step: null }
 }
 
 /** 检查科技在目标等级的前置（含等级门槛；既有 checkTechnologyRequirements 只查基础前置） */
@@ -767,7 +794,7 @@ export const tickAutopilotPlanet = (
   // 规划用资源快照：逐笔模拟扣款，避免等待队列超发（等待项开工时才真扣款）
   let planningResources: Resources = { ...planet.resources }
 
-  const enqueueStep = (step: AutopilotStep): boolean => {
+  const enqueueStep = (step: AutopilotStep, opts: { exemptSpaceReserve?: boolean } = {}): boolean => {
     if (isBuildingBusy(planet, step.buildingType)) return false
     if (autopilotPending() >= maxAutopilotPending) {
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedNoSlot' })
@@ -781,12 +808,14 @@ export const tickAutopilotPlanet = (
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedWaitingFull' })
       return false
     }
-    // B5：空间预留
-    const usedSpace = buildingLogic.calculateUsedSpace(planet)
-    const spaceUsage = BUILDINGS[step.buildingType].spaceUsage
-    if (usedSpace + spaceUsage > planet.maxSpace - config.minFreeSpace) {
-      pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedNoSpace' })
-      return false
+    // B5：空间预留。Minor-2：能源救援豁免空间预留，否则断电时无法自救
+    if (!opts.exemptSpaceReserve) {
+      const usedSpace = buildingLogic.calculateUsedSpace(planet)
+      const spaceUsage = BUILDINGS[step.buildingType].spaceUsage
+      if (usedSpace + spaceUsage > planet.maxSpace - config.minFreeSpace) {
+        pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedNoSpace' })
+        return false
+      }
     }
     const item: WaitingQueueItem = {
       id: nextAutopilotId('apw', now),
@@ -827,7 +856,8 @@ export const tickAutopilotPlanet = (
       return 'downgraded'
     }
     // 仓库救援：费用超过容量先扩仓库
-    const warehouseStep = planWarehouseRescue(planet, step.cost, ctx.storageCapacityBonus, ctx)
+    const rescueOutcome = planWarehouseRescue(planet, step.cost, ctx.storageCapacityBonus, ctx)
+    const warehouseStep = rescueOutcome.step
     if (warehouseStep) {
       // BLK-3：仓库本身已在途（等待/在建）时不再重复排入，否则同一 targetLevel 的
       // 重复项转正后判 levelAlreadyReached 且不移除，永久卡住等待队列
@@ -844,13 +874,23 @@ export const tickAutopilotPlanet = (
       }
       if (!hasResourcesAfterReserve(planningResources, config.reserve, warehouseStep.cost)) {
         pushBlocker(blockers, { kind: 'building', itemType: warehouseStep.buildingType, level: warehouseStep.nextLevel, reason: 'autopilot.blockedNoResource' })
+        // MAJ-8：救援项被资源挡住同样软预留，避免低优先级步骤吃掉它要攒的资源
+        planningResources = subtractCost(planningResources, warehouseStep.cost)
         return 'blocked'
       }
       return enqueueStep(warehouseStep) ? 'enqueued' : 'blocked'
     }
+    // Minor-7：仓库上限导致无法救援（12 级都装不下），给出明确阻塞原因
+    if (rescueOutcome.blocked) {
+      pushBlocker(blockers, rescueOutcome.blocked)
+      return 'blocked'
+    }
     // 资源检查（含预留）
     if (!hasResourcesAfterReserve(planningResources, config.reserve, step.cost)) {
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedNoResource' })
+      // MAJ-8：高优先级步骤因资源被挡时，把它的成本从 planningResources 软预留掉
+      // （可为负），低优先级只能用剩下的部分，避免便宜步骤花掉它正在攒的资源
+      planningResources = subtractCost(planningResources, step.cost)
       return 'blocked'
     }
     // B1：最坏完工顺序能源验证（含本步）
@@ -868,11 +908,12 @@ export const tickAutopilotPlanet = (
     const energyCheck = checkEnergySafeWorstOrder(planet, energyBonus, [{ type: 'building', itemType: step.buildingType, targetLevel: step.nextLevel }])
     if (!energyCheck.safe) {
       const rescue = planEnergyRescue(planet, technologies, ctx)
-      // Minor-2：救援步骤同样受自主模式工时门槛约束；排入失败不再记「已救援」
+      // Minor-2：救援步骤同样受自主模式工时门槛约束；排入失败不再记「已救援」；
+      // 能源救援豁免 B5 空间预留，否则断电时无法自救
       if (rescue &&
           !(config.mode === 'auto' && rescue.buildTime > config.workHourThreshold) &&
           hasResourcesAfterReserve(planningResources, config.reserve, rescue.cost) &&
-          enqueueStep(rescue)) {
+          enqueueStep(rescue, { exemptSpaceReserve: true })) {
         pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedEnergyRescue' })
       } else {
         pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedEnergy' })
@@ -927,13 +968,16 @@ export const resumeAutoMode = (
   return true
 }
 
-/** 切换自主/执行模式（玩家手动） */
-export const setAutopilotMode = (config: AutopilotPlanetConfig, mode: AutopilotMode): void => {
+/** 切换自主/执行模式（玩家手动）。MAJ-5：执行模式下无条件手动切回自主会
+ *  绕过 B8 滞后守卫；除非 canResumeAuto 已放行，否则拒绝切换。 */
+export const setAutopilotMode = (config: AutopilotPlanetConfig, mode: AutopilotMode): boolean => {
+  if (mode === 'auto' && config.mode === 'execute' && config.downgradeReason && !config.canResumeAuto) return false
   config.mode = mode
   if (mode === 'auto') {
     config.downgradeReason = undefined
     config.canResumeAuto = false
   }
+  return true
 }
 
 // ---------------------------------------------------------------------------
@@ -1034,8 +1078,14 @@ export const tickEmpireResearch = (
 
   // 帝国研究预留从玩家...研究没有星球资源概念：预留约束研究排队时的资源占用。
   // 简化：检查第一颗有研究室星球的资源（既有研究等待项同样在此星球扣款）。
+  // Minor-5：研究 tick 的资源快照至少扣掉研究星球的副官预留，
+  // 避免星球副官和研究副官各自拿一份互不扣减的快照规划。
   const labPlanet = selectResearchPlanet(player)!
-  let planningResources: Resources = { ...labPlanet.resources }
+  const labReserve = labPlanet.autopilot?.reserve ?? createDefaultReserve()
+  let planningResources: Resources = subtractCost(
+    { ...labPlanet.resources },
+    { metal: labReserve.metal, crystal: labReserve.crystal, deuterium: labReserve.deuterium, darkMatter: 0, energy: 0 }
+  )
 
   /** 该科技是否已有在途研究（研究队列/等待队列，任何来源） */
   const isResearchBusy = (technology: TechnologyType): boolean =>
@@ -1077,6 +1127,8 @@ export const tickEmpireResearch = (
     // 资源检查（含预留），在研究星球的资源快照上模拟扣款
     if (!hasResourcesAfterReserve(planningResources, config.reserve, step.cost)) {
       pushBlocker(blockers, { kind: 'technology', itemType: step.technology, level: step.nextLevel, reason: 'autopilot.blockedNoResource' })
+      // MAJ-8：高优先级研究被资源挡住时软预留其成本，低优先级只能用剩下的部分
+      planningResources = subtractCost(planningResources, step.cost)
       continue
     }
     const check = waitingQueueLogic.canAddToResearchWaitingQueue(player, {

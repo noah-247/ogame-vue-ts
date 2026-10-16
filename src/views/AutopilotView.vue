@@ -109,6 +109,7 @@
             <GripVertical class="h-4 w-4 text-muted-foreground cursor-grab shrink-0" />
             <span class="text-xs text-muted-foreground w-6 text-center">{{ i + 1 }}</span>
             <span class="font-medium flex-1 min-w-0 truncate">{{ t(`buildings.${target.buildingType}`) }}</span>
+            <Badge v-if="target.completed" variant="secondary" class="shrink-0">{{ t('autopilot.targetCompleted') }}</Badge>
             <span class="text-xs text-muted-foreground whitespace-nowrap">
               {{ t('autopilot.currentLevel') }} {{ planet.buildings[target.buildingType] || 0 }}
             </span>
@@ -311,6 +312,7 @@
           >
             <span class="text-xs text-muted-foreground w-6 text-center">{{ i + 1 }}</span>
             <span class="font-medium flex-1 min-w-0 truncate">{{ t(`technologies.${target.technology}`) }}</span>
+            <Badge v-if="target.completed" variant="secondary" class="shrink-0">{{ t('autopilot.targetCompleted') }}</Badge>
             <span class="text-xs text-muted-foreground whitespace-nowrap">
               {{ t('autopilot.currentLevel') }} {{ gameStore.player.technologies[target.technology] || 0 }}
             </span>

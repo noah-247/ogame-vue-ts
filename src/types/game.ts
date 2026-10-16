@@ -695,6 +695,8 @@ export interface AutopilotTarget {
   buildingType: BuildingType
   targetLevel: number
   priority: number // 数字越小优先级越高
+  /** 是否已达标（由每 tick 的 reconcileTargets 重推；达标后目标保留，见 Minor-9/E） */
+  completed?: boolean
 }
 
 // 资源预留：规划层面的软性预留，不实际扣款；低优先级自动工作只能用预留之外的资源
@@ -737,6 +739,8 @@ export interface AutopilotResearchTarget {
   technology: TechnologyType
   targetLevel: number
   priority: number
+  /** 是否已达标（由每 tick 的 reconcileResearchTargets 重推；达标后目标保留，见 Minor-9/E） */
+  completed?: boolean
 }
 
 /** 帝国层级研究副官配置（存于 Player.empireResearchAutopilot；缺省 = 未启用） */
