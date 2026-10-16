@@ -30,6 +30,7 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
       <Card v-for="shipType in Object.values(ShipType)" :key="shipType" class="relative">
+        <ArtworkImage :src="SHIP_ARTWORK[shipType]" :alt="SHIPS[shipType].name" />
         <CardUnlockOverlay :requirements="SHIPS[shipType].requirements" />
         <CardHeader>
           <div class="mb-2">
@@ -212,6 +213,7 @@
   import { Input } from '@/components/ui/input'
   import { Label } from '@/components/ui/label'
   import ResourceIcon from '@/components/common/ResourceIcon.vue'
+  import ArtworkImage from '@/components/common/ArtworkImage.vue'
   import {
     AlertDialog,
     AlertDialogAction,
@@ -221,6 +223,7 @@
     AlertDialogHeader,
     AlertDialogTitle
   } from '@/components/ui/alert-dialog'
+  import { SHIP_ARTWORK } from '@/config/artwork'
   import UnlockRequirement from '@/components/common/UnlockRequirement.vue'
   import CardUnlockOverlay from '@/components/common/CardUnlockOverlay.vue'
   import { formatNumber, getResourceCostColor } from '@/utils/format'

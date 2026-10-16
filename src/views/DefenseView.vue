@@ -30,6 +30,7 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
       <Card v-for="defenseType in Object.values(DefenseType)" :key="defenseType" class="relative">
+        <ArtworkImage :src="DEFENSE_ARTWORK[defenseType]" :alt="DEFENSES[defenseType].name" />
         <CardUnlockOverlay :requirements="DEFENSES[defenseType].requirements" />
         <CardHeader>
           <div class="mb-2">
@@ -175,6 +176,7 @@
   import { Label } from '@/components/ui/label'
   import { Badge } from '@/components/ui/badge'
   import ResourceIcon from '@/components/common/ResourceIcon.vue'
+  import ArtworkImage from '@/components/common/ArtworkImage.vue'
   import {
     AlertDialog,
     AlertDialogAction,
@@ -184,6 +186,7 @@
     AlertDialogHeader,
     AlertDialogTitle
   } from '@/components/ui/alert-dialog'
+  import { DEFENSE_ARTWORK } from '@/config/artwork'
   import UnlockRequirement from '@/components/common/UnlockRequirement.vue'
   import CardUnlockOverlay from '@/components/common/CardUnlockOverlay.vue'
   import { formatNumber, getResourceCostColor } from '@/utils/format'

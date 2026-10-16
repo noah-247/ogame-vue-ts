@@ -4,6 +4,7 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
       <Card v-for="officerType in Object.values(OfficerType)" :key="officerType">
+        <ArtworkImage :src="OFFICER_ARTWORK[officerType]" :alt="OFFICERS[officerType].name" />
         <CardHeader>
           <div class="mb-2">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
@@ -163,6 +164,7 @@
   import { Button } from '@/components/ui/button'
   import { Badge } from '@/components/ui/badge'
   import ResourceIcon from '@/components/common/ResourceIcon.vue'
+  import ArtworkImage from '@/components/common/ArtworkImage.vue'
   import {
     AlertDialog,
     AlertDialogAction,
@@ -173,6 +175,7 @@
     AlertDialogHeader,
     AlertDialogTitle
   } from '@/components/ui/alert-dialog'
+  import { OFFICER_ARTWORK } from '@/config/artwork'
   import { formatNumber, formatTime, formatDate, getResourceCostColor } from '@/utils/format'
   import * as officerLogic from '@/logic/officerLogic'
   import * as resourceLogic from '@/logic/resourceLogic'

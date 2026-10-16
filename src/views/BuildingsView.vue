@@ -30,6 +30,7 @@
 
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       <Card v-for="buildingType in availableBuildings" :key="buildingType" :data-building="buildingType" class="relative">
+        <ArtworkImage :src="BUILDING_ARTWORK[buildingType]" :alt="BUILDINGS[buildingType].name" />
         <!-- 前置条件遮罩 -->
         <CardUnlockOverlay :requirements="BUILDINGS[buildingType].requirements" :currentLevel="getBuildingLevel(buildingType)" />
 
@@ -197,6 +198,7 @@
   import { Button } from '@/components/ui/button'
   import { Badge } from '@/components/ui/badge'
   import ResourceIcon from '@/components/common/ResourceIcon.vue'
+  import ArtworkImage from '@/components/common/ArtworkImage.vue'
   import CardUnlockOverlay from '@/components/common/CardUnlockOverlay.vue'
   import {
     AlertDialog,
@@ -208,6 +210,7 @@
     AlertDialogHeader,
     AlertDialogTitle
   } from '@/components/ui/alert-dialog'
+  import { BUILDING_ARTWORK } from '@/config/artwork'
   import { Clock, Grid3x3, Check, X } from 'lucide-vue-next'
   import { formatNumber, formatTime, getResourceCostColor } from '@/utils/format'
   import * as buildingLogic from '@/logic/buildingLogic'
