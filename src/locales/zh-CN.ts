@@ -978,6 +978,9 @@ export default {
     remove: '移除',
     noTargets: '暂无目标：添加目标或应用蓝图开始',
     blueprintApplied: '已应用蓝图并启用副官',
+    blueprintPreviewTitle: '蓝图预览',
+    blueprintChainEmpty: '无需前置，直接可建',
+    blueprintIncompatible: '月球不可建，套用时略过',
     blueprints: {
       title: '蓝图预设',
       apply: '应用',
@@ -1026,6 +1029,7 @@ export default {
     blockedNoSpace: '空间不足（含预留）',
     blockedEnergy: '排入会导致断电，且无法补足能源',
     blockedEnergyRescue: '先补能源：已改为排入太阳能/聚变',
+    blockedWaitingWarehouse: '仓库扩建已在排队，等待完成',
     blockedPrereq: '前置未满足，等待前置链完成',
     blockedPrereqDisabled: '前置未满足，且未允许自动补前置',
     blockedWaitingFull: '等待队列已满',
