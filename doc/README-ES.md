@@ -36,6 +36,12 @@ La sonda de espionaje tenía ataque y escudo a 0, lo que no coincide con el OGam
 ### ⏩ Adiós a la espera en el late game: avance rápido
 - Velocidad de juego máxima de 10x a 100x
 - Avance de tiempo en un clic (+1 h / +8 h / +24 h) en la vista general — recursos, colas de construcción y flotas se resuelven de golpe, con una sola notificación resumen en vez de una avalancha
+
+### ☁️ Despliegue: frontend puro en Cloudflare Workers
+Este juego es puro frontend, no necesita servidor para nada — todo el arsenal del README original (servidor Go / Docker / Electron / APK) en realidad sobra. La demo de este fork está desplegada así:
+1. `pnpm build` (artefactos en `docs/`)
+2. Escribir un `wrangler.toml` con `[assets] directory = "./docs"`
+3. `wrangler deploy` — listo. Cero servidores, cero mantenimiento, la cuota gratuita de Cloudflare sobra.
 ## Características Principales
 
 - **Gestión de Edificios** - Construye y mejora varios edificios en planetas y lunas

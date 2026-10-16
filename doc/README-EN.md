@@ -36,6 +36,12 @@ The espionage probe had 0 attack and 0 shield, which doesn't match real OGame. R
 ### ⏩ No more idling in the late game: fast-forward
 - Game speed cap raised from 10x to 100x
 - One-click time skip (+1h / +8h / +24h) on the overview page — resources, build queues and fleets all resolve at once, with a single summary notification instead of a spam storm
+
+### ☁️ Deployment: pure Cloudflare Workers frontend
+This game is pure frontend — it doesn't need a server at all. The whole Go server / Docker / Electron / APK toolbox from the original README is actually unnecessary. This fork's demo is deployed exactly like this:
+1. `pnpm build` (artifacts in `docs/`)
+2. Write a `wrangler.toml` with `[assets] directory = "./docs"`
+3. `wrangler deploy` — done. Zero servers, zero ops, the Cloudflare free quota is more than enough.
 ## Features
 
 - **Building Management** - Construct and upgrade various buildings on planets and moons

@@ -36,6 +36,12 @@ OGame Vue TS 是一款受經典 OGame 遊戲啟發的單機版、基於瀏覽器
 ### ⏩ 後期終於不用掛機了：快轉
 - 遊戲速度上限從 10x 放開到 100x
 - 總覽頁加了 +1 小時 / +8 小時 / +24 小時一鍵快轉，資源、建造、艦隊一次結算完，不會彈一堆通知煩你
+
+### ☁️ 部署：純 Cloudflare Workers 前端
+這遊戲是純前端，根本不需要伺服器——原版 README 裡的 Go 伺服器 / Docker / Electron / APK 全家桶其實都可以省掉。這個 fork 的試玩站就是這麼部署的：
+1. `pnpm build`（產物在 `docs/`）
+2. 寫一個 `wrangler.toml`，`[assets] directory = "./docs"`
+3. `wrangler deploy` ——完事，零伺服器、零運維，Cloudflare 免費額度都用不完
 ## 核心特性
 
 - **建築管理** - 在行星和月球上建造和升級各種建築

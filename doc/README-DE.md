@@ -36,6 +36,12 @@ Die Spionagesonde hatte Angriff und Schildstärke 0, was nicht dem echten OGame 
 ### ⏩ Kein Warten mehr im Endgame: Vorspulen
 - Spielgeschwindigkeit von max. 10x auf 100x erhöht
 - Zeitraffer per Klick (+1 Std. / +8 Std. / +24 Std.) auf der Übersichtsseite — Ressourcen, Bauaufträge und Flotten werden auf einmal abgerechnet, mit einer Sammelmitteilung statt Mitteilungsflut
+
+### ☁️ Deployment: reines Cloudflare-Workers-Frontend
+Dieses Spiel ist reines Frontend — es braucht überhaupt keinen Server. Der ganze Go-Server-/Docker-/Electron-/APK-Werkzeugkasten aus der ursprünglichen README ist eigentlich überflüssig. Die Demo dieses Forks läuft genau so:
+1. `pnpm build` (Build-Ausgabe in `docs/`)
+2. Eine `wrangler.toml` schreiben mit `[assets] directory = "./docs"`
+3. `wrangler deploy` — fertig. Kein Server, kein Ops-Aufwand, das Cloudflare-Free-Kontingent reicht locker.
 ## Hauptfunktionen
 
 - **Gebäudeverwaltung** - Baue und verbessere verschiedene Gebäude auf Planeten und Monden
