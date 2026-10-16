@@ -20,6 +20,7 @@ const router = createRouter({
     { path: '/campaign', name: 'campaign', component: () => import('@/views/CampaignView.vue') },
     { path: '/ranking', name: 'ranking', component: () => import('@/views/RankingView.vue') },
     { path: '/settings', name: 'settings', component: () => import('@/views/SettingsView.vue') },
+    { path: '/autopilot', name: 'autopilot', component: () => import('@/views/AutopilotView.vue') },
     { path: '/gm', name: 'gm', component: () => import('@/views/GMView.vue') },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') }
   ]

@@ -468,7 +468,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted, computed, ref, watch } from 'vue'
+  import { onMounted, onUnmounted, computed, ref, watch, provide } from 'vue'
   import { RouterView, useRouter } from 'vue-router'
   import { useGameStore } from '@/stores/gameStore'
   import { useUniverseStore } from '@/stores/universeStore'
@@ -548,9 +548,11 @@
     Pencil,
     Trophy,
     Crown,
-    Scroll
+    Scroll,
+    Bot
   } from 'lucide-vue-next'
   import * as gameLogic from '@/logic/gameLogic'
+  import * as autopilotLogic from '@/logic/autopilotLogic'
   import * as planetLogic from '@/logic/planetLogic'
   import * as officerLogic from '@/logic/officerLogic'
   import * as buildingValidation from '@/logic/buildingValidation'
@@ -607,6 +609,12 @@
   const npcBehaviorCounter = ref(0)
   const NPC_BEHAVIOR_INTERVAL = 5 // 每5秒检查一次NPC行为
 
+  // 自动成长副官：最近一次 tick 结果（按星球 id；帝国研究用 '__empire__'），供副官视图展示阻塞原因
+  const autopilotTickResults = ref(
+    new Map<string, autopilotLogic.AutopilotTickResult | autopilotLogic.EmpireResearchTickResult>()
+  )
+  provide('autopilotTickResults', autopilotTickResults)
+
   // 游戏循环定时器
   const gameLoop = ref<ReturnType<typeof setInterval> | null>(null)
   const pointsUpdateInterval = ref<ReturnType<typeof setInterval> | null>(null)
@@ -660,6 +668,7 @@
     { name: computed(() => t('nav.ranking')), path: '/ranking', icon: Crown },
     { name: computed(() => t('nav.messages')), path: '/messages', icon: Mail },
     { name: computed(() => t('nav.settings')), path: '/settings', icon: Settings },
+    { name: computed(() => t('nav.autopilot')), path: '/autopilot', icon: Bot },
     // GM菜单在启用GM模式时显示
     ...(gameStore.player.isGMEnabled ? [{ name: computed(() => t('nav.gm')), path: '/gm', icon: Wrench }] : [])
   ])
@@ -932,6 +941,28 @@
       silent ? aggregateUnlockNotification : handleUnlockNotification
     )
     gameStore.player.researchQueue = result.updatedResearchQueue
+
+    // M1 自动成长副官 tick：在线 tick 与快转各推进一次（离线返回不追补，靠等待队列自然推进）
+    // try/catch 包裹：副官异常不得影响主更新流程
+    try {
+      const officerBonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
+      const autopilotCtx: autopilotLogic.AutopilotContext = {
+        buildSpeedBonus: officerBonuses.buildingSpeedBonus,
+        additionalBuildQueue: officerBonuses.additionalBuildQueue,
+        energyProductionBonus: officerBonuses.energyProductionBonus,
+        storageCapacityBonus: officerBonuses.storageCapacityBonus,
+        researchSpeedBonus: officerBonuses.researchSpeedBonus
+      }
+      gameStore.player.planets.forEach(planet => {
+        const tickResult = autopilotLogic.tickAutopilotPlanet(gameStore.player, planet, now, autopilotCtx)
+        autopilotTickResults.value.set(planet.id, tickResult)
+      })
+      const researchTickResult = autopilotLogic.tickEmpireResearch(gameStore.player, now, autopilotCtx)
+      autopilotTickResults.value.set('__empire__', researchTickResult)
+    } catch (error) {
+      console.error('[autopilot] tick failed:', error)
+    }
+
     // 处理舰队任务
     gameStore.player.fleetMissions.forEach(mission => {
       if (mission.status === 'outbound' && now >= mission.arrivalTime) {

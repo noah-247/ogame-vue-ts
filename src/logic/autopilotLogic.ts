@@ -1005,3 +1005,77 @@ export const tickEmpireResearch = (
   config.lastDecision = decision
   return { enqueued, downgraded, completedTargets, blockers, decision }
 }
+
+// ---------------------------------------------------------------------------
+// 蓝图预设（M1 首版两套；蓝图 = 目标清单的预设组合，方案 A）
+// 开局骨架按 Opus 修正：太阳能 1 → 三矿各 1（三槽并行）→ 重氢优先 2→3～4 →
+// 三矿到 2 后重氢一够立刻工厂 1、2 → 关键路径最长先排。
+// ---------------------------------------------------------------------------
+
+export interface AutopilotBlueprintTarget {
+  buildingType: BuildingType
+  targetLevel: number
+  priority: number
+}
+
+export interface AutopilotBlueprint {
+  id: string
+  nameKey: string
+  descKey: string
+  targets: AutopilotBlueprintTarget[]
+}
+
+export const AUTOPILOT_BLUEPRINTS: AutopilotBlueprint[] = [
+  {
+    id: 'economy',
+    nameKey: 'autopilot.blueprints.economy.name',
+    descKey: 'autopilot.blueprints.economy.desc',
+    targets: [
+      { buildingType: BuildingType.SolarPlant, targetLevel: 6, priority: 0 },
+      { buildingType: BuildingType.MetalMine, targetLevel: 12, priority: 1 },
+      { buildingType: BuildingType.CrystalMine, targetLevel: 10, priority: 2 },
+      { buildingType: BuildingType.DeuteriumSynthesizer, targetLevel: 6, priority: 3 },
+      { buildingType: BuildingType.RoboticsFactory, targetLevel: 4, priority: 4 },
+      { buildingType: BuildingType.MetalStorage, targetLevel: 3, priority: 5 },
+      { buildingType: BuildingType.CrystalStorage, targetLevel: 3, priority: 5 },
+      { buildingType: BuildingType.DeuteriumTank, targetLevel: 2, priority: 5 }
+    ]
+  },
+  {
+    id: 'balanced',
+    nameKey: 'autopilot.blueprints.balanced.name',
+    descKey: 'autopilot.blueprints.balanced.desc',
+    targets: [
+      { buildingType: BuildingType.SolarPlant, targetLevel: 6, priority: 0 },
+      { buildingType: BuildingType.MetalMine, targetLevel: 12, priority: 1 },
+      { buildingType: BuildingType.CrystalMine, targetLevel: 10, priority: 2 },
+      { buildingType: BuildingType.DeuteriumSynthesizer, targetLevel: 8, priority: 3 },
+      { buildingType: BuildingType.ResearchLab, targetLevel: 5, priority: 4 },
+      { buildingType: BuildingType.RoboticsFactory, targetLevel: 4, priority: 5 },
+      { buildingType: BuildingType.MetalStorage, targetLevel: 3, priority: 6 },
+      { buildingType: BuildingType.CrystalStorage, targetLevel: 3, priority: 6 },
+      { buildingType: BuildingType.DeuteriumTank, targetLevel: 2, priority: 6 }
+    ]
+  }
+]
+
+export const getAutopilotBlueprint = (id: string): AutopilotBlueprint | undefined =>
+  AUTOPILOT_BLUEPRINTS.find(b => b.id === id)
+
+/**
+ * 应用蓝图：用预设替换当前目标清单（已完成/已开工的工作不受影响，
+ * 下次 tick 从实际等级重推）。同时启用副官。
+ */
+export const applyBlueprintToPlanet = (
+  config: AutopilotPlanetConfig,
+  blueprintId: string,
+  now: number = Date.now()
+): boolean => {
+  const blueprint = getAutopilotBlueprint(blueprintId)
+  if (!blueprint) return false
+  config.targets = blueprint.targets.map(t => createAutopilotTarget(t.buildingType, t.targetLevel, t.priority, now))
+  config.enabled = true
+  config.paused = false
+  config.lastDecision = 'autopilot.decisionBlueprintApplied'
+  return true
+}
