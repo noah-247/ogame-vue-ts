@@ -48,6 +48,14 @@
         <Shield class="mr-2 h-4 w-4" />
         {{ t('settings.privacyPolicy') }}
       </Button>
+
+      <!-- 开源仓库链接（本 fork） -->
+      <Button variant="ghost" size="sm" as-child>
+        <a href="https://github.com/noah-247/ogame-vue-ts" target="_blank" rel="noopener">
+          <Github class="mr-2 h-4 w-4" />
+          GitHub
+        </a>
+      </Button>
     </div>
 
     <!-- 隐私协议弹窗 -->
@@ -106,7 +114,7 @@
     AlertDialogTitle
   } from '@/components/ui/alert-dialog'
   import { Checkbox } from '@/components/ui/checkbox'
-  import { Rocket, Languages, Shield } from 'lucide-vue-next'
+  import { Rocket, Languages, Shield, Github } from 'lucide-vue-next'
   import PrivacyDialog from '@/components/dialogs/PrivacyDialog.vue'
   import pkg from '../../package.json'
 
