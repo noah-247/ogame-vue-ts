@@ -1029,7 +1029,10 @@
   }
 
   const updateGame = async () => {
-    await updateGameAt(Date.now())
+    // B10 修复：快转后 gameTime/lastUpdate 已被推到未来，下一次 tick 必须从未来
+    // 虚拟时间继续推进；若用 Date.now() 会因 timeDiff<=0 被重置时间戳，
+    // 快转推进的时间等于被吃掉。
+    await updateGameAt(Math.max(Date.now(), gameStore.gameTime || 0))
   }
 
   // 一键时间快转：立即结算未来 N 小时的游戏状态

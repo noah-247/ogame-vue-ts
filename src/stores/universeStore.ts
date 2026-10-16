@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { Planet, DebrisField } from '@/types/game'
 import pkg from '../../package.json'
 import { encryptData, decryptData } from '@/utils/crypto'
+import { parseVersionedSave, wrapVersionedSave, UNIVERSE_SAVE_VERSION } from '@/logic/saveMigration'
 
 /**
  * 宇宙地图 Store
@@ -19,8 +20,18 @@ export const useUniverseStore = defineStore('universe', {
     key: `${pkg.name}-universe`,
     storage: localStorage,
     serializer: {
-      serialize: state => encryptData(state),
-      deserialize: value => decryptData(value)
+      // M1：写入版本信封 { version, data }（UNIVERSE_SAVE_VERSION）
+      serialize: state => encryptData(wrapVersionedSave(state, UNIVERSE_SAVE_VERSION)),
+      deserialize: value => {
+        try {
+          const raw = decryptData(value, { throwOnError: true })
+          return parseVersionedSave(raw, UNIVERSE_SAVE_VERSION, 'universe') as Record<string, unknown>
+        } catch (error) {
+          // 本地损坏沿用旧行为：记错并按空状态启动（严格校验在云/WebDAV 导入边界做）
+          console.error(`[${pkg.name}] Failed to parse universe save; starting empty`, error)
+          return {}
+        }
+      }
     }
   }
 })

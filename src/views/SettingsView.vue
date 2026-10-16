@@ -393,6 +393,7 @@
   import { Capacitor } from '@capacitor/core'
   import { decryptData, encryptData } from '@/utils/crypto'
   import { parseSave } from '@/logic/saveIo'
+  import { validateSaveImportBundle } from '@/logic/saveMigration'
   import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
   import pkg from '../../package.json'
   import { checkLatestVersion, canCheckVersion } from '@/utils/versionCheck'
@@ -929,6 +930,9 @@
       confirmCallback = () => {
         try {
           const importData = JSON.parse(result.data!)
+
+          // M1 严格校验：版本与结构，损坏给明确错误（抛 SaveError，message 直接展示）
+          validateSaveImportBundle(importData)
 
           // 兼容旧版本格式
           if (typeof importData === 'string' || !importData.game) {

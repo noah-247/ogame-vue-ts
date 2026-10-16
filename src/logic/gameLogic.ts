@@ -152,30 +152,6 @@ export const processGameUpdate = (
   // 收集所有新解锁的内容
   const allUnlockedItems: UnlockedItem[] = []
 
-  // 先完成所有星球的建造队列（升级建筑），确保资源更新时使用新的建筑等级
-  player.planets.forEach(planet => {
-    // 保存完成前的建筑状态
-    const previousBuildings = { ...planet.buildings }
-
-    // 检查建造队列
-    buildingLogic.completeBuildQueue(planet, now, onPointsEarned, onCompleted)
-
-    // 检查新解锁（只在主星球上检查，避免重复通知）
-    if (!planet.isMoon && onUnlock) {
-      const unlockedItems = unlockLogic.checkAllNewlyUnlocked(planet, player.technologies, previousBuildings, previousTechnologies)
-      allUnlockedItems.push(...unlockedItems)
-    }
-
-    // 更新星球最大空间
-    if (planet.isMoon) {
-      planet.maxSpace = planetLogic.calculateMoonMaxSpace(planet)
-    } else {
-      const terraformingTechLevel = player.technologies[TechnologyType.TerraformingTechnology] || 0
-      planet.maxSpace = planetLogic.calculatePlanetMaxSpace(planet, terraformingTechLevel)
-    }
-  })
-
-  // 然后更新所有星球资源（使用新的建筑等级计算生产）
   // 获取采矿技术等级（用于矿脉恢复上限计算）
   const miningTechLevel = player.technologies[TechnologyType.MiningTechnology] || 0
   // 获取资源研究科技等级
@@ -185,11 +161,32 @@ export const processGameUpdate = (
     fuelResearchLevel: player.technologies[TechnologyType.FuelResearch] || 0
   }
 
-  player.planets.forEach(planet => {
-    // 计算更新前的资源（用于计算生产量）
+  /**
+   * B1 修复：逐事件结算。
+   * 旧逻辑先完成区间内所有建筑、再用完工后等级结算整段时间——若离线期间
+   * 任何时点断电（某矿/设施完工导致用电超过发电），整段离线产量归零。
+   * 新逻辑按完工时间点切分区间：每段用该段起始时的建筑等级结算资源，
+   * 再结算该时间点的完工事件；中途断电只影响断电后的分段，不吞掉整段。
+   */
+  const settlePlanetEventStepped = (planet: Planet): void => {
+    const from = planet.lastUpdate
+    const eventTimes = new Set<number>()
+    for (const item of planet.buildQueue) {
+      if (item.endTime > from && item.endTime <= now) eventTimes.add(item.endTime)
+    }
+    const sortedTimes = [...eventTimes].sort((a, b) => a - b)
+
+    // 计算更新前的资源（用于成就生产统计：整段口径，与旧逻辑一致）
     const resourcesBefore = { ...planet.resources }
 
+    for (const eventTime of sortedTimes) {
+      // 先用完工前等级结算 [lastUpdate, eventTime]，再结算该时间点的完工
+      resourceLogic.updatePlanetResources(planet, eventTime, bonuses, gameSpeed, miningTechLevel, techBonuses)
+      buildingLogic.completeBuildQueue(planet, now, onPointsEarned, onCompleted, eventTime)
+    }
+    // 最后一段：[最后事件, now]
     resourceLogic.updatePlanetResources(planet, now, bonuses, gameSpeed, miningTechLevel, techBonuses)
+    buildingLogic.completeBuildQueue(planet, now, onPointsEarned, onCompleted, now)
 
     // 追踪资源生产统计
     if (player.achievementStats) {
@@ -206,6 +203,28 @@ export const processGameUpdate = (
           darkMatter: darkMatterProduced
         })
       }
+    }
+  }
+
+  // 逐星球：逐事件结算建造与资源（取代旧的「先全完成、再整段结算」）
+  player.planets.forEach(planet => {
+    // 保存完成前的建筑状态
+    const previousBuildings = { ...planet.buildings }
+
+    settlePlanetEventStepped(planet)
+
+    // 检查新解锁（只在主星球上检查，避免重复通知）
+    if (!planet.isMoon && onUnlock) {
+      const unlockedItems = unlockLogic.checkAllNewlyUnlocked(planet, player.technologies, previousBuildings, previousTechnologies)
+      allUnlockedItems.push(...unlockedItems)
+    }
+
+    // 更新星球最大空间
+    if (planet.isMoon) {
+      planet.maxSpace = planetLogic.calculateMoonMaxSpace(planet)
+    } else {
+      const terraformingTechLevel = player.technologies[TechnologyType.TerraformingTechnology] || 0
+      planet.maxSpace = planetLogic.calculatePlanetMaxSpace(planet, terraformingTechLevel)
     }
   })
 

@@ -981,6 +981,7 @@ export default {
       notFound: '没有找到该用户名的云存档',
       unauthorized: '身份验证失败：密码错误或该用户名已被其他玩家注册，本地存档未被替换',
       decryptFailed: '解密失败：密码错误或云存档已损坏，本地存档未更改',
+      invalidSaveData: '云存档结构损坏：版本不受支持或缺少必要数据，本地存档未更改',
       requestFailed: '云存档请求失败，请检查网络和 Worker 地址',
       storageFailed: '无法写入浏览器存储，请检查可用空间及存储权限'
     },

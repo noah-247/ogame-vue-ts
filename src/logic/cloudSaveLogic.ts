@@ -1,6 +1,13 @@
 import CryptoJS from 'crypto-js'
 import pkg from '../../package.json'
 import { decryptData, encryptData } from '@/utils/crypto'
+import {
+  NPC_SAVE_VERSION,
+  SaveError,
+  UNIVERSE_SAVE_VERSION,
+  parseVersionedSave,
+  validateGameSaveStructure
+} from '@/logic/saveMigration'
 
 export const DEFAULT_CLOUD_SAVE_URL = 'https://ogame-save.pagi.workers.dev'
 export const CLOUD_SAVE_STORAGE_KEY = pkg.name
@@ -26,6 +33,7 @@ type CloudSaveErrorCode =
   | 'notFound'
   | 'unauthorized'
   | 'decryptFailed'
+  | 'invalidSaveData'
   | 'requestFailed'
   | 'storageFailed'
 
@@ -169,6 +177,7 @@ const encryptCloudState = async (plaintext: string, credentials: CloudSaveCreden
 }
 
 const decryptCloudState = async (ciphertext: string, clientHash: string, credentials: CloudSaveCredentials): Promise<CloudSaveBundle> => {
+  let state: unknown
   try {
     const envelope = JSON.parse(ciphertext)
     if (envelope.version !== 2 || envelope.compression !== 'gzip' || !/^[a-f0-9]{32}$/.test(envelope.iv) || typeof envelope.data !== 'string') throw new Error()
@@ -182,12 +191,24 @@ const decryptCloudState = async (ciphertext: string, clientHash: string, credent
     }
     const plaintext = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
     if (!plaintext || CryptoJS.SHA256(plaintext).toString() !== clientHash) throw new Error()
-    const state: unknown = JSON.parse(plaintext)
+    state = JSON.parse(plaintext)
     if (!isObject(state) || !isObject(state.game) || !isObject(state.universe) || !isObject(state.npcs)) throw new Error()
-    return { game: state.game, universe: state.universe, npcs: state.npcs }
-  } catch {
+  } catch (error) {
+    if (error instanceof CloudSaveError) throw error
     throw new CloudSaveError('decryptFailed')
   }
+  // M1 严格校验：版本与结构，损坏给明确错误（invalidSaveData）而不是静默吞掉
+  // （上面的 isObject 检查已保证 bundle 形状，此处断言安全）
+  const bundle = state as { game: Record<string, unknown>; universe: Record<string, unknown>; npcs: Record<string, unknown> }
+  try {
+    validateGameSaveStructure(bundle.game)
+    parseVersionedSave(bundle.universe, UNIVERSE_SAVE_VERSION, 'universe')
+    parseVersionedSave(bundle.npcs, NPC_SAVE_VERSION, 'npcs')
+  } catch (error) {
+    if (error instanceof SaveError) throw new CloudSaveError('invalidSaveData')
+    throw error
+  }
+  return { game: bundle.game, universe: bundle.universe, npcs: bundle.npcs }
 }
 
 const saveRateLimit = (scope: string, response: CloudSaveResponse, now: number) => {

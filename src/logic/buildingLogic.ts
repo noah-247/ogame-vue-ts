@@ -169,15 +169,18 @@ export const createBuildQueueItem = (buildingType: BuildingType, targetLevel: nu
 
 /**
  * 处理建造完成
+ * @param upTo 只完成 endTime <= upTo 的项（默认 = now）。B1 离线大步结算时，
+ *             调用方按完工时间点逐事件调用，实现分段结算。
  */
 export const completeBuildQueue = (
   planet: Planet,
   now: number,
   onPointsEarned?: (points: number, type: 'building' | 'ship' | 'defense', itemType: string, level?: number, quantity?: number) => void,
-  onCompleted?: (type: 'building' | 'ship' | 'defense' | 'demolish', itemType: string, level?: number, quantity?: number) => void
+  onCompleted?: (type: 'building' | 'ship' | 'defense' | 'demolish', itemType: string, level?: number, quantity?: number) => void,
+  upTo: number = now
 ): void => {
   planet.buildQueue = planet.buildQueue.filter(item => {
-    if (now >= item.endTime) {
+    if (upTo >= item.endTime) {
       // 建造完成
       if (item.type === 'building') {
         const oldLevel = planet.buildings[item.itemType as BuildingType] || 0
