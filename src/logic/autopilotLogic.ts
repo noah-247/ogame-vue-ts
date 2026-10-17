@@ -753,6 +753,59 @@ const pushBlocker = (blockers: AutopilotBlocker[], blocker: AutopilotBlocker): v
 }
 
 /**
+ * MAJ-8 软预留改版（死锁修复）：高优先级步骤被资源挡住时，不再从 planningResources
+ * 直接扣掉其成本（会误杀收入型建筑：收入建筑自己的成本检查会撞上被扣成负数的快照，
+ * 而它正是赚回资源去盖高优先级建筑的收入来源 → 自己卡自己，零收入下等于死锁）。
+ * 改用独立的软预留累加器，只累加「扣掉显式 reserve 后还差多少」的缺口，不累加全额。
+ */
+const zeroSoftReserve = (): Resources => ({ metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 })
+
+/** 把缺口按资源种类累加进软预留（只累加缺口，避免超额预留） */
+const addSoftReserveGap = (soft: Resources, planning: Resources, reserve: AutopilotReserve, cost: Resources): void => {
+  soft.metal += Math.max(0, cost.metal - (planning.metal - reserve.metal))
+  soft.crystal += Math.max(0, cost.crystal - (planning.crystal - reserve.crystal))
+  soft.deuterium += Math.max(0, cost.deuterium - (planning.deuterium - reserve.deuterium))
+}
+
+/** 资源生产建筑 → 其生产的资源种类（太阳能电站不产金属/晶体/重氢，不在其中） */
+const INCOME_RESOURCE: Partial<Record<BuildingType, 'metal' | 'crystal' | 'deuterium'>> = {
+  [BuildingType.MetalMine]: 'metal',
+  [BuildingType.CrystalMine]: 'crystal',
+  [BuildingType.DeuteriumSynthesizer]: 'deuterium'
+}
+
+/**
+ * 资源检查（含显式 reserve 和 MAJ-8 软预留）。
+ * incomeBypass 传入时只豁免该种资源的软预留部分，显式 config.reserve 永不豁免。
+ */
+const hasResourcesAfterSoftReserve = (
+  available: Resources,
+  reserve: AutopilotReserve,
+  soft: Resources,
+  cost: Resources,
+  incomeBypass?: 'metal' | 'crystal' | 'deuterium'
+): boolean => {
+  const kinds: Array<'metal' | 'crystal' | 'deuterium'> = ['metal', 'crystal', 'deuterium']
+  for (const k of kinds) {
+    const softPart = incomeBypass === k && soft[k] > 0 ? 0 : soft[k]
+    if (available[k] - reserve[k] - softPart < cost[k]) return false
+  }
+  return available.darkMatter >= cost.darkMatter
+}
+
+/**
+ * 求当前步骤的软预留豁免：仅当它是收入型建筑、且该资源确实存在软预留缺口
+ * （soft > 0）时返回豁免种类，否则 undefined。仓库/研究/太阳能电站恒为 undefined。
+ */
+const softReserveBypassFor = (
+  soft: Resources,
+  buildingType: BuildingType
+): 'metal' | 'crystal' | 'deuterium' | undefined => {
+  const kind = INCOME_RESOURCE[buildingType]
+  return kind && soft[kind] > 0 ? kind : undefined
+}
+
+/**
  * 单星球副官 tick。在线每秒调用（由 App.vue 的 updateGameAt 驱动），
  * 快转时同样经过 updateGameAt。离线返回时只做资源结算（B2），副官不追补。
  */
@@ -804,6 +857,8 @@ export const tickAutopilotPlanet = (
 
   // 规划用资源快照：逐笔模拟扣款，避免等待队列超发（等待项开工时才真扣款）
   let planningResources: Resources = { ...planet.resources }
+  // MAJ-8 软预留累加器（死锁修复）：高优先级步骤被资源挡住时只累加缺口，不再从 planningResources 扣款
+  const softReserved: Resources = zeroSoftReserve()
 
   const enqueueStep = (step: AutopilotStep, opts: { exemptSpaceReserve?: boolean } = {}): boolean => {
     if (isBuildingBusy(planet, step.buildingType)) return false
@@ -883,10 +938,10 @@ export const tickAutopilotPlanet = (
         downgraded = true
         return 'downgraded'
       }
-      if (!hasResourcesAfterReserve(planningResources, config.reserve, warehouseStep.cost)) {
+      if (!hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, warehouseStep.cost, softReserveBypassFor(softReserved, warehouseStep.buildingType))) {
         pushBlocker(blockers, { kind: 'building', itemType: warehouseStep.buildingType, level: warehouseStep.nextLevel, reason: 'autopilot.blockedNoResource' })
-        // MAJ-8：救援项被资源挡住同样软预留，避免低优先级步骤吃掉它要攒的资源
-        planningResources = subtractCost(planningResources, warehouseStep.cost)
+        // MAJ-8（改版）：救援项被资源挡住只累加缺口进软预留，避免低优先级步骤吃掉它要攒的资源
+        addSoftReserveGap(softReserved, planningResources, config.reserve, warehouseStep.cost)
         return 'blocked'
       }
       return enqueueStep(warehouseStep) ? 'enqueued' : 'blocked'
@@ -896,12 +951,12 @@ export const tickAutopilotPlanet = (
       pushBlocker(blockers, rescueOutcome.blocked)
       return 'blocked'
     }
-    // 资源检查（含预留）
-    if (!hasResourcesAfterReserve(planningResources, config.reserve, step.cost)) {
+    // 资源检查（含显式预留和 MAJ-8 软预留；收入型建筑在软预留有缺口时豁免该资源，避免死锁）
+    if (!hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, step.cost, softReserveBypassFor(softReserved, step.buildingType))) {
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedNoResource' })
-      // MAJ-8：高优先级步骤因资源被挡时，把它的成本从 planningResources 软预留掉
-      // （可为负），低优先级只能用剩下的部分，避免便宜步骤花掉它正在攒的资源
-      planningResources = subtractCost(planningResources, step.cost)
+      // MAJ-8（改版）：高优先级步骤因资源被挡时只把缺口累加进软预留，
+      // 低优先级只能用剩下的部分；收入型建筑豁免软预留放行时不 push 误导性 blocker、不累加。
+      addSoftReserveGap(softReserved, planningResources, config.reserve, step.cost)
       return 'blocked'
     }
     // B1：最坏完工顺序能源验证（含本步）
@@ -923,7 +978,7 @@ export const tickAutopilotPlanet = (
       // 能源救援豁免 B5 空间预留，否则断电时无法自救
       if (rescue &&
           !(config.mode === 'auto' && rescue.buildTime > config.workHourThreshold) &&
-          hasResourcesAfterReserve(planningResources, config.reserve, rescue.cost) &&
+          hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, rescue.cost) &&
           enqueueStep(rescue, { exemptSpaceReserve: true })) {
         pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedEnergyRescue' })
       } else {
@@ -1104,6 +1159,8 @@ export const tickEmpireResearch = (
     { ...labPlanet.resources },
     { metal: labReserve.metal, crystal: labReserve.crystal, deuterium: labReserve.deuterium, darkMatter: 0, energy: 0 }
   )
+  // MAJ-8 软预留累加器（死锁修复；研究不产资源，bypass 恒为 undefined，行为与改版前一致）
+  const softReserved: Resources = zeroSoftReserve()
 
   /** 该科技是否已有在途研究（研究队列/等待队列，任何来源） */
   const isResearchBusy = (technology: TechnologyType): boolean =>
@@ -1142,11 +1199,11 @@ export const tickEmpireResearch = (
       decision = 'autopilot.decisionDowngraded'
       break
     }
-    // 资源检查（含预留），在研究星球的资源快照上模拟扣款
-    if (!hasResourcesAfterReserve(planningResources, config.reserve, step.cost)) {
+    // 资源检查（含预留和 MAJ-8 软预留），在研究星球的资源快照上模拟扣款
+    if (!hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, step.cost)) {
       pushBlocker(blockers, { kind: 'technology', itemType: step.technology, level: step.nextLevel, reason: 'autopilot.blockedNoResource' })
-      // MAJ-8：高优先级研究被资源挡住时软预留其成本，低优先级只能用剩下的部分
-      planningResources = subtractCost(planningResources, step.cost)
+      // MAJ-8（改版）：高优先级研究被资源挡住时只累加缺口进软预留，低优先级只能用剩下的部分
+      addSoftReserveGap(softReserved, planningResources, config.reserve, step.cost)
       continue
     }
     const check = waitingQueueLogic.canAddToResearchWaitingQueue(player, {
