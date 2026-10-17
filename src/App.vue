@@ -225,7 +225,7 @@
                   :class="[resourceBarExpanded ? 'hidden' : 'overflow-x-auto']"
                 >
                   <div v-for="resourceType in resourceTypes" :key="resourceType.key" class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <ResourceIcon :type="resourceType.key" size="md" />
+                    <ResourceIcon :type="resourceType.key" size="md" :title="t(`resources.${resourceType.key}`)" />
                     <div class="min-w-0">
                       <!-- 电力显示：当前储量/最大容量，净产量/小时 -->
                       <template v-if="resourceType.key === 'energy'">
