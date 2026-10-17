@@ -1375,35 +1375,48 @@ describe('review patch round 2', () => {
     expect(result.blockers.some(b => b.reason === 'autopilot.blockedMoonIncompatible')).toBe(true)
   })
 
-  it('MAJ-8: a resource-blocked high-priority step soft-reserves its cost against lower priorities', () => {
+  it('MAJ-8: a resource-blocked high-priority step soft-reserves its gap; income buildings bypass, non-income steps stay constrained', () => {
     const planet = makePlanet(
       {
         [BuildingType.SolarPlant]: 20,
         [BuildingType.MetalMine]: 19,
         [BuildingType.CrystalMine]: 15,
+        [BuildingType.DeuteriumSynthesizer]: 2,
         [BuildingType.RoboticsFactory]: 5,
         [BuildingType.ResearchLab]: 3,
         [BuildingType.MetalStorage]: 12,
         [BuildingType.CrystalStorage]: 12,
         [BuildingType.DeuteriumTank]: 12
       },
-      // 金属 20（133010m/33252c）：晶体不够被挡；晶体 16（55339m/27670c）单独看可建
+      // 金属 20（133010m/33252c）：晶体不够被挡，缺口 33252-30000=3252；
+      // 晶体 16（55339m/27670c）单独看可建；机器人 6（12800m/3840c/6400d）单独看可建
       { resources: { metal: 200000, crystal: 30000, deuterium: 100000, darkMatter: 0, energy: 5000 } }
     )
     const player = makePlayer([planet])
     setNow(NOW)
-    const config = enableAutopilot(planet, [[BuildingType.MetalMine, 20], [BuildingType.CrystalMine, 16]])
+    const config = enableAutopilot(planet, [
+      [BuildingType.MetalMine, 20],
+      [BuildingType.CrystalMine, 16],
+      [BuildingType.RoboticsFactory, 6]
+    ])
     config.workHourThreshold = 1e12 // 关掉工时降级，单独验证软预留
 
     const result = tickAutopilotPlanet(player, planet, NOW, ctx)
 
-    expect(result.enqueued).toBe(0)
     const reasons = result.blockers.map(b => `${b.itemType}:${b.reason}`)
+    // 高优先级金属矿 20 被资源挡住，缺口 3252 晶体进入软预留
     expect(reasons).toContain(`${BuildingType.MetalMine}:autopilot.blockedNoResource`)
-    expect(reasons).toContain(`${BuildingType.CrystalMine}:autopilot.blockedNoResource`)
+    // 晶体矿 16 是收入型建筑且软预留有晶体缺口 → bypass，照常排入（旧逻辑下会被误杀）
+    expect(planet.waitingBuildQueue.some(
+      i => i.itemType === BuildingType.CrystalMine && i.targetLevel === 16
+    )).toBe(true)
+    expect(reasons).not.toContain(`${BuildingType.CrystalMine}:autopilot.blockedNoResource`)
+    // 机器人厂 6 不产资源、无 bypass：排入晶体矿 16 后晶体只剩 2330，扣掉软预留 3252 不够 3840 → 仍被挡
+    expect(reasons).toContain(`${BuildingType.RoboticsFactory}:autopilot.blockedNoResource`)
+    expect(result.enqueued).toBe(1)
   })
 
-  it('MAJ-8 (research): a resource-blocked high-priority research soft-reserves its cost', () => {
+  it('MAJ-8 (research): a resource-blocked high-priority research soft-reserves its gap only', () => {
     const planet = makePlanet(
       {
         [BuildingType.SolarPlant]: 2,
@@ -1422,8 +1435,15 @@ describe('review patch round 2', () => {
 
     const result = tickEmpireResearch(player, NOW, ctx)
 
-    expect(result.enqueued).toBe(0)
-    expect(result.blockers.filter(b => b.reason === 'autopilot.blockedNoResource')).toHaveLength(2)
+    // 能源 4（6400c/3200d）缺晶体 1400 → 被挡，缺口 1400 进入软预留；
+    // 激光 1（200m/100c）只累加缺口后仍买得起（3600 ≥ 100）→ 排入（旧逻辑全额预留会把它误杀）
+    expect(result.enqueued).toBe(1)
+    expect(result.blockers.some(
+      b => b.itemType === TechnologyType.EnergyTechnology && b.reason === 'autopilot.blockedNoResource'
+    )).toBe(true)
+    expect(player.waitingResearchQueue.some(
+      i => i.itemType === TechnologyType.LaserTechnology && i.targetLevel === 1
+    )).toBe(true)
   })
 
   it('Minor-2: energy rescue is exempt from the minFreeSpace reserve', () => {
@@ -1484,5 +1504,72 @@ describe('review patch round 2', () => {
     expect(setAutopilotMode(config, 'auto')).toBe(true)
     expect(config.mode).toBe('auto')
     expect(config.downgradeReason).toBeUndefined()
+  })
+})
+
+describe('MAJ-8 软预留改版：收入型建筑 bypass（死锁回归）', () => {
+  it('太阳能3因缺金属被挡时，金属矿1通过 bypass 排入；收入起来后太阳能3最终排上', () => {
+    setNow(NOW)
+    // 帕吉场景：太阳能2/重氢1/金属0/晶体0，资源 metal 88 / crystal 350 / deuterium 426
+    const planet = makePlanet(
+      { [BuildingType.SolarPlant]: 2, [BuildingType.DeuteriumSynthesizer]: 1 },
+      { resources: { metal: 88, crystal: 350, deuterium: 426, darkMatter: 0, energy: 0 } }
+    )
+    const player = makePlayer([planet])
+    const config = createDefaultPlanetAutopilot()
+    config.enabled = true
+    planet.autopilot = config
+    applyBlueprintToPlanet(config, 'economy', NOW) // 太阳能→6（优先级0）、金属→12、晶体→10…
+
+    const result1 = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    // 太阳能3造价约 168 金属，88 金属确实不够 → 被资源挡住（这就是它的高优先级软预留来源）
+    const solarBlocker = result1.blockers.find(
+      b => b.itemType === BuildingType.SolarPlant && b.level === 3
+    )
+    expect(solarBlocker?.reason).toBe('autopilot.blockedNoResource')
+
+    // 死锁修复：金属矿1是收入型建筑，软预留缺口豁免 → 排入而非 blockedNoResource
+    // （旧逻辑下太阳能3的全额成本会把 planningResources 扣成负数，金属矿1也被挡）
+    expect(result1.blockers.some(
+      b => b.itemType === BuildingType.MetalMine && b.reason === 'autopilot.blockedNoResource'
+    )).toBe(false)
+    expect(planet.waitingBuildQueue.some(
+      i => i.itemType === BuildingType.MetalMine && i.targetLevel === 1
+    )).toBe(true)
+
+    // 模拟：金属矿1完工 + 一轮收入（金属涨到 5000）
+    planet.buildings[BuildingType.MetalMine] = 1
+    planet.waitingBuildQueue = []
+    planet.resources.metal = 5000
+
+    // 下一个 tick：太阳能3的资源检查通过 → 最终排上
+    tickAutopilotPlanet(player, planet, NOW + 1000, ctx)
+    expect(planet.waitingBuildQueue.some(
+      i => i.itemType === BuildingType.SolarPlant && i.targetLevel === 3
+    )).toBe(true)
+  })
+
+  it('bypass 不豁免显式 reserve：收入建筑缺口再大也盖不掉用户预留', () => {
+    setNow(NOW)
+    const planet = makePlanet(
+      { [BuildingType.SolarPlant]: 2 },
+      { resources: { metal: 88, crystal: 350, deuterium: 0, darkMatter: 0, energy: 0 } }
+    )
+    const player = makePlayer([planet])
+    const config = createDefaultPlanetAutopilot()
+    config.enabled = true
+    config.reserve = { metal: 80, crystal: 0, deuterium: 0 } // 用户显式预留 80 金属
+    planet.autopilot = config
+    applyBlueprintToPlanet(config, 'economy', NOW)
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    // 可用金属只有 88-80=8，金属矿1（60金属）就算有 bypass 也排不上；
+    // 且必须有 blockedNoResource 记录（不是静默放行也不是其他原因）
+    expect(planet.waitingBuildQueue.some(i => i.itemType === BuildingType.MetalMine)).toBe(false)
+    expect(result.blockers.some(
+      b => b.itemType === BuildingType.MetalMine && b.reason === 'autopilot.blockedNoResource'
+    )).toBe(true)
   })
 })

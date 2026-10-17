@@ -679,11 +679,7 @@ const isBuildingBusy = (planet: Planet, buildingType: BuildingType): boolean => 
   return false
 }
 
-const hasResourcesAfterReserve = (available: Resources, reserve: AutopilotReserve, cost: Resources): boolean =>
-  available.metal - reserve.metal >= cost.metal &&
-  available.crystal - reserve.crystal >= cost.crystal &&
-  available.deuterium - reserve.deuterium >= cost.deuterium &&
-  available.darkMatter >= cost.darkMatter
+/** 副官建筑/研究/等待队列的通用资源检查已统一走 hasResourcesAfterSoftReserve（MAJ-8 改版后此函数无调用方，已移除，见 git 历史） */
 
 /**
  * MAJ-1：清理过期的副官等待项。
