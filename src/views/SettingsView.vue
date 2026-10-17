@@ -134,7 +134,8 @@
           </div>
           <Input
             :model-value="gameStore.player.name"
-            @change="(e: Event) => commitPlayerName((e.target as HTMLInputElement).value)"
+            @update:model-value="(val: string | number) => { gameStore.player.name = String(val).slice(0, 24) }"
+            @blur="normalizePlayerName"
             class="w-full sm:w-64"
             maxlength="24"
             :placeholder="t('settings.playerName')"
@@ -448,10 +449,11 @@
   const confirmMessage = ref('')
   let confirmCallback: (() => void) | null = null
 
-  // 玩家名称：失焦/回车才提交，打字途中不写回（空值回退为默认名）
-  const commitPlayerName = (raw: string) => {
-    const name = raw.trim().slice(0, 24)
-    gameStore.player.name = name || t('common.playerName')
+  // 玩家名称：每键即时保存（重整不丢）；空值时不弹回，失焦时才补默认名
+  const normalizePlayerName = () => {
+    if (!gameStore.player.name.trim()) {
+      gameStore.player.name = t('common.playerName')
+    }
   }
 
   const isTypesExpanded = ref(false)
@@ -831,8 +833,13 @@
 
   const clearData = () => {
     gameStore.isPaused = true
+    // 先清一次；再用 pagehide 兜底——clear 和 reload 之间 game loop 的 tick
+    // 可能又把存档写回 localStorage，pagehide 是卸载前最后一道，可靠清除
+    const wipe = () => { try { localStorage.clear() } catch {} }
+    wipe()
+    window.addEventListener('beforeunload', wipe)
+    window.addEventListener('pagehide', wipe)
     try {
-      localStorage.clear()
       window.location.reload()
     } catch (error) {
       console.error('Failed to clear data:', error)
