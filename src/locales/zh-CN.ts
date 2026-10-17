@@ -118,6 +118,12 @@ export default {
     depletedResources: '已耗尽: {resources}',
     lowResources: '即将耗尽: {resources}'
   },
+  newGame: {
+    title: '欢迎来到银河',
+    description: '为你的指挥官取个名字，开始你的星际征途',
+    namePlaceholder: '指挥官名称',
+    start: '开始游戏'
+  },
   planet: {
     moon: '月球',
     position: '位置',

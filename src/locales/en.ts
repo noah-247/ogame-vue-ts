@@ -117,6 +117,12 @@ export default {
     depletedResources: 'Depleted: {resources}',
     lowResources: 'Running low: {resources}'
   },
+  newGame: {
+    title: 'Welcome to the Galaxy',
+    description: 'Name your commander and begin your interstellar journey',
+    namePlaceholder: 'Commander name',
+    start: 'Start Game'
+  },
   planet: {
     moon: 'Moon',
     position: 'Position',

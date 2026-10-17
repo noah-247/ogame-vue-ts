@@ -111,6 +111,12 @@ export default {
     depletedResources: '고갈됨: {resources}',
     lowResources: '곧 고갈: {resources}'
   },
+  newGame: {
+    title: '은하에 오신 것을 환영합니다',
+    description: '사령관의 이름을 정하고 성간 여행을 시작하세요',
+    namePlaceholder: '사령관 이름',
+    start: '게임 시작'
+  },
   planet: {
     moon: '위성',
     position: '위치',

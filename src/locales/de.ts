@@ -111,6 +111,12 @@ export default {
     depletedResources: 'Erschöpft: {resources}',
     lowResources: 'Fast erschöpft: {resources}'
   },
+  newGame: {
+    title: 'Willkommen in der Galaxie',
+    description: 'Benenne deinen Kommandanten und beginne deine interstellare Reise',
+    namePlaceholder: 'Name des Kommandanten',
+    start: 'Spiel starten'
+  },
   planet: {
     moon: 'Mond',
     position: 'Position',

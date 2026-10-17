@@ -116,6 +116,12 @@ export default {
     depletedResources: '枯渇: {resources}',
     lowResources: '残りわずか: {resources}'
   },
+  newGame: {
+    title: '銀河へようこそ',
+    description: '司令官に名前を付けて、星間の旅を始めましょう',
+    namePlaceholder: '司令官の名前',
+    start: 'ゲーム開始'
+  },
   planet: {
     planet: '惑星',
     moon: '月',

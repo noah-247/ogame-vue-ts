@@ -112,6 +112,12 @@ export default {
     depletedResources: 'Истощено: {resources}',
     lowResources: 'Почти истощено: {resources}'
   },
+  newGame: {
+    title: 'Добро пожаловать в Галактику',
+    description: 'Назовите своего командира и начните межзвёздное путешествие',
+    namePlaceholder: 'Имя командира',
+    start: 'Начать игру'
+  },
   planet: {
     moon: 'Луна',
     position: 'Позиция',

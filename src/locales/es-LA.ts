@@ -110,6 +110,12 @@ export default {
     depletedResources: 'Agotados: {resources}',
     lowResources: 'Agotándose: {resources}'
   },
+  newGame: {
+    title: 'Bienvenido a la Galaxia',
+    description: 'Nombra a tu comandante y comienza tu viaje interestelar',
+    namePlaceholder: 'Nombre del comandante',
+    start: 'Comenzar juego'
+  },
   planet: {
     moon: 'Luna',
     position: 'Posición',

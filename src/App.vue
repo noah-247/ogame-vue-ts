@@ -415,6 +415,24 @@
     <!-- Toast 通知 -->
     <Sonner position="top-center" />
     <!-- 重命名星球对话框 -->
+    <!-- 新游戏取名对话框 -->
+    <Dialog :open="newGameDialogOpen" @update:open="(open: boolean) => { if (!open && newGameNameResolve) confirmNewGame() }">
+      <DialogContent class="sm:max-w-md" :show-close-button="false">
+        <DialogHeader>
+          <DialogTitle>{{ t('newGame.title') }}</DialogTitle>
+          <DialogDescription>{{ t('newGame.description') }}</DialogDescription>
+        </DialogHeader>
+        <div class="py-4">
+          <Input v-model="newPlayerName" :placeholder="t('newGame.namePlaceholder')" maxlength="24" @keyup.enter="confirmNewGame" autofocus />
+        </div>
+        <DialogFooter>
+          <Button @click="confirmNewGame">
+            {{ t('newGame.start') }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <Dialog v-model:open="renameDialogOpen">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
@@ -640,6 +658,10 @@
   const renameDialogOpen = ref(false)
   const renamingPlanetId = ref<string | null>(null)
   const newPlanetName = ref('')
+  // 新游戏取名对话框状态
+  const newGameDialogOpen = ref(false)
+  const newPlayerName = ref('')
+  let newGameNameResolve: ((name: string) => void) | null = null
   // Android 退出确认对话框状态
   const exitDialogOpen = ref(false)
   // NPC 名称更新对话框状态
@@ -907,7 +929,9 @@
 
       return
     }
-    gameStore.player = gameLogic.initializePlayer(gameStore.player.id, t('common.playerName'))
+    // 新游戏：先请玩家取名
+    const playerName = await askPlayerName()
+    gameStore.player = gameLogic.initializePlayer(gameStore.player.id, playerName)
     const initialPlanet = planetLogic.createInitialPlanet(gameStore.player.id, t('planet.homePlanet'))
     gameStore.player.planets = [initialPlanet]
     gameStore.currentPlanetId = initialPlanet.id
@@ -2453,6 +2477,23 @@
     renameDialogOpen.value = false
     renamingPlanetId.value = null
     newPlanetName.value = ''
+  }
+
+  // 新游戏：弹出取名对话框，等待玩家输入名字后继续
+  const askPlayerName = (): Promise<string> => {
+    newPlayerName.value = t('common.playerName')
+    newGameDialogOpen.value = true
+    return new Promise(resolve => {
+      newGameNameResolve = resolve
+    })
+  }
+
+  const confirmNewGame = () => {
+    const name = newPlayerName.value.trim().slice(0, 24) || t('common.playerName')
+    newGameDialogOpen.value = false
+    newGameNameResolve?.(name)
+    newGameNameResolve = null
+    newPlayerName.value = ''
   }
 
   // 检查功能是否解锁
