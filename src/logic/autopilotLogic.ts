@@ -763,13 +763,7 @@ export const tickAutopilotPlanet = (
   ctx: AutopilotContext
 ): AutopilotTickResult => {
   const config = planet.autopilot
-  if (config?.mode === 'monitor') {
-    withdrawAutopilotWaiting(planet)
-    config.canResumeAuto = false
-    config.lastDecision = 'autopilot.decisionMonitoring'
-    return emptyResult('autopilot.decisionMonitoring')
-  }
-  if (!config || !config.enabled || config.paused) {
+  if (!config || !config.enabled) {
     // Minor-4：停用/暂停时清理滞后恢复标记，避免 UI 显示过期状态
     if (config) config.canResumeAuto = false
     return emptyResult('autopilot.decisionDisabled')
@@ -777,6 +771,17 @@ export const tickAutopilotPlanet = (
 
   // B12：每 tick 从实际等级重推目标进度
   const completedTargets = reconcileTargets(config, planet)
+
+  if (config.mode === 'monitor') {
+    withdrawAutopilotWaiting(planet)
+    config.canResumeAuto = false
+    config.lastDecision = 'autopilot.decisionMonitoring'
+    return { ...emptyResult('autopilot.decisionMonitoring'), completedTargets }
+  }
+  if (config.paused) {
+    config.canResumeAuto = false
+    return { ...emptyResult('autopilot.decisionDisabled'), completedTargets }
+  }
 
   // MAJ-1：清理过期的副官等待项（玩家手动先建好导致 targetLevel <= 当前等级），
   // 避免 levelAlreadyReached 的死项永久占槽
@@ -1059,7 +1064,8 @@ export const tickEmpireResearch = (
     if (config) config.canResumeAuto = false
     return { ...emptyResult('autopilot.decisionDisabled'), completedTargets: [] }
   }
-  if (!selectResearchPlanet(player)) {
+  const labPlanet = selectResearchPlanet(player)
+  if (!labPlanet) {
     return {
       ...emptyResult('autopilot.decisionBlocked'),
       completedTargets: [],
@@ -1068,6 +1074,13 @@ export const tickEmpireResearch = (
   }
 
   const completedTargets = reconcileResearchTargets(config, player.technologies)
+
+  if (labPlanet.autopilot?.mode === 'monitor') {
+    withdrawAutopilotResearchWaiting(player)
+    config.canResumeAuto = false
+    config.lastDecision = 'autopilot.decisionMonitoring'
+    return { ...emptyResult('autopilot.decisionMonitoring'), completedTargets }
+  }
 
   // MAJ-1：清理过期的副官研究等待项
   pruneAutopilotResearchWaiting(player)
@@ -1086,7 +1099,6 @@ export const tickEmpireResearch = (
   // 简化：检查第一颗有研究室星球的资源（既有研究等待项同样在此星球扣款）。
   // Minor-5：研究 tick 的资源快照至少扣掉研究星球的副官预留，
   // 避免星球副官和研究副官各自拿一份互不扣减的快照规划。
-  const labPlanet = selectResearchPlanet(player)!
   const labReserve = labPlanet.autopilot?.reserve ?? createDefaultReserve()
   let planningResources: Resources = subtractCost(
     { ...labPlanet.resources },

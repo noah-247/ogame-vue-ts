@@ -106,6 +106,15 @@ export const getEnergyBonusExpiresAt = (
   return earliest
 }
 
+export const getStorageBonusExpiresAt = (
+  officers: Record<OfficerType, Officer>, now: number
+): number | undefined => {
+  const expirations = Object.values(officers)
+    .filter(officer => isOfficerActive(officer, now) && (OFFICERS[officer.type]?.benefits.storageCapacityBonus ?? 0) > 0)
+    .flatMap(officer => officer.expiresAt === undefined ? [] : [officer.expiresAt])
+  return expirations.length > 0 ? Math.min(...expirations) : undefined
+}
+
 /**
  * 检查并停用过期的军官
  */

@@ -975,7 +975,7 @@ export default {
     noAlerts: "Keine aktiven Warnungen",
     alertore: "Erzabbau vor Leistungsabfall",
     alertwarehouse: "Lager fast voll",
-    alertpower: "Energiepuffer gefährdet",
+    alertpower: "Stromversorgung unzureichend",
     alertDetail: "{planet} · {resource} · noch {hours} Std.",
     oreHours: "Erzwarnung (Stunden)",
     warehouseHours: "Lagerwarnung (Stunden)",

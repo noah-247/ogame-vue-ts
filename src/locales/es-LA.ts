@@ -984,7 +984,7 @@ export default {
     noAlerts: "Sin alertas activas",
     alertore: "Veta próxima a decaer",
     alertwarehouse: "Almacén casi lleno",
-    alertpower: "Reserva de energía en riesgo",
+    alertpower: "Suministro de energía insuficiente",
     alertDetail: "{planet} · {resource} · quedan {hours} h",
     oreHours: "Aviso de veta (horas)",
     warehouseHours: "Aviso de almacén (horas)",

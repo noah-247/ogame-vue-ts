@@ -975,7 +975,7 @@ export default {
     noAlerts: "暫無預警",
     alertore: "礦脈即將衰減",
     alertwarehouse: "倉庫即將滿倉",
-    alertpower: "能源緩衝告急",
+    alertpower: "電力供應不足",
     alertDetail: "{planet} · {resource} · 剩餘 {hours} 小時",
     oreHours: "礦脈預警（小時）",
     warehouseHours: "滿倉預警（小時）",

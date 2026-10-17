@@ -953,7 +953,7 @@ export default {
     noAlerts: "활성 경고 없음",
     alertore: "광맥 효율 저하 임박",
     alertwarehouse: "창고 포화 임박",
-    alertpower: "전력 버퍼 부족 위험",
+    alertpower: "전력 공급 부족",
     alertDetail: "{planet} · {resource} · 남은 시간 {hours}시간",
     oreHours: "광맥 경고 (시간)",
     warehouseHours: "창고 경고 (시간)",

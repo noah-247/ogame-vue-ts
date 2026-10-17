@@ -998,7 +998,7 @@ export default {
     noAlerts: "警告はありません",
     alertore: "鉱脈の効率低下が接近",
     alertwarehouse: "倉庫がまもなく満杯",
-    alertpower: "電力バッファ不足の恐れ",
+    alertpower: "電力供給不足",
     alertDetail: "{planet} · {resource} · 残り {hours} 時間",
     oreHours: "鉱脈警告（時間）",
     warehouseHours: "倉庫警告（時間）",

@@ -976,7 +976,7 @@ export default {
     noAlerts: "Активных предупреждений нет",
     alertore: "Приближается спад добычи",
     alertwarehouse: "Склад почти заполнен",
-    alertpower: "Резерв энергии под угрозой",
+    alertpower: "Нехватка электроснабжения",
     alertDetail: "{planet} · {resource} · осталось {hours} ч",
     oreHours: "Руда: предупреждение (часы)",
     warehouseHours: "Склад: предупреждение (часы)",

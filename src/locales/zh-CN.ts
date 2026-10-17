@@ -971,7 +971,7 @@ export default {
     noAlerts: "暂无预警",
     alertore: "矿脉即将衰减",
     alertwarehouse: "仓库即将满仓",
-    alertpower: "能源缓冲告急",
+    alertpower: "电力供应不足",
     alertDetail: "{planet} · {resource} · 剩余 {hours} 小时",
     oreHours: "矿脉预警（小时）",
     warehouseHours: "满仓预警（小时）",

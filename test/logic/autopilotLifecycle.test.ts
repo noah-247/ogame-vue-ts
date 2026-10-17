@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { BuildingType } from '@/types/game'
+import { BuildingType, TechnologyType } from '@/types/game'
 import { calculateBuildingTime } from '@/logic/buildingLogic'
-import { createAutopilotTarget, createDefaultContext, setAutopilotMode, tickAutopilotPlanet } from '@/logic/autopilotLogic'
+import {
+  createAutopilotTarget, createAutopilotResearchTarget, createDefaultContext, createDefaultEmpireResearchAutopilot,
+  setAutopilotMode, tickAutopilotPlanet, tickEmpireResearch
+} from '@/logic/autopilotLogic'
 import { applyBlueprintAndEnablePlanet, enablePlanetAutopilot, shouldStartInMonitoring } from '@/logic/autopilotLifecycle'
 import { collectAutopilotAlerts, createDefaultForecastContext } from '@/logic/autopilotAlerts'
-import { processPlanetWaitingQueue } from '@/logic/waitingQueueLogic'
+import { processPlanetWaitingQueue, processResearchWaitingQueue } from '@/logic/waitingQueueLogic'
 import { monitoringPlanet, monitoringPlayer } from '../utils/autopilot'
 import { HOUR, jump, restore, setNow } from '../utils/time'
 
@@ -135,6 +138,37 @@ describe('first enable lifecycle', () => {
 })
 
 describe('monitoring scheduling boundary', () => {
+  it.each([false, true])('reconciles manually completed targets while monitoring, paused=%s', paused => {
+    const planet = monitoringPlanet()
+    planet.autopilot!.mode = 'monitor'
+    planet.autopilot!.paused = paused
+    const target = createAutopilotTarget(BuildingType.SolarPlant, 1, 0, Date.now())
+    planet.autopilot!.targets = [target]
+    planet.buildings[BuildingType.SolarPlant] = 1
+    const player = monitoringPlayer([planet])
+    const result = tickAutopilotPlanet(player, planet, Date.now(), context)
+    expect(result.completedTargets).toEqual([target])
+    expect(target.completed).toBe(true)
+    expect(result.decision).toBe('autopilot.decisionMonitoring')
+    expect(tickAutopilotPlanet(player, planet, Date.now(), context).completedTargets).toEqual([])
+    planet.buildings[BuildingType.SolarPlant] = 0
+    tickAutopilotPlanet(player, planet, Date.now(), context)
+    expect(target.completed).toBe(false)
+  })
+  it('checks enabled before reconciling or withdrawing monitoring waiting jobs', () => {
+    const planet = monitoringPlanet()
+    planet.autopilot!.mode = 'monitor'
+    planet.autopilot!.enabled = false
+    const target = createAutopilotTarget(BuildingType.SolarPlant, 1, 0, Date.now())
+    planet.autopilot!.targets = [target]
+    planet.buildings[BuildingType.SolarPlant] = 1
+    planet.waitingBuildQueue.push({ id: 'automatic', type: 'building', itemType: BuildingType.MetalMine,
+      targetLevel: 1, source: 'autopilot', priority: 0, addedTime: Date.now() })
+    const snapshot = JSON.stringify(planet.waitingBuildQueue)
+    expect(tickAutopilotPlanet(monitoringPlayer([planet]), planet, Date.now(), context).decision).toBe('autopilot.decisionDisabled')
+    expect(JSON.stringify(planet.waitingBuildQueue)).toBe(snapshot)
+    expect(target.completed).toBeUndefined()
+  })
   it('removes only autopilot waiting jobs, preserving manual and active construction', () => {
     const planet = maturePlanet()
     const automatic = { id: 'automatic', type: 'building' as const, itemType: BuildingType.SolarPlant, targetLevel: 1, priority: 0, addedTime: Date.now(), source: 'autopilot' as const }
@@ -188,5 +222,61 @@ describe('monitoring scheduling boundary', () => {
     expect(tickAutopilotPlanet(player, planet, Date.now(), context).enqueued).toBe(0)
     expect(setAutopilotMode(planet.autopilot!, 'execute')).toBe(true)
     expect(tickAutopilotPlanet(player, planet, Date.now(), context).enqueued).toBeGreaterThan(0)
+  })
+})
+
+describe('monitoring empire research boundary', () => {
+  const researchSetup = () => {
+    const planet = monitoringPlanet()
+    planet.autopilot!.mode = 'monitor'
+    planet.buildings[BuildingType.ResearchLab] = 1
+    planet.resources.metal = 100000
+    planet.resources.crystal = 100000
+    planet.resources.deuterium = 100000
+    const player = monitoringPlayer([planet])
+    player.technologies[TechnologyType.EnergyTechnology] = 1
+    player.empireResearchAutopilot = { ...createDefaultEmpireResearchAutopilot(), enabled: true,
+      targets: [createAutopilotResearchTarget(TechnologyType.CombustionDrive, 1, 0, Date.now())] }
+    return { planet, player }
+  }
+  it('does not enqueue empire research until the laboratory switches to execute', () => {
+    const { planet, player } = researchSetup()
+    expect(tickEmpireResearch(player, Date.now(), context).decision).toBe('autopilot.decisionMonitoring')
+    expect(player.waitingResearchQueue).toEqual([])
+    expect(setAutopilotMode(planet.autopilot!, 'execute')).toBe(true)
+    expect(tickEmpireResearch(player, Date.now(), context).enqueued).toBeGreaterThan(0)
+  })
+  it('reconciles manually completed empire research while monitoring', () => {
+    const { player } = researchSetup()
+    player.technologies[TechnologyType.CombustionDrive] = 1
+    const result = tickEmpireResearch(player, Date.now(), context)
+    expect(result.completedTargets).toHaveLength(1)
+    expect(player.empireResearchAutopilot!.targets[0]?.completed).toBe(true)
+  })
+  it('blocks persisted automatic research promotion before tick and withdraws only automatic waiting jobs', () => {
+    const { planet, player } = researchSetup()
+    const automatic = { id: 'automatic', type: 'technology' as const, itemType: TechnologyType.CombustionDrive,
+      targetLevel: 1, source: 'autopilot' as const, priority: 0, addedTime: Date.now() }
+    player.waitingResearchQueue.push(automatic)
+    expect(processResearchWaitingQueue(player, planet, player.officers).executed).toEqual([])
+    expect(player.researchQueue).toEqual([])
+    player.waitingResearchQueue.push({ ...automatic, id: 'manual', source: 'player' }, { ...automatic, id: 'legacy', source: undefined })
+    tickEmpireResearch(player, Date.now(), context)
+    expect(player.waitingResearchQueue.map(item => item.id)).toEqual(['manual', 'legacy'])
+  })
+  it.each(['player', undefined] as const)('keeps manual and legacy research promotion (%s)', source => {
+    const { planet, player } = researchSetup()
+    player.waitingResearchQueue.push({ id: 'manual', type: 'technology', itemType: TechnologyType.CombustionDrive,
+      targetLevel: 1, source, priority: 0, addedTime: Date.now() })
+    expect(processResearchWaitingQueue(player, planet, player.officers).executed.map(item => item.id)).toEqual(['manual'])
+    expect(player.researchQueue).toHaveLength(1)
+  })
+  it('preserves active research when the laboratory enters monitoring', () => {
+    const { player } = researchSetup()
+    player.researchQueue.push({ id: 'active', type: 'technology', itemType: TechnologyType.CombustionDrive,
+      targetLevel: 1, startTime: Date.now(), endTime: Date.now() + HOUR })
+    const snapshot = JSON.stringify(player.researchQueue)
+    tickEmpireResearch(player, Date.now(), context)
+    expect(JSON.stringify(player.researchQueue)).toBe(snapshot)
   })
 })

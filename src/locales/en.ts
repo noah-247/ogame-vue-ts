@@ -1001,7 +1001,7 @@ export default {
     noAlerts: "No active alerts",
     alertore: "Ore decay approaching",
     alertwarehouse: "Warehouse nearly full",
-    alertpower: "Power buffer at risk",
+    alertpower: "Power supply shortage",
     alertDetail: "{planet} · {resource} · {hours} h remaining",
     oreHours: "Ore warning (hours)",
     warehouseHours: "Warehouse warning (hours)",

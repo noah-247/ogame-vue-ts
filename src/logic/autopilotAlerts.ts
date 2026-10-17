@@ -1,11 +1,12 @@
 import { BuildingType, TechnologyType } from '@/types/game'
 import type { AutopilotAlertSettings, Planet, Player, Resources } from '@/types/game'
 import { ORE_DEPOSIT_CONFIG } from '@/config/gameConfig'
-import { checkEnergySafeWorstOrder, createDefaultContext } from './autopilotLogic'
+import { checkEnergySafeWorstOrder, createDefaultContext, pendingEnergyDelta } from './autopilotLogic'
 import type { AutopilotContext } from './autopilotLogic'
 import * as resourceLogic from './resourceLogic'
 import * as oreLogic from './oreDepositLogic'
 import * as officerLogic from './officerLogic'
+import { getGameNow } from './gameTime'
 
 export const TRANSPORT_RESOURCES = ['metal', 'crystal', 'deuterium'] as const
 export type TransportResource = (typeof TRANSPORT_RESOURCES)[number]
@@ -18,6 +19,8 @@ export interface AutopilotAlert {
 }
 
 export interface ForecastContext extends AutopilotContext {
+  now: number
+  storageBonusExpiresAt?: number
   gameSpeed: number
   resourceProductionBonus: number
   darkMatterProductionBonus: number
@@ -27,7 +30,7 @@ export interface ForecastContext extends AutopilotContext {
 }
 
 export const createDefaultForecastContext = (): ForecastContext => ({
-  ...createDefaultContext(), gameSpeed: 1, resourceProductionBonus: 0,
+  ...createDefaultContext(), now: getGameNow(), gameSpeed: 1, resourceProductionBonus: 0,
   darkMatterProductionBonus: 0, technologies: {}
 })
 
@@ -38,7 +41,8 @@ export const createForecastContext = (player: Player, gameSpeed: number, now: nu
     buildSpeedBonus: bonuses.buildingSpeedBonus,
     researchSpeedBonus: bonuses.researchSpeedBonus,
     energyBonusExpiresAt: officerLogic.getEnergyBonusExpiresAt(player.officers, now),
-    technologies: player.technologies, gameSpeed
+    storageBonusExpiresAt: officerLogic.getStorageBonusExpiresAt(player.officers, now),
+    technologies: player.technologies, gameSpeed, now
   }
 }
 
@@ -91,7 +95,7 @@ export const predictOreDepletion = (
       ? enhanced[resource] * regeneration.RATE_PER_HOUR * oreLogic.calculateGeoStationBonus(planet.buildings[BuildingType.GeoResearchStation] || 0) * Math.max(0, context.gameSpeed)
       : 0
     const consumed = context.oreConsumption?.[resource] ?? production[resource] - regenerated
-    const hoursLeft = remaining <= 0 ? 0 : consumed > 0 ? remaining / consumed : Infinity
+    const hoursLeft = consumed <= 0 ? Infinity : remaining <= 0 ? 0 : remaining / consumed
     return forecastAlert('ore', planet.id, hoursLeft, hours, resource)
   })
 }
@@ -101,10 +105,17 @@ export const predictWarehouseFull = (
 ): AutopilotAlert[] => {
   const production = forecastProduction(planet, context)
   const capacity = resourceLogic.calculateResourceCapacity(planet, context.storageCapacityBonus)
+  const expiredCapacity = resourceLogic.calculateResourceCapacity(planet, 0)
   return TRANSPORT_RESOURCES.flatMap(resource => {
     const remaining = capacity[resource] - planet.resources[resource]
     const rate = production[resource]
-    const hoursLeft = remaining <= 0 ? 0 : rate > 0 ? remaining / rate : Infinity
+    let hoursLeft = remaining <= 0 ? 0 : rate > 0 ? remaining / rate : Infinity
+    if (context.storageBonusExpiresAt !== undefined) {
+      const expiresIn = Math.max(0, (context.storageBonusExpiresAt - context.now) / 3.6e6)
+      const expiredRemaining = expiredCapacity[resource] - planet.resources[resource]
+      const expiredFullIn = expiredRemaining <= 0 ? 0 : rate > 0 ? expiredRemaining / rate : Infinity
+      hoursLeft = Math.min(hoursLeft, Math.max(expiresIn, expiredFullIn))
+    }
     return forecastAlert('warehouse', planet.id, hoursLeft, hours, resource)
   })
 }
@@ -112,12 +123,36 @@ export const predictWarehouseFull = (
 export const predictPowerShortage = (
   planet: Planet, hours = getAlertSettings(planet).powerHours, context = createDefaultForecastContext()
 ): AutopilotAlert[] => {
-  const current = checkEnergySafeWorstOrder(planet, context.energyProductionBonus)
-  const expired = context.energyBonusExpiresAt !== undefined ? checkEnergySafeWorstOrder(planet, 0) : current
-  const margin = Math.min(current.margin, expired.margin)
-  const drain = -margin * Math.max(0, context.gameSpeed)
-  const hoursLeft = drain > 0 ? Math.max(0, planet.resources.energy) / drain : Infinity
-  return forecastAlert('power', planet.id, hoursLeft, hours)
+  const currentMargin = (bonus: number) => resourceLogic.calculateEnergyProduction(planet, { energyProductionBonus: bonus }) -
+    resourceLogic.calculateEnergyConsumption(planet)
+  if (currentMargin(context.energyProductionBonus) < 0) return forecastAlert('power', planet.id, 0, hours)
+
+  const harmful = planet.buildQueue.filter(item => {
+    if (item.type !== 'building' && item.type !== 'demolish') return false
+    const { prodDelta, consDelta } = pendingEnergyDelta(planet, item, context.energyProductionBonus)
+    return consDelta > 0 || prodDelta < 0
+  })
+  const times = harmful.map(item => item.endTime)
+  if (context.energyBonusExpiresAt !== undefined) times.push(context.energyBonusExpiresAt)
+  for (const time of [...new Set(times)].sort((earlier, later) => earlier - later)) {
+    const bonus = context.energyBonusExpiresAt !== undefined && time >= context.energyBonusExpiresAt
+      ? 0 : context.energyProductionBonus
+    let margin = currentMargin(bonus)
+    for (const item of harmful) {
+      if (item.endTime > time) continue
+      const { prodDelta, consDelta } = pendingEnergyDelta(planet, item, bonus)
+      margin += Math.min(0, prodDelta) - Math.max(0, consDelta)
+    }
+    if (margin < 0) return forecastAlert('power', planet.id, Math.max(0, (time - context.now) / 3.6e6), hours)
+  }
+
+  if (!checkEnergySafeWorstOrder(planet, context.energyProductionBonus).safe) {
+    const slots = planet.buildQueue.filter(item => item.type === 'building' || item.type === 'demolish')
+    const earliest = Math.min(...slots.map(item => item.endTime))
+    const hoursLeft = slots.length > 0 ? Math.max(0, (earliest - context.now) / 3.6e6) : 0
+    return forecastAlert('power', planet.id, hoursLeft, hours).map(alert => ({ ...alert, severity: 'warn' }))
+  }
+  return []
 }
 
 export const collectAutopilotAlerts = (player: Player, context: ForecastContext): AutopilotAlert[] =>
@@ -127,16 +162,22 @@ export const collectAutopilotAlerts = (player: Player, context: ForecastContext)
     ...predictPowerShortage(planet, undefined, context)
   ])
 
+export interface AlertNotificationState {
+  severity: AutopilotAlert['severity']
+  lastSeenAt: number
+}
+
 export const selectNewAlerts = (
-  alerts: AutopilotAlert[], previous: ReadonlyMap<string, AutopilotAlert['severity']>
-): { fresh: AutopilotAlert[]; state: Map<string, AutopilotAlert['severity']> } => {
-  const state = new Map<string, AutopilotAlert['severity']>()
+  alerts: AutopilotAlert[], previous: ReadonlyMap<string, AlertNotificationState>, now = getGameNow()
+): { fresh: AutopilotAlert[]; state: Map<string, AlertNotificationState> } => {
+  const state = new Map([...previous].filter(([, entry]) => now - entry.lastSeenAt < 30 * 60_000))
   const rank = { info: 0, warn: 1, critical: 2 }
   const fresh = alerts.filter(alert => {
     const key = `${alert.planetId}:${alert.type}:${alert.resource ?? ''}`
     const old = previous.get(key)
-    state.set(key, old !== undefined && rank[old] > rank[alert.severity] ? old : alert.severity)
-    return old === undefined || rank[alert.severity] > rank[old]
+    const notify = old === undefined || rank[alert.severity] > rank[old.severity]
+    state.set(key, { severity: notify ? alert.severity : old.severity, lastSeenAt: now })
+    return notify
   })
   return { fresh, state }
 }

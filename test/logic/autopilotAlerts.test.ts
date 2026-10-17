@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { BuildingType } from '@/types/game'
+import { BuildingType, OfficerType } from '@/types/game'
+import { createActiveOfficer } from '@/logic/officerLogic'
 import { calculateInitialDeposits, calculateDepositEfficiency } from '@/logic/oreDepositLogic'
 import { calculateResourceCapacity } from '@/logic/resourceLogic'
 import {
@@ -37,8 +38,14 @@ describe('ore decay forecasts', () => {
     it(`${resource}: already depleted keeps 20 percent production`, () => {
       const planet = monitoringPlanet()
       planet.oreDeposits = { ...calculateInitialDeposits(planet.position), [resource]: 0, position: planet.position }
-      expect(predictOreDepletion(planet).find(alert => alert.resource === resource)?.hoursLeft).toBe(0)
+      expect(predictOreDepletion(planet, 24, { ...createDefaultForecastContext(), oreConsumption: { [resource]: 100 } })
+        .find(alert => alert.resource === resource)?.hoursLeft).toBe(0)
       expect(calculateDepositEfficiency(planet.oreDeposits, resource)).toBe(0.2)
+    })
+    it.each([0, -100])(`${resource}: suppresses depleted deposits while consumption is %s`, consumed => {
+      const planet = monitoringPlanet()
+      planet.oreDeposits = { ...calculateInitialDeposits(planet.position), [resource]: 0, position: planet.position }
+      expect(predictOreDepletion(planet, 24, { ...createDefaultForecastContext(), oreConsumption: { [resource]: consumed } })).toEqual([])
     })
   }
   it('ignores moons and legacy missing deposits', () => {
@@ -83,13 +90,11 @@ describe('warehouse forecasts', () => {
 })
 
 describe('power and monitoring integration', () => {
-  it('forecasts buffer drain under a deficit', () => {
+  it.each([0, 66, 1_000_000])('reports an immediate outage regardless of energy buffer %s', energy => {
     const planet = monitoringPlanet()
     planet.buildings[BuildingType.MetalMine] = 1
-    planet.resources.energy = 11 * 6
-    expect(predictPowerShortage(planet)[0]?.hoursLeft).toBeCloseTo(6)
-    planet.resources.energy = 0
-    expect(predictPowerShortage(planet)[0]?.severity).toBe('critical')
+    planet.resources.energy = energy
+    expect(predictPowerShortage(planet)[0]).toMatchObject({ hoursLeft: 0, severity: 'critical' })
   })
   it('does not warn with zero consumption or surplus', () => {
     const planet = monitoringPlanet()
@@ -104,7 +109,7 @@ describe('power and monitoring integration', () => {
       { id: 'consumer', type: 'building', itemType: BuildingType.MetalMine, targetLevel: 1, priority: 0, addedTime: Date.now() },
       { id: 'producer', type: 'building', itemType: BuildingType.SolarPlant, targetLevel: 1, priority: 1, addedTime: Date.now() }
     )
-    expect(predictPowerShortage(planet)[0]?.hoursLeft).toBeCloseTo(1 / 11)
+    expect(predictPowerShortage(planet)[0]).toMatchObject({ hoursLeft: 0, severity: 'warn' })
   })
   it('uses pessimistic energy when an officer bonus can expire', () => {
     const planet = monitoringPlanet()
@@ -113,15 +118,15 @@ describe('power and monitoring integration', () => {
     planet.resources.energy = 1
     const context = { ...createDefaultForecastContext(), energyProductionBonus: 100 }
     expect(predictPowerShortage(planet, 6, context)).toEqual([])
-    expect(predictPowerShortage(planet, 6, { ...context, energyBonusExpiresAt: Date.now() + HOUR })).toHaveLength(1)
+    expect(predictPowerShortage(planet, 6, { ...context, energyBonusExpiresAt: Date.now() + HOUR })[0]?.hoursLeft).toBe(1)
+    expect(predictPowerShortage(planet, 6, { ...context, energyBonusExpiresAt: Date.now() + 30 * 24 * HOUR })).toEqual([])
   })
-  it('scales resource and power rates with game speed, including pause', () => {
+  it('scales resource production but never delays an existing outage, including pause', () => {
     const planet = monitoringPlanet()
     planet.buildings[BuildingType.MetalMine] = 1
     const context = createDefaultForecastContext()
-    const normal = predictPowerShortage(planet, 24, context)[0]!.hoursLeft
-    expect(predictPowerShortage(planet, 24, { ...context, gameSpeed: 2 })[0]!.hoursLeft).toBe(normal / 2)
-    expect(predictPowerShortage(planet, 24, { ...context, gameSpeed: 0 })).toEqual([])
+    expect(predictPowerShortage(planet, 24, { ...context, gameSpeed: 2 })[0]!.hoursLeft).toBe(0)
+    expect(predictPowerShortage(planet, 24, { ...context, gameSpeed: 0 })[0]!.severity).toBe('critical')
     expect(forecastProduction(planet, { ...context, gameSpeed: 0 }).metal).toBe(0)
   })
   it('defaults legacy settings and rejects invalid thresholds', () => {
@@ -142,17 +147,20 @@ describe('power and monitoring integration', () => {
   })
   it('only notifies new and escalated alerts and rearms after resolution', () => {
     const planet = monitoringPlanet()
-    planet.buildings[BuildingType.MetalMine] = 1
-    planet.resources.energy = 60
-    const alerts = predictPowerShortage(planet)
+    planet.resources.metal = 9700
+    const context = { ...createDefaultForecastContext(), netProduction: { metal: 100 } }
+    const alerts = predictWarehouseFull(planet, 6, context)
     const first = selectNewAlerts(alerts, new Map())
     expect(first.fresh).toHaveLength(1)
-    jump(HOUR)
+    jump(HOUR / 4)
     expect(selectNewAlerts(alerts, first.state).fresh).toEqual([])
-    planet.resources.energy = 0
-    expect(selectNewAlerts(predictPowerShortage(planet), first.state).fresh).toHaveLength(1)
+    planet.resources.metal = 10000
+    expect(selectNewAlerts(predictWarehouseFull(planet, 6, context), first.state).fresh).toHaveLength(1)
     const cleared = selectNewAlerts([], first.state)
-    expect(selectNewAlerts(alerts, cleared.state).fresh).toHaveLength(1)
+    expect(selectNewAlerts(alerts, cleared.state).fresh).toEqual([])
+    jump(HOUR)
+    const resolved = selectNewAlerts([], cleared.state)
+    expect(selectNewAlerts(alerts, resolved.state).fresh).toHaveLength(1)
   })
   it('prediction calls never mutate the planet', () => {
     const planet = monitoringPlanet()
@@ -164,13 +172,116 @@ describe('power and monitoring integration', () => {
   })
   it('does not spam when an active alert oscillates across a severity boundary', () => {
     const planet = monitoringPlanet()
-    planet.buildings[BuildingType.MetalMine] = 1
-    planet.resources.energy = 11 * 2
-    const warned = selectNewAlerts(predictPowerShortage(planet), new Map())
-    planet.resources.energy = 11 * 4
-    const improved = selectNewAlerts(predictPowerShortage(planet), warned.state)
+    planet.resources.metal = 9800
+    const context = { ...createDefaultForecastContext(), netProduction: { metal: 100 } }
+    const warned = selectNewAlerts(predictWarehouseFull(planet, 6, context), new Map())
+    planet.resources.metal = 9600
+    const improved = selectNewAlerts(predictWarehouseFull(planet, 6, context), warned.state)
     expect(improved.fresh).toEqual([])
-    planet.resources.energy = 11 * 2
-    expect(selectNewAlerts(predictPowerShortage(planet), improved.state).fresh).toEqual([])
+    planet.resources.metal = 9800
+    expect(selectNewAlerts(predictWarehouseFull(planet, 6, context), improved.state).fresh).toEqual([])
+  })
+  it('requires a continuous cooldown after resolution even for a long-running alert', () => {
+    const planet = monitoringPlanet()
+    planet.buildings[BuildingType.MetalMine] = 1
+    const alerts = predictPowerShortage(planet)
+    let selection = selectNewAlerts(alerts, new Map(), Date.now())
+    jump(24 * HOUR)
+    selection = selectNewAlerts(alerts, selection.state, Date.now())
+    expect(selection.fresh).toEqual([])
+    jump(1000)
+    const brieflyCleared = selectNewAlerts([], selection.state, Date.now())
+    jump(1000)
+    const reappeared = selectNewAlerts(alerts, brieflyCleared.state, Date.now())
+    expect(reappeared.fresh).toEqual([])
+    jump(HOUR / 2 - 1)
+    const notYetRearmed = selectNewAlerts([], reappeared.state, Date.now())
+    expect(notYetRearmed.state.size).toBe(1)
+    jump(1)
+    const rearmed = selectNewAlerts([], notYetRearmed.state, Date.now())
+    expect(rearmed.state.size).toBe(0)
+    expect(selectNewAlerts(alerts, rearmed.state, Date.now()).fresh).toHaveLength(1)
+  })
+})
+
+describe('timestamp-based power forecasts', () => {
+  const queued = (itemType: BuildingType, targetLevel: number, hours: number, type: 'building' | 'demolish' = 'building') => ({
+    id: `${itemType}-${targetLevel}`, type, itemType, targetLevel, startTime: Date.now(), endTime: Date.now() + hours * HOUR
+  })
+
+  it.each([0, 1, 10])('uses the first harmful completion timestamp at speed %s', gameSpeed => {
+    const planet = monitoringPlanet()
+    planet.buildings[BuildingType.SolarPlant] = 1
+    planet.buildings[BuildingType.MetalMine] = 2
+    planet.buildQueue.push(queued(BuildingType.MetalMine, 4, 4), queued(BuildingType.MetalMine, 3, 2))
+    expect(predictPowerShortage(planet, 6, { ...createDefaultForecastContext(), gameSpeed })[0]?.hoursLeft).toBe(4)
+  })
+  it('does not credit pending energy producers', () => {
+    const planet = monitoringPlanet()
+    planet.buildQueue.push(queued(BuildingType.SolarPlant, 10, 1), queued(BuildingType.MetalMine, 1, 2))
+    expect(predictPowerShortage(planet)[0]?.hoursLeft).toBe(2)
+  })
+  it('forecasts demolition of an energy producer', () => {
+    const planet = monitoringPlanet()
+    planet.buildings[BuildingType.SolarPlant] = 1
+    planet.buildings[BuildingType.MetalMine] = 1
+    planet.buildQueue.push(queued(BuildingType.SolarPlant, 0, 3, 'demolish'))
+    expect(predictPowerShortage(planet)[0]?.hoursLeft).toBe(3)
+  })
+  it('estimates waiting consumers from the earliest free building slot', () => {
+    const planet = monitoringPlanet()
+    planet.buildQueue.push(queued(BuildingType.MetalStorage, 1, 3), queued(BuildingType.SolarPlant, 1, 2))
+    planet.waitingBuildQueue.push({ id: 'waiting', type: 'building', itemType: BuildingType.MetalMine, targetLevel: 1, priority: 0, addedTime: Date.now() })
+    expect(predictPowerShortage(planet)[0]).toMatchObject({ hoursLeft: 2, severity: 'warn' })
+  })
+  it('combines officer expiry with a later consuming completion', () => {
+    const planet = monitoringPlanet()
+    planet.buildings[BuildingType.SolarPlant] = 1
+    planet.buildings[BuildingType.MetalMine] = 2
+    planet.buildQueue.push(queued(BuildingType.MetalMine, 3, 1), queued(BuildingType.MetalMine, 4, 4))
+    const context = { ...createDefaultForecastContext(), energyProductionBonus: 100, energyBonusExpiresAt: Date.now() + 2 * HOUR }
+    expect(predictPowerShortage(planet, 6, context)[0]?.hoursLeft).toBe(4)
+  })
+  it('uses the supplied game clock rather than wall clock', () => {
+    const planet = monitoringPlanet()
+    planet.buildQueue.push(queued(BuildingType.MetalMine, 1, 5))
+    expect(predictPowerShortage(planet, 6, { ...createDefaultForecastContext(), now: Date.now() + 3 * HOUR })[0]?.hoursLeft).toBe(2)
+  })
+})
+
+describe('warehouse officer expiry', () => {
+  it.each([0, 100])('reports capacity shrink at expiry with production %s', rate => {
+    const planet = monitoringPlanet()
+    planet.resources.metal = 10500
+    const context = { ...createDefaultForecastContext(), storageCapacityBonus: 10,
+      storageBonusExpiresAt: Date.now() + HOUR, netProduction: { metal: rate } }
+    expect(predictWarehouseFull(planet, 6, context)[0]?.hoursLeft).toBe(1)
+  })
+  it('reports filling the smaller capacity after expiry', () => {
+    const planet = monitoringPlanet()
+    planet.resources.metal = 9700
+    const context = { ...createDefaultForecastContext(), storageCapacityBonus: 10,
+      storageBonusExpiresAt: Date.now() + HOUR, netProduction: { metal: 100 } }
+    expect(predictWarehouseFull(planet, 6, context)[0]?.hoursLeft).toBe(3)
+  })
+  it('keeps an earlier full time and ignores expiry beyond the warning window', () => {
+    const planet = monitoringPlanet()
+    planet.resources.metal = 10900
+    const context = { ...createDefaultForecastContext(), storageCapacityBonus: 10,
+      storageBonusExpiresAt: Date.now() + 24 * HOUR, netProduction: { metal: 100 } }
+    expect(predictWarehouseFull(planet, 6, context)[0]?.hoursLeft).toBe(1)
+    expect(predictWarehouseFull(planet, 6, { ...context, netProduction: { metal: 0 } })).toEqual([])
+  })
+  it('collects only active expiring storage bonuses', () => {
+    const planet = monitoringPlanet()
+    const player = monitoringPlayer([planet])
+    player.officers[OfficerType.Commander] = createActiveOfficer(OfficerType.Commander, 2)
+    player.officers[OfficerType.Geologist] = createActiveOfficer(OfficerType.Geologist, 1)
+    player.officers[OfficerType.Engineer] = createActiveOfficer(OfficerType.Engineer, 0.5)
+    expect(createForecastContext(player, 1, Date.now()).storageBonusExpiresAt).toBe(Date.now() + 24 * HOUR)
+    player.officers[OfficerType.Geologist].active = false
+    expect(createForecastContext(player, 1, Date.now()).storageBonusExpiresAt).toBe(Date.now() + 48 * HOUR)
+    player.officers[OfficerType.Commander].expiresAt = undefined
+    expect(createForecastContext(player, 1, Date.now()).storageBonusExpiresAt).toBeUndefined()
   })
 })

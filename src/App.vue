@@ -555,6 +555,7 @@
   import * as autopilotLogic from '@/logic/autopilotLogic'
   import * as autopilotAlerts from '@/logic/autopilotAlerts'
   import { selectNewExpeditionReminders } from '@/logic/autopilotExpeditions'
+  import { deliverAutopilotNotifications, type AutopilotNotification } from '@/logic/autopilotNotifications'
   import { getGameNow, setTimeOffset } from '@/logic/gameTime'
   import * as planetLogic from '@/logic/planetLogic'
   import * as officerLogic from '@/logic/officerLogic'
@@ -619,7 +620,7 @@
   )
   provide('autopilotTickResults', autopilotTickResults)
   provide('openIncomingFleetAlerts', () => openEnemyAlertPanel())
-  let autopilotAlertState = new Map<string, autopilotAlerts.AutopilotAlert['severity']>()
+  let autopilotAlertState = new Map<string, autopilotAlerts.AlertNotificationState>()
   let expeditionReminderState = new Set<string>()
 
   const notifyAutopilot = (title: string, body: string) => {
@@ -938,6 +939,7 @@
 
     // 静默模式：收集完成计数与解锁项，结束后统一汇总（避免逐条 toast 轰炸）
     const skipStats = { buildings: 0, researches: 0, ships: 0, defenses: 0, unlocks: 0 }
+    const autopilotSummary: string[] = []
     const aggregateNotification = (type: string, _itemType: string, _level?: number, quantity?: number) => {
       if (type === 'building') skipStats.buildings += 1
       else if (type === 'technology') skipStats.researches += 1
@@ -989,24 +991,32 @@
     {
       const context = autopilotAlerts.createForecastContext(gameStore.player, gameStore.gameSpeed, now)
       const { fresh, state } = autopilotAlerts.selectNewAlerts(
-        autopilotAlerts.collectAutopilotAlerts(gameStore.player, context), autopilotAlertState
+        autopilotAlerts.collectAutopilotAlerts(gameStore.player, context), autopilotAlertState, now
       )
       autopilotAlertState = state
+      const notifications: AutopilotNotification[] = []
       for (const alert of fresh) {
         const name = gameStore.player.planets.find(planet => planet.id === alert.planetId)?.name ?? alert.planetId
-        notifyAutopilot(t(`autopilot.alert${alert.type}`), t('autopilot.alertDetail', {
-          planet: name, resource: alert.resource ? t(`resources.${alert.resource}`) : t('resources.energy'),
-          hours: alert.hoursLeft.toFixed(1)
-        }))
+        notifications.push({
+          title: t(`autopilot.alert${alert.type}`),
+          description: t('autopilot.alertDetail', {
+            planet: name, resource: alert.resource ? t(`resources.${alert.resource}`) : t('resources.energy'),
+            hours: alert.hoursLeft.toFixed(1)
+          })
+        })
       }
       const expeditions = selectNewExpeditionReminders(gameStore.player, now, expeditionReminderState)
       expeditionReminderState = expeditions.state
       for (const reminder of expeditions.fresh) {
         const name = gameStore.player.planets.find(planet => planet.id === reminder.planetId)?.name ?? reminder.planetId
-        notifyAutopilot(t('autopilot.expeditionReturn'), t('autopilot.expeditionDetail', {
-          planet: name, minutes: Math.ceil(reminder.minutesLeft)
-        }))
+        notifications.push({
+          title: t('autopilot.expeditionReturn'),
+          description: t('autopilot.expeditionDetail', {
+            planet: name, minutes: Math.ceil(reminder.minutesLeft)
+          })
+        })
       }
+      autopilotSummary.push(...deliverAutopilotNotifications(notifications, silent, notifyAutopilot))
     }
 
     // 处理舰队任务
@@ -1100,6 +1110,7 @@
       if (skipStats.ships > 0) parts.push(t('overview.timeSkipShip', { count: skipStats.ships }))
       if (skipStats.defenses > 0) parts.push(t('overview.timeSkipDefense', { count: skipStats.defenses }))
       if (skipStats.unlocks > 0) parts.push(t('overview.timeSkipUnlock', { count: skipStats.unlocks }))
+      parts.push(...autopilotSummary)
       const details = parts.length > 0 ? parts.join('、') : t('overview.timeSkipNothing')
       toast.success(t('overview.timeSkipSummary', { hours: opts?.hours ?? 0, details }))
     }
@@ -1172,7 +1183,10 @@
       // 在处理任务之前保存货物信息（因为processTransportArrival会清空cargo）
       const transportedResources = { ...mission.cargo }
       const isGiftMission = mission.isGift && mission.giftTargetNpcId
-      const result = fleetLogic.processTransportArrival(mission, targetPlanet, gameStore.player, npcStore.npcs)
+      const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
+      const result = fleetLogic.processTransportArrival(
+        mission, targetPlanet, gameStore.player, npcStore.npcs, gameStore.locale, bonuses.storageCapacityBonus
+      )
 
       // 更新成就统计（仅在成功时追踪）
       if (result.success) {

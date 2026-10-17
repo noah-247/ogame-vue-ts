@@ -352,6 +352,7 @@ export const processResearchWaitingQueue = (
   const itemsToProcess = [...waitingResearchQueue]
   for (const waitingItem of itemsToProcess) {
     if (player.researchQueue.length >= maxResearchQueue) break
+    if (currentPlanet.autopilot?.mode === 'monitor' && waitingItem.source === 'autopilot') continue
 
     if (waitingItem.type === 'technology') {
       const result = tryExecuteResearchWaitingItem(currentPlanet, waitingItem, player, officers)

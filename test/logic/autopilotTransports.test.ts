@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { BuildingType, MissionType, ShipType, TechnologyType } from '@/types/game'
+import { BuildingType, MissionType, OfficerType, ShipType, TechnologyType } from '@/types/game'
+import type { FleetMission } from '@/types/game'
 import { createAutopilotResearchTarget, createAutopilotTarget, createDefaultEmpireResearchAutopilot } from '@/logic/autopilotLogic'
-import { createDefaultForecastContext } from '@/logic/autopilotAlerts'
+import { createDefaultForecastContext, createForecastContext } from '@/logic/autopilotAlerts'
+import { createFleetMission, processTransportArrival } from '@/logic/fleetLogic'
+import { createActiveOfficer } from '@/logic/officerLogic'
 import { suggestTransports } from '@/logic/autopilotTransports'
 import { executeSuggestedTransport } from '@/logic/autopilotTransportDispatch'
 import { getGameNow, setTimeOffset } from '@/logic/gameTime'
@@ -26,6 +29,12 @@ const setup = () => {
   const player = monitoringPlayer([from, to])
   return { from, to, player }
 }
+
+const incomingMission = (overrides: Partial<FleetMission> = {}): FleetMission => ({
+  ...createFleetMission('player-1', 'from', { galaxy: 1, system: 2, position: 8 }, MissionType.Transport,
+    { [ShipType.SmallCargo]: 1 }, { metal: 75, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 }, 3600),
+  ...overrides
+})
 
 describe('pure conservative transport suggestions', () => {
   it('matches overflow to shortage and discounts once to 80 percent', () => {
@@ -93,6 +102,15 @@ describe('pure conservative transport suggestions', () => {
 })
 
 describe('confirmed transport dispatch', () => {
+  it('rejects the same suggestion on second confirmation after deducting outbound cargo', () => {
+    const { player } = setup()
+    const suggestion = suggestTransports(player.planets, createDefaultForecastContext(), player)[0]!
+    expect(executeSuggestedTransport(player, suggestion, 1)).toEqual({ success: true })
+    const snapshot = JSON.stringify(player)
+    expect(executeSuggestedTransport(player, suggestion, 1)).toEqual({ success: false, reason: 'autopilot.transportExpired' })
+    expect(JSON.stringify(player)).toBe(snapshot)
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)[0]?.amount).toBe(12)
+  })
   it('dispatches through existing fleet logic and records fuel statistics', () => {
     const { from, to, player } = setup()
     setTimeOffset(2 * HOUR)
@@ -169,5 +187,69 @@ describe('confirmed transport dispatch', () => {
     const snapshot = JSON.stringify(player)
     expect(executeSuggestedTransport(player, suggestTransports(player.planets)[0]!, 1).reason).toBe('errors.fleetMissionsFull')
     expect(JSON.stringify(player)).toBe(snapshot)
+  })
+})
+
+describe('outbound cargo accounting', () => {
+  it('removes a fully covered shortage from suggestions', () => {
+    const { to, player } = setup()
+    player.fleetMissions.push(incomingMission({ targetPlanetId: to.id }))
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)).toEqual([])
+  })
+  it('sums multiple transports before applying the 80 percent discount', () => {
+    const { to, player } = setup()
+    const mission = incomingMission({ targetPlanetId: to.id })
+    mission.cargo.metal = 25
+    player.fleetMissions.push(mission, { ...mission, id: 'second' })
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)[0]?.amount).toBe(20)
+  })
+  it.each(['returning', 'arrived'] as const)('ignores %s transports', status => {
+    const { player } = setup()
+    player.fleetMissions.push(incomingMission({ status }))
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)[0]?.amount).toBe(60)
+  })
+  it('ignores other mission types', () => {
+    const { player } = setup()
+    player.fleetMissions.push(incomingMission({ missionType: MissionType.Deploy }))
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)[0]?.amount).toBe(60)
+  })
+  it('prefers the planet id even when the position and moon flag differ', () => {
+    const { to, player } = setup()
+    player.fleetMissions.push(incomingMission({ targetPlanetId: to.id,
+      targetPosition: { galaxy: 2, system: 2, position: 2 }, targetIsMoon: true }))
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)).toEqual([])
+    player.fleetMissions[0]!.targetPlanetId = 'another-planet'
+    player.fleetMissions[0]!.targetPosition = to.position
+    player.fleetMissions[0]!.targetIsMoon = false
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)[0]?.amount).toBe(60)
+  })
+  it.each([false, true])('matches manual transport position and targetIsMoon=%s', isMoon => {
+    const { to, player } = setup()
+    to.isMoon = isMoon
+    if (isMoon) to.autopilot!.targets = [createAutopilotTarget(BuildingType.RoboticsFactory, 1, 0, Date.now())]
+    const mission = incomingMission({ targetIsMoon: !isMoon })
+    mission.cargo.metal = 10000
+    player.fleetMissions.push(mission)
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)).toHaveLength(1)
+    mission.targetIsMoon = isMoon
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)).toEqual([])
+  })
+  it('does not match a different position', () => {
+    const { player } = setup()
+    player.fleetMissions.push(incomingMission({ targetPosition: { galaxy: 1, system: 3, position: 8 } }))
+    expect(suggestTransports(player.planets, createDefaultForecastContext(), player)[0]?.amount).toBe(60)
+  })
+  it('uses the same officer-adjusted capacity when settling transport arrivals', () => {
+    const { to, player } = setup()
+    player.officers[OfficerType.Commander] = createActiveOfficer(OfficerType.Commander, 1)
+    to.resources.metal = 10000
+    const mission = incomingMission({ targetPlanetId: to.id })
+    mission.cargo.metal = 1000
+    const context = createForecastContext(player, 1, Date.now())
+    const result = processTransportArrival(mission, to, player, [], 'zh-CN', context.storageCapacityBonus)
+    expect(result.success).toBe(true)
+    expect(result.overflow?.metal ?? 0).toBe(0)
+    expect(to.resources.metal).toBe(11000)
+    expect(mission.cargo.metal).toBe(0)
   })
 })
