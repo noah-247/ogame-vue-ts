@@ -1572,4 +1572,58 @@ describe('MAJ-8 软预留改版：收入型建筑 bypass（死锁回归）', () 
       b => b.itemType === BuildingType.MetalMine && b.reason === 'autopilot.blockedNoResource'
     )).toBe(true)
   })
+  it('重氢合成器 bypass：高优先级聚变堆因缺重氢被挡时，重氢合成器豁免重氢软预留排入', () => {
+    setNow(NOW)
+    const planet = makePlanet(
+      {
+        [BuildingType.SolarPlant]: 8,
+        [BuildingType.MetalMine]: 8,
+        [BuildingType.CrystalMine]: 8,
+        [BuildingType.DeuteriumSynthesizer]: 5 // 聚变堆前置要求重氢 5
+      },
+      { resources: { metal: 50000, crystal: 50000, deuterium: 50, darkMatter: 0, energy: 5000 } }
+    )
+    // 聚变堆前置：能源科技 3（重氢 5 已满足）
+    const player = makePlayer([planet], { [TechnologyType.EnergyTechnology]: 3 })
+    const config = enableAutopilot(planet, [
+      [BuildingType.FusionReactor, 1], // priority 0：180 重氢 > 50 → 被挡，缺口 130 进入软预留
+      [BuildingType.DeuteriumSynthesizer, 7] // priority 1：收入型建筑，bypass 重氢软预留
+    ])
+    config.workHourThreshold = 1e12
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    // 聚变堆因缺重氢被挡住
+    expect(result.blockers.some(
+      b => b.itemType === BuildingType.FusionReactor && b.reason === 'autopilot.blockedNoResource'
+    )).toBe(true)
+    // 重氢合成器 6 本身不花重氢，但旧逻辑下 planning 重氢被扣成 -130，连 0 花费都过不了；
+    // bypass 豁免重氢软预留 → 排入而非被挡
+    expect(planet.waitingBuildQueue.some(
+      i => i.itemType === BuildingType.DeuteriumSynthesizer && i.targetLevel === 6
+    )).toBe(true)
+    expect(result.blockers.some(
+      b => b.itemType === BuildingType.DeuteriumSynthesizer && b.reason === 'autopilot.blockedNoResource'
+    )).toBe(false)
+  })
+
+  it('soft 预留为空时 bypass 不生效：收入建筑缺资源照常被挡', () => {
+    setNow(NOW)
+    const planet = makePlanet(
+      { [BuildingType.SolarPlant]: 3, [BuildingType.MetalMine]: 2 },
+      { resources: { metal: 10, crystal: 5000, deuterium: 0, darkMatter: 0, energy: 5000 } }
+    )
+    const player = makePlayer([planet])
+    // 唯一目标：金属矿 3（135 金属 > 10，可用资源不够；且它是第一个步骤，无软预留）
+    const config = enableAutopilot(planet, [[BuildingType.MetalMine, 3]])
+    config.workHourThreshold = 1e12
+
+    const result = tickAutopilotPlanet(player, planet, NOW, ctx)
+
+    // 软预留为空，bypass 无从生效 → 照常被资源挡住，且有明确 blocker 记录
+    expect(result.blockers.some(
+      b => b.itemType === BuildingType.MetalMine && b.reason === 'autopilot.blockedNoResource'
+    )).toBe(true)
+    expect(planet.waitingBuildQueue.length).toBe(0)
+  })
 })
