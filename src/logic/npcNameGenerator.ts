@@ -756,6 +756,15 @@ export const updateNPCName = (npcId: string, locale: string): string => {
   return generateNPCName(npcId, locale)
 }
 
+/**
+ * 根据 NPC 名称语言设置解析实际用于生成名字的 locale
+ * @param npcNameLocale 设置值：'en' 固定英文，'auto' 跟随界面语言
+ * @param uiLocale 当前界面语言
+ */
+export const resolveNPCNameLocale = (npcNameLocale: 'en' | 'auto', uiLocale: string): string => {
+  return npcNameLocale === 'auto' ? uiLocale : 'en'
+}
+
 export default {
   generateNPCName,
   generateUniqueNPCNames,

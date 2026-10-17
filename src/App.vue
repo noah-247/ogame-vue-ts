@@ -570,7 +570,7 @@
   import * as publicLogic from '@/logic/publicLogic'
   import * as oreDepositLogic from '@/logic/oreDepositLogic'
   import * as campaignLogic from '@/logic/campaignLogic'
-  import { generateNPCName, countOldFormatNPCs, updateNPCName } from '@/logic/npcNameGenerator'
+  import { generateNPCName, countOldFormatNPCs, updateNPCName, resolveNPCNameLocale } from '@/logic/npcNameGenerator'
   import pkg from '../package.json'
   import { toast } from 'vue-sonner'
   import { migrateGameData } from '@/utils/migration'
@@ -2051,7 +2051,7 @@
 
           npcMap.set(planet.ownerId, {
             id: planet.ownerId,
-            name: generateNPCName(planet.ownerId, gameStore.locale),
+            name: generateNPCName(planet.ownerId, resolveNPCNameLocale(gameStore.npcNameLocale, gameStore.locale)),
             planets: [],
             technologies: {}, // 初始化空科技树
             difficulty: 'medium' as const, // 默认中等难度
@@ -2589,7 +2589,7 @@
 
       // 检测旧格式 NPC 名称
       if (npcStore.npcs.length > 0) {
-        const oldCount = countOldFormatNPCs(npcStore.npcs, gameStore.locale)
+        const oldCount = countOldFormatNPCs(npcStore.npcs, resolveNPCNameLocale(gameStore.npcNameLocale, gameStore.locale))
         if (oldCount > 0) {
           oldFormatNPCCount.value = oldCount
           npcNameUpdateDialogOpen.value = true
@@ -2658,7 +2658,7 @@
   const handleUpdateNPCNames = () => {
     let updatedCount = 0
     npcStore.npcs.forEach(npc => {
-      const newName = updateNPCName(npc.id, gameStore.locale)
+      const newName = updateNPCName(npc.id, resolveNPCNameLocale(gameStore.npcNameLocale, gameStore.locale))
       if (newName !== npc.name) {
         npc.name = newName
         updatedCount++

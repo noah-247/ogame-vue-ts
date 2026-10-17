@@ -58,6 +58,7 @@ export const useGameStore = defineStore('game', {
     currentPlanetId: '',
     isDark: '',
     locale: 'zh-CN' as Locale,
+    npcNameLocale: 'en' as 'en' | 'auto', // NPC 名称语言：'en' 固定英文，'auto' 跟随界面语言
     notificationSettings: {
       browser: false,
       inApp: true,

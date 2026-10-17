@@ -125,6 +125,30 @@
           </div>
           <Switch :checked="gameStore.battleToFinish" @update:checked="(val: boolean) => (gameStore.battleToFinish = val)" />
         </div>
+
+        <!-- 玩家名称 -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3">
+          <div class="space-y-1 flex-1">
+            <h3 class="font-medium">{{ t('settings.playerName') }}</h3>
+            <p class="text-sm text-muted-foreground">{{ t('settings.playerNameDesc') }}</p>
+          </div>
+          <Input
+            :model-value="gameStore.player.name"
+            @update:model-value="(val: string | number) => (gameStore.player.name = String(val).slice(0, 24) || 'Commander')"
+            class="w-full sm:w-64"
+            maxlength="24"
+            :placeholder="t('settings.playerName')"
+          />
+        </div>
+
+        <!-- NPC 名称语言 -->
+        <div class="flex items-center justify-between p-4 border rounded-lg">
+          <div class="space-y-1">
+            <h3 class="font-medium">{{ t('settings.npcNameEnglish') }}</h3>
+            <p class="text-sm text-muted-foreground">{{ t('settings.npcNameEnglishDesc') }}</p>
+          </div>
+          <Switch :checked="gameStore.npcNameLocale === 'en'" @update:checked="toggleNpcNameLocale" />
+        </div>
       </CardContent>
     </Card>
 
@@ -359,6 +383,7 @@
   import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
   import { Button } from '@/components/ui/button'
   import { Switch } from '@/components/ui/switch'
+  import { Input } from '@/components/ui/input'
   import { Label } from '@/components/ui/label'
   import {
     AlertDialog,
@@ -398,6 +423,7 @@
   import pkg from '../../package.json'
   import { checkLatestVersion, canCheckVersion } from '@/utils/versionCheck'
   import type { VersionInfo } from '@/utils/versionCheck'
+  import type { NPC } from '@/types/game'
   import UpdateDialog from '@/components/dialogs/UpdateDialog.vue'
   import PrivacyDialog from '@/components/dialogs/PrivacyDialog.vue'
   import WebDAVConfigDialog from '@/components/settings/WebDAVConfigDialog.vue'
@@ -405,6 +431,8 @@
   import CloudSaveSettings from '@/components/settings/CloudSaveSettings.vue'
   import { useHints } from '@/composables/useHints'
   import { uploadToWebDAV, downloadFromWebDAV } from '@/services/webdavService'
+  import { useNPCStore } from '@/stores/npcStore'
+  import { updateNPCName, resolveNPCNameLocale } from '@/logic/npcNameGenerator'
 
   const { t } = useI18n()
   const { hintsEnabled, setHintsEnabled, resetHints } = useHints()
@@ -837,6 +865,22 @@
     } else {
       toast.success(t('settings.gameResumed'))
     }
+  }
+
+  // 切换 NPC 名称语言，并重命名现有 NPC
+  const toggleNpcNameLocale = (useEnglish: boolean) => {
+    gameStore.npcNameLocale = useEnglish ? 'en' : 'auto'
+    const locale = resolveNPCNameLocale(gameStore.npcNameLocale, gameStore.locale)
+    const npcStore = useNPCStore()
+    let count = 0
+    npcStore.npcs.forEach((npc: NPC) => {
+      const newName = updateNPCName(npc.id, locale)
+      if (newName !== npc.name) {
+        npc.name = newName
+        count++
+      }
+    })
+    toast.success(t('settings.npcNameUpdateSuccess', { count }))
   }
 
   // 确认操作

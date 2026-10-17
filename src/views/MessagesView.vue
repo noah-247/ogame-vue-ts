@@ -195,6 +195,7 @@
                   <template v-if="getResourceInfo(offer.offeredResources)">
                     <ResourceIcon :type="getResourceInfo(offer.offeredResources)!.type" size="sm" />
                     <NumberWithTooltip :value="getResourceInfo(offer.offeredResources)!.amount" />
+                    <span class="text-xs text-muted-foreground">{{ t(`resources.${getResourceInfo(offer.offeredResources)!.type}`) }}</span>
                   </template>
                   <span v-else>-</span>
                 </div>
@@ -203,6 +204,7 @@
                   <template v-if="getResourceInfo(offer.requestedResources)">
                     <ResourceIcon :type="getResourceInfo(offer.requestedResources)!.type" size="sm" />
                     <NumberWithTooltip :value="getResourceInfo(offer.requestedResources)!.amount" />
+                    <span class="text-xs text-muted-foreground">{{ t(`resources.${getResourceInfo(offer.requestedResources)!.type}`) }}</span>
                   </template>
                   <span v-else>-</span>
                 </div>
