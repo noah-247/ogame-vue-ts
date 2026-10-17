@@ -929,9 +929,11 @@
 
       return
     }
-    // 新游戏：先请玩家取名
-    const playerName = await askPlayerName()
-    gameStore.player = gameLogic.initializePlayer(gameStore.player.id, playerName)
+    // 新游戏：先以默认名初始化，取名对话框非阻塞弹出（对话框异常时不卡死 initGame）
+    gameStore.player = gameLogic.initializePlayer(gameStore.player.id, t('common.playerName'))
+    try {
+      askPlayerName().then(name => { gameStore.player.name = name }).catch(() => {})
+    } catch { /* 对话框失败也不影响游戏启动 */ }
     const initialPlanet = planetLogic.createInitialPlanet(gameStore.player.id, t('planet.homePlanet'))
     gameStore.player.planets = [initialPlanet]
     gameStore.currentPlanetId = initialPlanet.id
