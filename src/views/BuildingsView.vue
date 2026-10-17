@@ -30,7 +30,11 @@
 
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       <Card v-for="buildingType in availableBuildings" :key="buildingType" :data-building="buildingType" class="relative">
-        <ArtworkImage :src="BUILDING_ARTWORK[buildingType]" :alt="BUILDINGS[buildingType].name" />
+        <ArtworkImage
+          :src="BUILDING_ARTWORK[buildingType]"
+          :alt="BUILDINGS[buildingType].name"
+          :locked="!isEntityUnlocked(BUILDINGS[buildingType].requirements, getBuildingLevel(buildingType))"
+        />
         <!-- 前置条件遮罩 -->
         <CardUnlockOverlay :requirements="BUILDINGS[buildingType].requirements" :currentLevel="getBuildingLevel(buildingType)" />
 
@@ -199,6 +203,7 @@
   import { Button } from '@/components/ui/button'
   import { Badge } from '@/components/ui/badge'
   import ResourceIcon from '@/components/common/ResourceIcon.vue'
+  import { isEntityUnlocked } from '@/composables/useUnlockState'
   import ArtworkImage from '@/components/common/ArtworkImage.vue'
   import CardUnlockOverlay from '@/components/common/CardUnlockOverlay.vue'
   import {

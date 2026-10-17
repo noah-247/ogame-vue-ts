@@ -8,7 +8,8 @@
       loading="lazy"
       :src="src"
       :alt="alt"
-      class="w-full h-full object-cover"
+      class="w-full h-full object-cover transition-all duration-300"
+      :class="{ 'blur-md brightness-[0.65] saturate-50': locked }"
       @error="visible = false"
     />
     <div v-else class="w-full h-full flex items-center justify-center">
@@ -24,6 +25,8 @@
   interface Props {
     src?: string
     alt: string
+    /** 鎖定時模糊圖片，與 CardUnlockOverlay 的遮罩呼應 */
+    locked?: boolean
   }
 
   defineProps<Props>()

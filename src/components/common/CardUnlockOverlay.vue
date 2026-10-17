@@ -56,7 +56,7 @@
     AlertDialogHeader,
     AlertDialogTitle
   } from '@/components/ui/alert-dialog'
-  import * as publicLogic from '@/logic/publicLogic'
+  import { isEntityUnlocked } from '@/composables/useUnlockState'
 
   interface Props {
     requirements?: Partial<Record<BuildingType | TechnologyType, number>>
@@ -73,12 +73,7 @@
   const requirementsDialogTitle = ref('')
   const requirementsDialogItems = ref<Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }>>([])
 
-  const isUnlocked = computed(() => {
-    // 如果已经建造过（level > 0），则认为已解锁，不显示遮罩
-    if (props.currentLevel !== undefined && props.currentLevel > 0) return true
-    if (!props.requirements || !gameStore.currentPlanet) return true
-    return publicLogic.checkRequirements(gameStore.currentPlanet, gameStore.player.technologies, props.requirements)
-  })
+  const isUnlocked = computed(() => isEntityUnlocked(props.requirements, props.currentLevel))
 
   const getRequirementsList = (): Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }> => {
     if (!props.requirements || !gameStore.currentPlanet) return []

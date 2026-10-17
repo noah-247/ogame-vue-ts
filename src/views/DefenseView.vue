@@ -30,7 +30,11 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
       <Card v-for="defenseType in Object.values(DefenseType)" :key="defenseType" class="relative">
-        <ArtworkImage :src="DEFENSE_ARTWORK[defenseType]" :alt="DEFENSES[defenseType].name" />
+        <ArtworkImage
+          :src="DEFENSE_ARTWORK[defenseType]"
+          :alt="DEFENSES[defenseType].name"
+          :locked="!isEntityUnlocked(DEFENSES[defenseType].requirements)"
+        />
         <CardUnlockOverlay :requirements="DEFENSES[defenseType].requirements" />
         <CardHeader>
           <div class="mb-2">
@@ -177,6 +181,7 @@
   import { Label } from '@/components/ui/label'
   import { Badge } from '@/components/ui/badge'
   import ResourceIcon from '@/components/common/ResourceIcon.vue'
+  import { isEntityUnlocked } from '@/composables/useUnlockState'
   import ArtworkImage from '@/components/common/ArtworkImage.vue'
   import {
     AlertDialog,
