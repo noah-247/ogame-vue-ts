@@ -415,24 +415,6 @@
     <!-- Toast 通知 -->
     <Sonner position="top-center" />
     <!-- 重命名星球对话框 -->
-    <!-- 新游戏取名对话框 -->
-    <Dialog :open="newGameDialogOpen" @update:open="(open: boolean) => { if (!open && newGameNameResolve) confirmNewGame() }">
-      <DialogContent class="sm:max-w-md" :show-close-button="false">
-        <DialogHeader>
-          <DialogTitle>{{ t('newGame.title') }}</DialogTitle>
-          <DialogDescription>{{ t('newGame.description') }}</DialogDescription>
-        </DialogHeader>
-        <div class="py-4">
-          <Input v-model="newPlayerName" :placeholder="t('newGame.namePlaceholder')" maxlength="24" @keyup.enter="confirmNewGame" autofocus />
-        </div>
-        <DialogFooter>
-          <Button @click="confirmNewGame">
-            {{ t('newGame.start') }}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-
     <Dialog v-model:open="renameDialogOpen">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
@@ -453,6 +435,24 @@
       </DialogContent>
     </Dialog>
   </SidebarProvider>
+
+  <!-- 新游戏取名对话框（放根层级：欢迎页无侧边栏，放在 SidebarProvider 内不会渲染） -->
+  <Dialog :open="newGameDialogOpen" @update:open="(open: boolean) => { if (!open && newGameNameResolve) confirmNewGame() }">
+    <DialogContent class="sm:max-w-md" :show-close-button="false">
+      <DialogHeader>
+        <DialogTitle>{{ t('newGame.title') }}</DialogTitle>
+        <DialogDescription>{{ t('newGame.description') }}</DialogDescription>
+      </DialogHeader>
+      <div class="py-4">
+        <Input v-model="newPlayerName" :placeholder="t('newGame.namePlaceholder')" maxlength="24" @keyup.enter="confirmNewGame" autofocus />
+      </div>
+      <DialogFooter>
+        <Button @click="confirmNewGame">
+          {{ t('newGame.start') }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 
   <!-- Android 退出确认对话框 -->
   <AlertDialog v-model:open="exitDialogOpen">

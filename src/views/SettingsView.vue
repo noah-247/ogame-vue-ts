@@ -134,7 +134,7 @@
           </div>
           <Input
             :model-value="gameStore.player.name"
-            @update:model-value="(val: string | number) => (gameStore.player.name = String(val).slice(0, 24) || 'Commander')"
+            @change="(e: Event) => commitPlayerName((e.target as HTMLInputElement).value)"
             class="w-full sm:w-64"
             maxlength="24"
             :placeholder="t('settings.playerName')"
@@ -447,6 +447,12 @@
   const confirmTitle = ref('')
   const confirmMessage = ref('')
   let confirmCallback: (() => void) | null = null
+
+  // 玩家名称：失焦/回车才提交，打字途中不写回（空值回退为默认名）
+  const commitPlayerName = (raw: string) => {
+    const name = raw.trim().slice(0, 24)
+    gameStore.player.name = name || t('common.playerName')
+  }
 
   const isTypesExpanded = ref(false)
 
