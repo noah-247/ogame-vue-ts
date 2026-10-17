@@ -267,6 +267,7 @@ export const processPlanetWaitingQueue = (
   const waitingQueue = planet.waitingBuildQueue || []
   const itemsToProcess = [...waitingQueue]
   for (const waitingItem of itemsToProcess) {
+    if (planet.autopilot?.mode === 'monitor' && waitingItem.source === 'autopilot') continue
     // 检查正式队列是否还有空位
     const currentBuildQueueCount = planet.buildQueue.filter(item => item.type === 'building' || item.type === 'demolish').length
     if (currentBuildQueueCount >= maxBuildQueue) break

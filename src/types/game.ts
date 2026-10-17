@@ -708,10 +708,19 @@ export interface AutopilotReserve {
 
 export type AutopilotMode = 'auto' | 'execute'
 
+export interface AutopilotAlertSettings {
+  oreHours: number
+  warehouseHours: number
+  powerHours: number
+}
+
 /** 单星球副官配置（存于 Planet.autopilot；缺省 = 未启用） */
 export interface AutopilotPlanetConfig {
+  alerts?: AutopilotAlertSettings
+  expeditionReminderMinutes?: number
+  firstEnabledAt?: number
   enabled: boolean
-  mode: AutopilotMode // auto=自主挑下一步；execute=执行已批准清单（降级后）
+  mode: AutopilotMode | 'monitor'
   paused: boolean // 玩家手动暂停：不再新增工作，已开工继续
   targets: AutopilotTarget[]
   reserve: AutopilotReserve

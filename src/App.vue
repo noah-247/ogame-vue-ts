@@ -553,6 +553,8 @@
   } from 'lucide-vue-next'
   import * as gameLogic from '@/logic/gameLogic'
   import * as autopilotLogic from '@/logic/autopilotLogic'
+  import * as autopilotAlerts from '@/logic/autopilotAlerts'
+  import { selectNewExpeditionReminders } from '@/logic/autopilotExpeditions'
   import { getGameNow, setTimeOffset } from '@/logic/gameTime'
   import * as planetLogic from '@/logic/planetLogic'
   import * as officerLogic from '@/logic/officerLogic'
@@ -616,6 +618,18 @@
     new Map<string, autopilotLogic.AutopilotTickResult | autopilotLogic.EmpireResearchTickResult>()
   )
   provide('autopilotTickResults', autopilotTickResults)
+  provide('openIncomingFleetAlerts', () => openEnemyAlertPanel())
+  let autopilotAlertState = new Map<string, autopilotAlerts.AutopilotAlert['severity']>()
+  let expeditionReminderState = new Set<string>()
+
+  const notifyAutopilot = (title: string, body: string) => {
+    const settings = gameStore.notificationSettings
+    if (settings.inApp) toast.warning(title, { description: body })
+    if (settings.browser && 'Notification' in window && Notification.permission === 'granted' &&
+      !(settings.suppressInFocus && document.hasFocus())) {
+      new Notification(title, { body, icon: '/favicon.ico' })
+    }
+  }
 
   // 游戏循环定时器
   const gameLoop = ref<ReturnType<typeof setInterval> | null>(null)
@@ -969,6 +983,29 @@
         autopilotTickResults.value.set('__empire__', researchTickResult)
       } catch (error) {
         console.error('[autopilot] empire research tick failed:', error)
+      }
+    }
+
+    {
+      const context = autopilotAlerts.createForecastContext(gameStore.player, gameStore.gameSpeed, now)
+      const { fresh, state } = autopilotAlerts.selectNewAlerts(
+        autopilotAlerts.collectAutopilotAlerts(gameStore.player, context), autopilotAlertState
+      )
+      autopilotAlertState = state
+      for (const alert of fresh) {
+        const name = gameStore.player.planets.find(planet => planet.id === alert.planetId)?.name ?? alert.planetId
+        notifyAutopilot(t(`autopilot.alert${alert.type}`), t('autopilot.alertDetail', {
+          planet: name, resource: alert.resource ? t(`resources.${alert.resource}`) : t('resources.energy'),
+          hours: alert.hoursLeft.toFixed(1)
+        }))
+      }
+      const expeditions = selectNewExpeditionReminders(gameStore.player, now, expeditionReminderState)
+      expeditionReminderState = expeditions.state
+      for (const reminder of expeditions.fresh) {
+        const name = gameStore.player.planets.find(planet => planet.id === reminder.planetId)?.name ?? reminder.planetId
+        notifyAutopilot(t('autopilot.expeditionReturn'), t('autopilot.expeditionDetail', {
+          planet: name, minutes: Math.ceil(reminder.minutesLeft)
+        }))
       }
     }
 

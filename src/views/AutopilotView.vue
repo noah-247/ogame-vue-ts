@@ -1,13 +1,59 @@
 <template>
   <div class="container mx-auto p-4 sm:p-6 space-y-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold">{{ t('autopilot.title') }}</h1>
-      <span v-if="planet" class="text-sm text-muted-foreground">{{ t('autopilot.planet') }}: {{ planet.name }}</span>
+      <h1 class="text-2xl font-bold flex items-center gap-2">
+        {{ t('autopilot.title') }}
+        <Badge v-if="monitoringAlerts.length" variant="destructive" role="status">{{ monitoringAlerts.length }}</Badge>
+      </h1>
+      <div class="flex flex-wrap items-center gap-2">
+        <span v-if="planet" class="text-sm text-muted-foreground">{{ t('autopilot.planet') }}: {{ planet.name }}</span>
+        <Button size="sm" variant="outline" @click="openIncomingFleetAlerts">{{ t('autopilot.incomingAlerts') }}</Button>
+      </div>
     </div>
 
     <div v-if="!planet || !config" class="text-muted-foreground">—</div>
     <template v-else>
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('autopilot.monitoring') }}</CardTitle>
+          <CardDescription>{{ t('autopilot.forecastNote') }}</CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-3">
+          <p v-if="!monitoringAlerts.length" class="text-sm text-muted-foreground">{{ t('autopilot.noAlerts') }}</p>
+          <div v-for="alert in monitoringAlerts" :key="`${alert.planetId}:${alert.type}:${alert.resource}`" class="flex flex-wrap items-center gap-2 text-sm">
+            <Badge :variant="alert.severity === 'critical' ? 'destructive' : 'secondary'">{{ t(`autopilot.alert${alert.type}`) }}</Badge>
+            {{ t('autopilot.alertDetail', { planet: planetName(alert.planetId), resource: alert.resource ? t(`resources.${alert.resource}`) : t('resources.energy'), hours: alert.hoursLeft.toFixed(1) }) }}
+          </div>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div v-for="field in alertFields" :key="field" class="space-y-1">
+              <Label :for="field">{{ t(`autopilot.${field}`) }}</Label>
+              <Input :id="field" :model-value="alertSettings[field]" type="number" min="0" max="720" @change="(event: Event) => updateAlertSetting(field, (event.target as HTMLInputElement).value)" />
+            </div>
+          </div>
+          <div class="space-y-1">
+            <Label for="expeditionReminderMinutes">{{ t('autopilot.expeditionMinutes') }}</Label>
+            <Input id="expeditionReminderMinutes" :model-value="expeditionMinutes" type="number" min="0" max="1440" @change="(event: Event) => updateExpeditionMinutes((event.target as HTMLInputElement).value)" />
+          </div>
+          <p v-for="reminder in expeditionReminders" :key="reminder.missionId" class="text-sm">
+            {{ t('autopilot.expeditionDetail', { planet: planetName(reminder.planetId), minutes: Math.ceil(reminder.minutesLeft) }) }}
+          </p>
+        </CardContent>
+      </Card>
       <!-- 状态 -->
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('autopilot.transports') }}</CardTitle>
+          <CardDescription>{{ t('autopilot.conservativeEstimate') }}</CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-3">
+          <p v-if="!transportSuggestions.length" class="text-sm text-muted-foreground">{{ t('autopilot.noTransports') }}</p>
+          <div v-for="suggestion in transportSuggestions" :key="`${suggestion.from}:${suggestion.to}:${suggestion.resource}`" class="rounded border p-3 space-y-2">
+            <p>{{ planetName(suggestion.from) }} → {{ planetName(suggestion.to) }} · {{ t(`resources.${suggestion.resource}`) }}: {{ suggestion.amount.toLocaleString() }}</p>
+            <p class="text-sm text-muted-foreground">{{ t(suggestion.reason) }}</p>
+            <Button size="sm" @click="confirmTransport(suggestion)">{{ t('autopilot.confirmTransport') }}</Button>
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>{{ t('autopilot.status') }}</CardTitle>
@@ -17,11 +63,13 @@
             <Switch :checked="config.enabled" @update:checked="toggleEnabled" />
             <span class="text-sm font-medium">{{ t('autopilot.enabled') }}</span>
             <Badge v-if="!config.enabled || config.paused" variant="outline">{{ t('autopilot.paused') }}</Badge>
+            <Badge v-else-if="config.mode === 'monitor'" variant="secondary">{{ t('autopilot.modeMonitor') }}</Badge>
             <Badge v-else-if="config.mode === 'execute' && config.downgradeReason" variant="destructive">{{ t('autopilot.downgraded') }}</Badge>
             <Badge v-else-if="config.mode === 'auto'" variant="default">{{ t('autopilot.modeAuto') }}</Badge>
             <Badge v-else variant="secondary">{{ t('autopilot.modeExecute') }}</Badge>
           </div>
 
+          <p v-if="config.mode === 'monitor'" class="text-sm text-muted-foreground">{{ t('autopilot.monitorModeDesc') }}</p>
           <p v-if="config.downgradeReason" class="text-sm text-destructive flex items-center gap-2">
             <AlertTriangle class="h-4 w-4" />
             {{ t('autopilot.downgradeReason') }}: {{ t(config.downgradeReason) }}
@@ -31,6 +79,9 @@
           </p>
 
           <div class="flex flex-wrap gap-2">
+            <Button v-if="config.enabled && config.mode === 'monitor'" size="sm" variant="outline" @click="onSwitchMode('execute')">
+              {{ t('autopilot.startApprovedConstruction') }}
+            </Button>
             <Button v-if="config.canResumeAuto" size="sm" @click="onResumeAuto">
               <Play class="mr-2 h-4 w-4" />{{ t('autopilot.resumeAuto') }}
             </Button>
@@ -388,10 +439,42 @@
   import type { AutopilotMode, AutopilotPlanetConfig, AutopilotResearchTarget, AutopilotTarget, EmpireResearchAutopilot } from '@/types/game'
   import { BUILDINGS } from '@/config/gameConfig'
   import * as autopilotLogic from '@/logic/autopilotLogic'
+  import * as autopilotAlerts from '@/logic/autopilotAlerts'
+  import type { AutopilotAlertSettings } from '@/types/game'
+  import { suggestTransports } from '@/logic/autopilotTransports'
+  import { executeSuggestedTransport } from '@/logic/autopilotTransportDispatch'
+  import type { TransportSuggestion } from '@/logic/autopilotTransports'
+  import { collectExpeditionReminders, getExpeditionReminderMinutes } from '@/logic/autopilotExpeditions'
+  import { applyBlueprintAndEnablePlanet, enablePlanetAutopilot } from '@/logic/autopilotLifecycle'
+  import { getGameNow } from '@/logic/gameTime'
 
   const { t } = useI18n()
   const gameStore = useGameStore()
+  const openIncomingFleetAlerts = inject<() => void>('openIncomingFleetAlerts', () => {})
   const planet = computed(() => gameStore.currentPlanet)
+  const forecastContext = computed(() => autopilotAlerts.createForecastContext(gameStore.player, gameStore.gameSpeed, gameStore.gameTime))
+  const monitoringAlerts = computed(() => autopilotAlerts.collectAutopilotAlerts(gameStore.player, forecastContext.value))
+  const alertFields = ['oreHours', 'warehouseHours', 'powerHours'] as const
+  const alertSettings = computed(() => planet.value ? autopilotAlerts.getAlertSettings(planet.value) : autopilotAlerts.createDefaultAlertSettings())
+  const planetName = (id: string) => gameStore.player.planets.find(planet => planet.id === id)?.name ?? id
+  const expeditionMinutes = computed(() => planet.value ? getExpeditionReminderMinutes(planet.value) : 30)
+  const expeditionReminders = computed(() => collectExpeditionReminders(gameStore.player, gameStore.gameTime))
+  const updateExpeditionMinutes = (raw: string) => {
+    const value = Number(raw)
+    if (config.value && Number.isFinite(value)) config.value.expeditionReminderMinutes = Math.min(1440, Math.max(0, value))
+  }
+  const transportSuggestions = computed(() => suggestTransports(gameStore.player.planets, forecastContext.value, gameStore.player))
+  const confirmTransport = (suggestion: TransportSuggestion) => {
+    const result = executeSuggestedTransport(gameStore.player, suggestion, gameStore.gameSpeed)
+    if (result.success) toast.success(t('autopilot.transportSent'))
+    else toast.error(t(result.reason ?? 'autopilot.transportExpired'))
+  }
+  const updateAlertSetting = (field: keyof AutopilotAlertSettings, raw: string) => {
+    const current = config.value
+    const value = Number(raw)
+    if (!current || !Number.isFinite(value)) return
+    current.alerts = { ...alertSettings.value, [field]: Math.min(720, Math.max(0, value)) }
+  }
 
   /** 确保当前星球有副官配置（默认关闭）；只在用户操作/进入视图时调用，不在 computed 里写 store */
   function ensureConfig(): AutopilotPlanetConfig | null {
@@ -425,8 +508,8 @@
   const toggleEnabled = (v: boolean) => {
     const c = ensureConfig()
     if (!c) return
-    c.enabled = v
-    if (v) c.paused = false
+    if (v && planet.value) enablePlanetAutopilot(planet.value, forecastContext.value, getGameNow())
+    else c.enabled = false
   }
   const onTakeOver = () => {
     const c = config.value
@@ -437,7 +520,9 @@
   }
   const onSwitchMode = (mode: AutopilotMode) => {
     const c = config.value
-    if (c) autopilotLogic.setAutopilotMode(c, mode)
+    if (c && autopilotLogic.setAutopilotMode(c, mode)) {
+      c.lastDecision = 'autopilot.decisionModeChanged'
+    }
   }
   const onResumeAuto = () => {
     const c = config.value
@@ -602,8 +687,8 @@
     blueprintPreviewOpen.value = false
     if (!c || !p || !id) return
     // Minor-8：月球上过滤 planetOnly 建筑
-    const ok = autopilotLogic.applyBlueprintToPlanet(
-      c, id, Date.now(),
+    const ok = applyBlueprintAndEnablePlanet(
+      p, id, forecastContext.value, getGameNow(),
       t => !(p.isMoon && (BUILDINGS[t.buildingType]?.planetOnly ?? false))
     )
     if (ok) toast.success(t('autopilot.blueprintApplied'))

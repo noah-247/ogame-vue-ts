@@ -763,6 +763,12 @@ export const tickAutopilotPlanet = (
   ctx: AutopilotContext
 ): AutopilotTickResult => {
   const config = planet.autopilot
+  if (config?.mode === 'monitor') {
+    withdrawAutopilotWaiting(planet)
+    config.canResumeAuto = false
+    config.lastDecision = 'autopilot.decisionMonitoring'
+    return emptyResult('autopilot.decisionMonitoring')
+  }
   if (!config || !config.enabled || config.paused) {
     // Minor-4：停用/暂停时清理滞后恢复标记，避免 UI 显示过期状态
     if (config) config.canResumeAuto = false
