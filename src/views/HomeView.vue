@@ -1,12 +1,17 @@
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
-    <!-- Logo 和标题 -->
-    <div class="text-center mb-8 animate-fade-in">
-      <img src="@/assets/logo.svg" alt="OGame Logo" class="w-24 h-24 mx-auto mb-4" />
-      <h1 class="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-        {{ pkg.title }}
-      </h1>
-      <p class="text-muted-foreground mt-2 text-sm sm:text-base">{{ t('home.subtitle') }}</p>
+    <!-- 主视觉横幅 -->
+    <div class="w-full max-w-3xl mx-auto mb-8 animate-fade-in">
+      <div class="relative rounded-2xl overflow-hidden border border-border/50 shadow-2xl">
+        <img src="@/assets/welcome-hero.webp" alt="OGame fleet" class="w-full aspect-video object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent pointer-events-none" />
+        <div class="absolute bottom-0 inset-x-0 p-4 sm:p-6 text-center">
+          <h1 class="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent drop-shadow">
+            {{ pkg.title }}
+          </h1>
+          <p class="text-muted-foreground mt-2 text-sm sm:text-base">{{ t('home.subtitle') }}</p>
+        </div>
+      </div>
     </div>
 
     <!-- 开始游戏按钮 -->
