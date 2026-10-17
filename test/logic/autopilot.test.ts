@@ -799,6 +799,34 @@ describe('blueprints', () => {
     expect(getAutopilotBlueprint('nope')).toBeUndefined()
   })
 
+  it('uses unique priorities within each blueprint (duplicate priorities freeze up/down reorder)', () => {
+    for (const blueprint of AUTOPILOT_BLUEPRINTS) {
+      const priorities = blueprint.targets.map(t => t.priority)
+      expect(new Set(priorities).size).toBe(priorities.length)
+    }
+  })
+
+  it('moveTarget-style reorder works even when existing saves carry duplicate priorities', () => {
+    // 回歸：舊存檔三倉庫 priority 全為 5，單純交換 priority 是空操作；
+    // 新的搬移實作（splice＋重排）必須能真正改變順序
+    const targets = [
+      { id: 'a', priority: 5 },
+      { id: 'b', priority: 5 },
+      { id: 'c', priority: 5 },
+    ]
+    const move = (index: number, dir: -1 | 1) => {
+      const j = index + dir
+      if (j < 0 || j >= targets.length) return
+      const arr = [...targets].sort((x, y) => x.priority - y.priority)
+      const [moved] = arr.splice(index, 1)
+      arr.splice(j, 0, moved!)
+      arr.forEach((t, idx) => { t.priority = idx })
+    }
+    move(2, -1) // 把 c 上移一位
+    const order = [...targets].sort((x, y) => x.priority - y.priority).map(t => t.id)
+    expect(order).toEqual(['a', 'c', 'b'])
+  })
+
   it('applyBlueprintToPlanet replaces targets, enables and records the decision', () => {
     const config = createDefaultPlanetAutopilot()
     config.targets.push(createAutopilotTarget(BuildingType.MetalMine, 3, 0, 1000))

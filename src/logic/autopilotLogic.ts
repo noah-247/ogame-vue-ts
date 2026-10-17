@@ -1277,8 +1277,8 @@ export const AUTOPILOT_BLUEPRINTS: AutopilotBlueprint[] = [
       { buildingType: BuildingType.DeuteriumSynthesizer, targetLevel: 6, priority: 3 },
       { buildingType: BuildingType.RoboticsFactory, targetLevel: 4, priority: 4 },
       { buildingType: BuildingType.MetalStorage, targetLevel: 3, priority: 5 },
-      { buildingType: BuildingType.CrystalStorage, targetLevel: 3, priority: 5 },
-      { buildingType: BuildingType.DeuteriumTank, targetLevel: 2, priority: 5 }
+      { buildingType: BuildingType.CrystalStorage, targetLevel: 3, priority: 6 },
+      { buildingType: BuildingType.DeuteriumTank, targetLevel: 2, priority: 7 }
     ]
   },
   {
@@ -1293,8 +1293,8 @@ export const AUTOPILOT_BLUEPRINTS: AutopilotBlueprint[] = [
       { buildingType: BuildingType.ResearchLab, targetLevel: 5, priority: 4 },
       { buildingType: BuildingType.RoboticsFactory, targetLevel: 4, priority: 5 },
       { buildingType: BuildingType.MetalStorage, targetLevel: 3, priority: 6 },
-      { buildingType: BuildingType.CrystalStorage, targetLevel: 3, priority: 6 },
-      { buildingType: BuildingType.DeuteriumTank, targetLevel: 2, priority: 6 }
+      { buildingType: BuildingType.CrystalStorage, targetLevel: 3, priority: 7 },
+      { buildingType: BuildingType.DeuteriumTank, targetLevel: 2, priority: 8 }
     ]
   }
 ]

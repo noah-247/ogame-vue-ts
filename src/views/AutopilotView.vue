@@ -612,14 +612,17 @@
   const moveTarget = (index: number, dir: -1 | 1) => {
     const c = config.value
     if (!c) return
-    const arr = sortedTargets.value
     const j = index + dir
-    if (j < 0 || j >= arr.length) return
-    const a = arr[index]!
-    const b = arr[j]!
-    const tmp = a.priority
-    a.priority = b.priority
-    b.priority = tmp
+    if (j < 0 || j >= c.targets.length) return
+    // 直接对源数组做搬移并重排 priority：旧存档可能有重复 priority（如蓝图仓库全为 5），
+    // 单纯交换 priority 在相邻项相等时是空操作，必须用 splice 搬移
+    const arr = [...c.targets].sort((a, b) => a.priority - b.priority)
+    const [moved] = arr.splice(index, 1)
+    if (!moved) return
+    arr.splice(j, 0, moved)
+    arr.forEach((target, idx) => {
+      target.priority = idx
+    })
   }
   const dragIndex = ref<number | null>(null)
   const onDragStart = (i: number) => {
@@ -733,13 +736,17 @@
     })
   }
   const moveResearchTarget = (index: number, dir: -1 | 1) => {
-    const arr = sortedResearchTargets.value
+    const c = researchConfig.value
+    if (!c) return
     const j = index + dir
-    if (j < 0 || j >= arr.length) return
-    const a = arr[index]!
-    const b = arr[j]!
-    const tmp = a.priority
-    a.priority = b.priority
-    b.priority = tmp
+    if (j < 0 || j >= c.targets.length) return
+    // 同 moveTarget：splice 搬移＋重排，避免重复 priority 导致交换空操作
+    const arr = [...c.targets].sort((a, b) => a.priority - b.priority)
+    const [moved] = arr.splice(index, 1)
+    if (!moved) return
+    arr.splice(j, 0, moved)
+    arr.forEach((target, idx) => {
+      target.priority = idx
+    })
   }
 </script>
