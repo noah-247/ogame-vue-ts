@@ -483,6 +483,27 @@
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+
+  <!-- 副官付费制迁移确认门（v2→v3；Phase 4 会美化＋做 i18n，文案先用设计报告原文） -->
+  <AlertDialog v-model:open="billingGateOpen">
+    <AlertDialogContent @escape-key-down="onBillingGateEscape">
+      <AlertDialogHeader>
+        <AlertDialogTitle>{{ billingGateConfirmMode ? '副官改為資源聘用制' : '副官聘用制上線' }}</AlertDialogTitle>
+        <AlertDialogDescription class="whitespace-pre-line">{{
+          billingGateConfirmMode
+            ? '副官改為資源聘用制，每遊戲小時收取金屬／晶體／重氫（各約標準產能 3%）。是否以新費率繼續使用副官？\n繼續使用將按目前費率開始計費。'
+            : '副官改為資源聘用制：每遊戲小時收取金屬／晶體／重氫（各約標準產能 3%）。聘請副官後將按費率計費，免費監控功能不受影響。'
+        }}</AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <template v-if="billingGateConfirmMode">
+          <AlertDialogCancel @click="handleBillingGateChoice('pause')">暫停副官</AlertDialogCancel>
+          <AlertDialogAction @click="handleBillingGateChoice('continue')">繼續使用</AlertDialogAction>
+        </template>
+        <AlertDialogAction v-else @click="handleBillingNoticeDismiss">知道了</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
@@ -575,6 +596,13 @@
   import * as autopilotAlerts from '@/logic/autopilotAlerts'
   import { selectNewExpeditionReminders } from '@/logic/autopilotExpeditions'
   import { deliverAutopilotNotifications, type AutopilotNotification } from '@/logic/autopilotNotifications'
+  import {
+    applyBillingConfirmation,
+    dismissBillingNotice,
+    shouldShowBillingConfirm,
+    shouldShowBillingNotice,
+    type BillingConfirmChoice
+  } from '@/logic/autopilotBilling'
   import { getGameNow, setTimeOffset } from '@/logic/gameTime'
   import * as planetLogic from '@/logic/planetLogic'
   import * as officerLogic from '@/logic/officerLogic'
@@ -685,6 +713,9 @@
   // NPC 名称更新对话框状态
   const npcNameUpdateDialogOpen = ref(false)
   const oldFormatNPCCount = ref(0)
+  // 副官付费制迁移确认门（v2→v3）：旧存档有用副官 → 确认门；其余旧存档 → 一次性新制说明
+  const billingGateOpen = ref(false)
+  const billingGateConfirmMode = ref(true)
   // 功能解锁要求配置
   const featureRequirements: Record<string, { building: BuildingType; level: number }> = {
     '/research': { building: BuildingType.ResearchLab, level: 1 },
@@ -2651,6 +2682,15 @@
         gameStore.locale = detectBrowserLocale()
       }
       await initGame()
+      // v2→v3 迁移确认门：旧存档有用副官 → 确认门（继续使用／暂停副官）；
+      // 其余旧存档 → 一次性新制说明。选择后旗标清除＋持久化，重读不重弹。
+      if (shouldShowBillingConfirm(gameStore.player)) {
+        billingGateConfirmMode.value = true
+        billingGateOpen.value = true
+      } else if (shouldShowBillingNotice(gameStore.player)) {
+        billingGateConfirmMode.value = false
+        billingGateOpen.value = true
+      }
       // 启动游戏循环
       startGameLoop()
       // 启动积分更新定时器
@@ -2766,6 +2806,25 @@
   const handleSkipNPCNameUpdate = () => {
     npcNameUpdateDialogOpen.value = false
     toast.info(t('settings.npcNameUpdateSkipped'))
+  }
+
+  // 副官付费制迁移确认门（v2→v3；Phase 4 会美化＋做 i18n，文案先用设计报告原文）
+  const handleBillingGateChoice = (choice: BillingConfirmChoice) => {
+    applyBillingConfirmation(gameStore.player, choice)
+    billingGateOpen.value = false
+    if (choice === 'continue') {
+      toast.success('副官已按新费率继续值班')
+    } else {
+      toast.info('副官已暂停，可随时在副官页恢复值班')
+    }
+  }
+  const handleBillingNoticeDismiss = () => {
+    dismissBillingNotice(gameStore.player)
+    billingGateOpen.value = false
+  }
+  const onBillingGateEscape = (e: Event) => {
+    // 确认门必须二选一：禁止 Esc 直接关闭
+    if (billingGateConfirmMode.value) e.preventDefault()
   }
 </script>
 

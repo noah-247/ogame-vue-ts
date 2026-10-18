@@ -63,7 +63,7 @@ describe('save migrations', () => {
     expect(() => migrateSave({ version: 0 }, registry, 2)).toThrow('No migration registered for save version 1')
   })
 
-  it('migrates v0 to v2 and preserves every business field', () => {
+  it('migrates v0 to v3 and preserves every business field', () => {
     const migrated = migrateSave(legacyGame)
 
     expect(migrated).toEqual(newGame)
@@ -74,18 +74,33 @@ describe('save migrations', () => {
   })
 
   it('deep-copies a mid-game v0 save without changing queues, levels or unknown fields', () => {
-    const { version: _version, ...legacy } = midGame
+    // 构造真正的 v0 输入：去掉顶层 version 与 player.autopilotContract（v3 才有）
+    const legacy = JSON.parse(JSON.stringify(midGame)) as Record<string, unknown>
+    delete legacy.version
+    delete (legacy.player as Record<string, unknown>).autopilotContract
     const original = { ...legacy, extension: { nested: ['preserve me'] } }
     const migrated = migrateSave(original)
 
-    expect(migrated).toEqual({ ...original, version: SAVE_VERSION })
+    expect(migrated.version).toBe(SAVE_VERSION)
+    // v2→v3 补的合约与 fixture 里迁移产生的一致（mid-game 无副官 → notice 旗标）
+    expect((migrated.player as Record<string, unknown>).autopilotContract).toEqual(
+      (midGame.player as Record<string, unknown>).autopilotContract
+    )
+    // 其余字段只是深拷贝（version 与 player 已单独断言）
+    const { player: _mp, version: _mv, ...restMigrated } = migrated
+    const { player: _op, ...restOriginal } = original
+    void _mp
+    void _mv
+    void _op
+    expect(restMigrated).toEqual(restOriginal)
     const player = migrated.player as typeof midGame.player
     player.planets[0]!.buildings.metalMine = 99
-    expect(original.player.planets[0]!.buildings.metalMine).toBe(12)
+    expect((original.player as typeof midGame.player).planets[0]!.buildings.metalMine).toBe(12)
     expect(original).not.toHaveProperty('version')
+    expect(original.player as Record<string, unknown>).not.toHaveProperty('autopilotContract')
   })
 
-  it.each([newGame, midGame])('keeps a v2 save unchanged and is idempotent', state => {
+  it.each([newGame, midGame])('keeps a v3 save unchanged and is idempotent', state => {
     const migrated = migrateSave(state)
 
     expect(migrated).toEqual(state)
@@ -93,24 +108,23 @@ describe('save migrations', () => {
     expect(migrated).not.toBe(state)
   })
 
-  it('migrates an explicit v1 save to v2 with only the version bumped', () => {
+  it('migrates an explicit v1 save to v3 without touching v1→v2 autopilot semantics', () => {
     const v1 = { ...newGame, version: 1 }
     const migrated = migrateSave(v1)
 
-    expect(migrated.version).toBe(2)
-    const { version: _v, ...rest } = migrated
-    const { version: _v1, ...restV1 } = v1
-    void _v
-    void _v1
-    expect(rest).toEqual(restV1)
-    // 副官字段缺省即未启用：迁移不补字段
+    expect(migrated.version).toBe(3)
+    // v1→v2：副官字段缺省即未启用，迁移不补 autopilot 字段
     for (const planet of (migrated.player as typeof newGame.player).planets) {
       expect(planet).not.toHaveProperty('autopilot')
     }
     expect(migrated.player).not.toHaveProperty('empireResearchAutopilot')
+    // v2→v3：补合约；v1 存档里已有合约字段（fixture 带）则保留不覆盖
+    expect((migrated.player as typeof newGame.player).autopilotContract).toEqual(
+      (newGame.player as typeof newGame.player).autopilotContract
+    )
   })
 
-  it('preserves autopilot config and waiting-queue source markers across v1→v2', () => {
+  it('preserves autopilot config and waiting-queue source markers across v1→v3', () => {
     const autopilot = { enabled: true, mode: 'auto', targets: [] }
     const waitingBuildQueue = [{ id: 'w1', source: 'autopilot' }, { id: 'w2' }]
     const player = {
@@ -119,12 +133,16 @@ describe('save migrations', () => {
     }
     const migrated = migrateSave({ ...newGame, version: 1, player })
 
-    expect(migrated.version).toBe(2)
+    expect(migrated.version).toBe(3)
     const migratedPlayer = migrated.player as typeof player
     expect(migratedPlayer.planets[0]!.autopilot).toEqual(autopilot)
     // B11 交接语义：没有 source 的旧等待项保持缺失，视为玩家手动
     expect(migratedPlayer.planets[0]!.waitingBuildQueue).toEqual(waitingBuildQueue)
     expect(migratedPlayer.planets[0]!.waitingBuildQueue[1]).not.toHaveProperty('source')
+    // fixture 自带的合约字段完整保留（已有值不覆盖）
+    expect(migratedPlayer.autopilotContract).toEqual(
+      (newGame.player as typeof newGame.player).autopilotContract
+    )
   })
 
   it('also accepts an explicitly numbered v0 save', () => {

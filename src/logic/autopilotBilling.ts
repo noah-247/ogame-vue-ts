@@ -1,4 +1,4 @@
-import type { AutopilotContract, Planet } from '@/types/game'
+import type { AutopilotContract, Planet, Player } from '@/types/game'
 import { BuildingType } from '@/types/game'
 import { calculateEnergyConsumption, calculateEnergyProduction } from './resourceLogic'
 
@@ -117,10 +117,19 @@ export function accrueBillingSeconds(
   return delta
 }
 
-/** 建立一份默认（未激活）的标准合约，方便调用方初始化 */
-export function createDefaultContract(payerPlanetId: string, servicePlanetIds: string[]): AutopilotContract {
+/**
+ * 建立一份默认（未激活）的合约，方便调用方初始化。
+ * - plan 默认为 'standard'；v2→v3 迁移时传 'free'（迁移合约不自动开始计费）。
+ * - status 恒为 'inactive'、autoRenew 恒为 false：不追溯、不自动重启。
+ * - needsBillingConfirm / needsBillingNotice 默认为 false，由迁移按旧存档使用情况设置。
+ */
+export function createDefaultContract(
+  payerPlanetId = '',
+  servicePlanetIds: string[] = [],
+  plan: 'free' | 'standard' = 'standard'
+): AutopilotContract {
   return {
-    plan: 'standard',
+    plan,
     status: 'inactive',
     payerPlanetId,
     servicePlanetIds,
@@ -131,8 +140,60 @@ export function createDefaultContract(payerPlanetId: string, servicePlanetIds: s
     dutySecondsAcc: 0,
     totalConsumedMetal: 0,
     totalConsumedCrystal: 0,
-    totalConsumedDeuterium: 0
+    totalConsumedDeuterium: 0,
+    needsBillingConfirm: false,
+    needsBillingNotice: false
   }
+}
+
+/** 旧存档是否用过副官：任一星球 autopilot.enabled，或帝国研究副官 enabled */
+export function hasLegacyAutopilotUsage(player: Player): boolean {
+  if (player.planets.some(p => p.autopilot?.enabled === true)) return true
+  return player.empireResearchAutopilot?.enabled === true
+}
+
+/** 旧存档里开过副官的星球 id（迁移时作为 servicePlanetIds） */
+export function autopilotEnabledPlanetIds(player: Player): string[] {
+  return player.planets.filter(p => p.autopilot?.enabled === true).map(p => p.id)
+}
+
+/** 确认门：旧存档有用副官且 needsBillingConfirm 尚未清除 */
+export function shouldShowBillingConfirm(player: Player): boolean {
+  return player.autopilotContract?.needsBillingConfirm === true
+}
+
+/** 一次性新制说明：确认门用户不重复弹（确认门文案已含新制说明） */
+export function shouldShowBillingNotice(player: Player): boolean {
+  const c = player.autopilotContract
+  return c !== undefined && c.needsBillingNotice === true && c.needsBillingConfirm !== true
+}
+
+export type BillingConfirmChoice = 'continue' | 'pause'
+
+/**
+ * 确认门选择（就地修改 player.autopilotContract，调用方负责持久化）：
+ * - continue：plan → 'standard'、status → 'active'，下个 tick 开始按费率计费
+ * - pause：status → 'paused_manual'，不扣款（canAutopilotWork 为 false）
+ * 两种选择都会清除确认旗标，保证重读不重弹。
+ */
+export function applyBillingConfirmation(player: Player, choice: BillingConfirmChoice): void {
+  const c = player.autopilotContract
+  if (!c) return
+  if (choice === 'continue') {
+    c.plan = 'standard'
+    c.status = 'active'
+  } else {
+    c.status = 'paused_manual'
+  }
+  c.needsBillingConfirm = false
+  c.needsBillingNotice = false
+}
+
+/** 一次性新制说明关闭：清除旗标，重读不重弹 */
+export function dismissBillingNotice(player: Player): void {
+  const c = player.autopilotContract
+  if (!c) return
+  c.needsBillingNotice = false
 }
 
 /**

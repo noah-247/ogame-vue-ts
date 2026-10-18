@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "gameTime": 1792108800000,
   "isPaused": false,
   "gameSpeed": 1,
@@ -711,6 +711,22 @@
           "diamond": null
         }
       }
+    },
+    "autopilotContract": {
+      "plan": "free",
+      "status": "inactive",
+      "payerPlanetId": "planet1",
+      "servicePlanetIds": [],
+      "autoRenew": false,
+      "accruedMicroMetal": 0,
+      "accruedMicroCrystal": 0,
+      "accruedMicroDeuterium": 0,
+      "dutySecondsAcc": 0,
+      "totalConsumedMetal": 0,
+      "totalConsumedCrystal": 0,
+      "totalConsumedDeuterium": 0,
+      "needsBillingConfirm": false,
+      "needsBillingNotice": true
     }
   },
   "currentPlanetId": "planet1",

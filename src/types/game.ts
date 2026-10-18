@@ -870,6 +870,10 @@ export interface AutopilotContract {
   totalConsumedMetal: number // 累计已扣（整数单位）
   totalConsumedCrystal: number
   totalConsumedDeuterium: number
+  /** v2→v3 迁移：旧存档有用副官，等待用户在确认门选择（继续使用／暂停副官），选择后清除 */
+  needsBillingConfirm?: boolean
+  /** v2→v3 迁移：所有旧存档展示一次新制说明，展示后清除 */
+  needsBillingNotice?: boolean
 }
 
 // 玩家
