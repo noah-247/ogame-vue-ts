@@ -855,6 +855,23 @@ export interface Officer {
   }
 }
 
+// 自动成长副官付费合约（v3：帝国统一合约；存于 Player.autopilotContract；缺省 = 未签约）
+// 计费单位：费率为每小时整数单位；accruedMicro* 为每分钟结算保留的小数余数（微单位，1 单位 = 1_000_000 微）
+export interface AutopilotContract {
+  plan: 'free' | 'standard' // free = 免费监控（不计费）；standard = 标准副官（auto/execute 计费）
+  status: 'inactive' | 'active' | 'paused_manual' | 'paused_funds' | 'terminated'
+  payerPlanetId: string // 扣款星球（默认母星）；三资源一律从该星球扣，不扫其他星球
+  servicePlanetIds: string[] // 服务星球（费率按这些星球的标准时产合计）
+  autoRenew: boolean // 余额不足暂停后是否自动恢复（v3 默认 false：补资源不自动重启）
+  accruedMicroMetal: number // 每分钟结算保留的小数余数（微单位整数）
+  accruedMicroCrystal: number
+  accruedMicroDeuterium: number
+  dutySecondsAcc: number // 累计值班秒数（显示用；快转/离线不计入）
+  totalConsumedMetal: number // 累计已扣（整数单位）
+  totalConsumedCrystal: number
+  totalConsumedDeuterium: number
+}
+
 // 玩家
 export interface Player {
   id: string
@@ -900,6 +917,8 @@ export interface Player {
   backgroundEnabled?: boolean // 是否启用背景动画（默认false）
   // 舰队预设
   fleetPresets?: FleetPreset[] // 舰队预设列表（最多3个）
+  // 自动成长副官付费合约（缺省 = 未签约，旧存档没有该字段）
+  autopilotContract?: AutopilotContract
   // 成就系统
   achievementStats?: AchievementStats // 成就统计数据
   achievements?: Record<string, AchievementProgress> // 成就进度
