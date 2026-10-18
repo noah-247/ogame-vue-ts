@@ -1091,6 +1091,9 @@
           })
           if (billingResult.pausedForFunds) {
             console.warn('[autopilot-billing] 付款星球余额不足，合约已暂停（paused_funds）')
+            // Phase 4：余额不足暂停是当 tick 的一次性事件（pausedForFunds 只在转入瞬间为 true），
+            // 直接弹 toast 提醒用户去副官页补充资源，不会刷屏
+            toast.warning(t('autopilot.contract.fundsPausedToast'))
           }
         }
       }

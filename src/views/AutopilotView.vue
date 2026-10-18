@@ -13,6 +13,145 @@
 
     <div v-if="!planet || !config" class="text-muted-foreground">—</div>
     <template v-else>
+      <!-- 副官合约卡（v3 付费机制） -->
+      <Card>
+        <CardHeader>
+          <CardTitle>{{ t('autopilot.contract.title') }}</CardTitle>
+          <CardDescription>{{ t('autopilot.contract.description') }}</CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <!-- 方案 / 状态 -->
+          <div class="flex flex-wrap items-center gap-3 text-sm">
+            <span class="text-muted-foreground">{{ t('autopilot.contract.planLabel') }}:</span>
+            <Badge v-if="contract" variant="secondary">{{ t(planKey) }}</Badge>
+            <span class="text-muted-foreground">{{ t('autopilot.contract.statusLabel') }}:</span>
+            <Badge :variant="statusVariant">{{ t(statusKey) }}</Badge>
+          </div>
+
+          <!-- 余额不足暂停的醒目提示 -->
+          <div v-if="contract?.status === 'paused_funds'" role="alert" class="rounded border border-destructive/50 bg-destructive/10 p-3 space-y-1">
+            <p class="text-sm font-semibold text-destructive flex items-center gap-2">
+              <AlertTriangle class="h-4 w-4" />{{ t('autopilot.contract.fundsWarningTitle') }}
+            </p>
+            <p class="text-sm text-destructive/90">{{ t('autopilot.contract.fundsWarning') }}</p>
+          </div>
+
+          <!-- 付款星球 / 服务星球 -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1">
+              <Label>{{ t('autopilot.contract.payerPlanet') }}</Label>
+              <Select :model-value="effectivePayerPlanetId" @update:model-value="onPayerChange">
+                <SelectTrigger class="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="p in gameStore.player.planets" :key="p.id" :value="p.id">
+                    {{ p.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="space-y-2">
+              <Label>{{ t('autopilot.contract.servicePlanets') }}</Label>
+              <div class="flex flex-wrap gap-3">
+                <label v-for="p in gameStore.player.planets" :key="p.id" class="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <Checkbox :checked="serviceIds.includes(p.id)" @update:checked="(v: boolean | 'indeterminate') => toggleServicePlanet(p.id, v)" />
+                  {{ p.name }}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 三资源即时价格 + 可用量 + 瓶颈 -->
+          <div class="space-y-2">
+            <p class="text-sm font-medium">{{ t('autopilot.contract.ratesTitle') }}</p>
+            <div class="grid gap-2 sm:grid-cols-3">
+              <div
+                v-for="r in resourceKeys"
+                :key="r"
+                class="rounded border p-2 text-sm"
+                :class="{ 'border-destructive': hoursSupport.bottleneck === r }"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-muted-foreground">{{ t(`resources.${r}`) }}</span>
+                  <Badge v-if="hoursSupport.bottleneck === r" variant="destructive">{{ t('autopilot.contract.bottleneck') }}</Badge>
+                </div>
+                <p class="font-semibold">{{ t('autopilot.contract.hourlyPrice', { price: rates[r].toLocaleString() }) }}</p>
+                <p class="text-xs text-muted-foreground">{{ t('autopilot.contract.availableAmount', { amount: availableTriple[r].toLocaleString() }) }}</p>
+                <p class="text-xs" :class="{ 'text-destructive font-semibold': hoursSupport.bottleneck === r }">
+                  {{ hoursSupport.perResource[r] === Infinity
+                    ? t('autopilot.contract.supportHoursInfinity')
+                    : t('autopilot.contract.supportHours', { hours: hoursSupport.perResource[r].toLocaleString() }) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 本期累计已扣 -->
+          <p class="text-sm">
+            <span class="text-muted-foreground">{{ t('autopilot.contract.totalConsumed') }}: </span>
+            <span v-for="r in resourceKeys" :key="r" class="mr-3">
+              {{ t(`resources.${r}`) }} {{ consumedAmount(r).toLocaleString() }}
+            </span>
+          </p>
+
+          <!-- 自动续费 -->
+          <div v-if="contract" class="flex items-center gap-2">
+            <Switch :checked="contract.autoRenew" @update:checked="v => contract && (contract.autoRenew = v)" />
+            <div>
+              <Label class="text-sm">{{ t('autopilot.contract.autoRenew') }}</Label>
+              <p class="text-xs text-muted-foreground">{{ t('autopilot.contract.autoRenewDesc') }}</p>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="flex flex-wrap gap-2">
+            <Button
+              v-if="!contract || contract.status === 'inactive' || contract.status === 'terminated'"
+              @click="hireDialogOpen = true"
+            >
+              {{ t('autopilot.contract.hire') }}
+            </Button>
+            <template v-else>
+              <Button v-if="contract.status === 'active'" size="sm" variant="outline" @click="onPauseContract">
+                <Pause class="mr-2 h-4 w-4" />{{ t('autopilot.contract.pause') }}
+              </Button>
+              <Button v-if="contract.status === 'paused_manual' || contract.status === 'paused_funds'" size="sm" @click="onResumeContract">
+                <Play class="mr-2 h-4 w-4" />{{ t('autopilot.contract.resume') }}
+              </Button>
+              <Button size="sm" variant="outline" @click="onTerminateContract">
+                {{ t('autopilot.contract.terminate') }}
+              </Button>
+            </template>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- 聘请二次确认对话框 -->
+      <Dialog v-model:open="hireDialogOpen">
+        <ScrollableDialogContent container-class="max-w-lg">
+          <template #header>
+            <DialogTitle>{{ t('autopilot.contract.confirmTitle') }}</DialogTitle>
+            <DialogDescription>{{ t('autopilot.contract.confirmNoTrial') }}</DialogDescription>
+          </template>
+          <div class="space-y-3 py-2 text-sm">
+            <p class="font-medium">
+              {{ t('autopilot.contract.confirmRates', {
+                metal: rates.metal.toLocaleString(),
+                crystal: rates.crystal.toLocaleString(),
+                deuterium: rates.deuterium.toLocaleString()
+              }) }}
+            </p>
+            <p class="text-muted-foreground">{{ t('autopilot.contract.confirmFundsRule') }}</p>
+            <p class="text-muted-foreground">{{ t('autopilot.contract.confirmNoSweep') }}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" @click="hireDialogOpen = false">{{ t('common.cancel') }}</Button>
+            <Button @click="confirmHire">{{ t('autopilot.contract.confirmHire') }}</Button>
+          </DialogFooter>
+        </ScrollableDialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <CardTitle>{{ t('autopilot.monitoring') }}</CardTitle>
@@ -435,8 +574,12 @@
     Plus,
     Trash2
   } from 'lucide-vue-next'
+  import { Checkbox } from '@/components/ui/checkbox'
   import { BuildingType, TechnologyType } from '@/types/game'
-  import type { AutopilotMode, AutopilotPlanetConfig, AutopilotResearchTarget, AutopilotTarget, EmpireResearchAutopilot } from '@/types/game'
+  import type { AutopilotMode, AutopilotPlanetConfig, AutopilotResearchTarget, AutopilotTarget, EmpireResearchAutopilot, AutopilotContract } from '@/types/game'
+  import * as autopilotBilling from '@/logic/autopilotBilling'
+  import type { ResourceTriple } from '@/logic/autopilotBilling'
+  import * as officerLogic from '@/logic/officerLogic'
   import { BUILDINGS } from '@/config/gameConfig'
   import * as autopilotLogic from '@/logic/autopilotLogic'
   import * as autopilotAlerts from '@/logic/autopilotAlerts'
@@ -505,9 +648,111 @@
     () => gameStore.player?.empireResearchAutopilot ?? null
   )
 
+  // ---------- 副官合约卡（v3 付费机制） ----------
+  const contract = computed<AutopilotContract | null>(() => gameStore.player.autopilotContract ?? null)
+  const resourceKeys = ['metal', 'crystal', 'deuterium'] as const
+  const hireDialogOpen = ref(false)
+  /** 聘请前的草稿：付款星球（默认母星）＋服务星球（默认全部） */
+  const draftPayerPlanetId = ref('')
+  const draftServicePlanetIds = ref<string[]>([])
+  const initDraft = () => {
+    const planets = gameStore.player.planets
+    if (!draftPayerPlanetId.value) draftPayerPlanetId.value = planets[0]?.id ?? ''
+    if (!draftServicePlanetIds.value.length) draftServicePlanetIds.value = planets.map(p => p.id)
+  }
+  const effectivePayerPlanetId = computed(() => contract.value?.payerPlanetId ?? draftPayerPlanetId.value)
+  const serviceIds = computed<string[]>(() => contract.value?.servicePlanetIds ?? draftServicePlanetIds.value)
+  const onPayerChange = (v: unknown) => {
+    const id = String(v ?? '')
+    const c = contract.value
+    if (c) c.payerPlanetId = id
+    else draftPayerPlanetId.value = id
+  }
+  const toggleServicePlanet = (id: string, checked: boolean | 'indeterminate') => {
+    const c = contract.value
+    const list = c ? c.servicePlanetIds : draftServicePlanetIds.value
+    const next = checked
+      ? (list.includes(id) ? list : [...list, id])
+      : list.filter(x => x !== id)
+    if (c) c.servicePlanetIds = next
+    else draftServicePlanetIds.value = next
+  }
+  /** 服务星球的费率输入（沿用 App.vue 计费 tick 的能源效率判定） */
+  const rates = computed<ResourceTriple>(() => {
+    const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
+    const inputs = gameStore.player.planets
+      .filter(p => serviceIds.value.includes(p.id))
+      .map(p => autopilotBilling.toBillingPlanetInput(p, bonuses.energyProductionBonus))
+    return autopilotBilling.calculateRates(inputs)
+  })
+  const payerPlanet = computed(() => gameStore.player.planets.find(p => p.id === effectivePayerPlanetId.value) ?? null)
+  const availableTriple = computed<ResourceTriple>(() => ({
+    metal: Math.floor(payerPlanet.value?.resources.metal ?? 0),
+    crystal: Math.floor(payerPlanet.value?.resources.crystal ?? 0),
+    deuterium: Math.floor(payerPlanet.value?.resources.deuterium ?? 0)
+  }))
+  const hoursSupport = computed(() => autopilotBilling.computeHoursSupported(rates.value, availableTriple.value))
+  const consumedAmount = (r: 'metal' | 'crystal' | 'deuterium') => {
+    const c = contract.value
+    if (!c) return 0
+    return r === 'metal' ? c.totalConsumedMetal : r === 'crystal' ? c.totalConsumedCrystal : c.totalConsumedDeuterium
+  }
+  const statusKey = computed(() => {
+    const s = contract.value?.status ?? 'inactive'
+    return s === 'active' ? 'autopilot.contract.statusActive'
+      : s === 'paused_manual' ? 'autopilot.contract.statusPausedManual'
+      : s === 'paused_funds' ? 'autopilot.contract.statusPausedFunds'
+      : s === 'terminated' ? 'autopilot.contract.statusTerminated'
+      : 'autopilot.contract.statusInactive'
+  })
+  const statusVariant = computed(() => {
+    const s = contract.value?.status ?? 'inactive'
+    return s === 'active' ? 'default' : s === 'paused_funds' ? 'destructive' : s === 'paused_manual' ? 'outline' : 'secondary'
+  })
+  const planKey = computed(() => contract.value?.plan === 'standard' ? 'autopilot.contract.planStandard' : 'autopilot.contract.planFree')
+
+  const confirmHire = () => {
+    const c = autopilotBilling.createDefaultContract(
+      effectivePayerPlanetId.value || gameStore.player.planets[0]?.id || '',
+      [...serviceIds.value]
+    )
+    // v3：无试用期，聘请即激活，下个 tick 起按分钟计费
+    c.status = 'active'
+    gameStore.player.autopilotContract = c
+    hireDialogOpen.value = false
+    toast.success(t('autopilot.contract.hired'))
+  }
+  const onPauseContract = () => {
+    const c = contract.value
+    if (!c) return
+    c.status = 'paused_manual'
+    toast.info(t('autopilot.contract.pausedToast'))
+  }
+  const onResumeContract = () => {
+    const c = contract.value
+    if (!c) return
+    // v3：不从其他星球自动扫——余额不足就提示补资源
+    const missing = autopilotBilling.findInsufficientForResume(rates.value, availableTriple.value)
+    if (missing.length) {
+      toast.error(t('autopilot.contract.resumeInsufficient', {
+        resources: missing.map(r => t(`resources.${r}`)).join('、')
+      }))
+      return
+    }
+    c.status = 'active'
+    toast.success(t('autopilot.contract.resumedToast'))
+  }
+  const onTerminateContract = () => {
+    const c = contract.value
+    if (!c) return
+    c.status = 'terminated'
+    toast.warning(t('autopilot.contract.terminatedToast'))
+  }
+
   onMounted(() => {
     ensureConfig()
     ensureResearchConfig()
+    initDraft()
   })
   watch(planet, () => ensureConfig())
 

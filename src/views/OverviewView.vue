@@ -35,6 +35,8 @@
         <Button @click="skipTime(8)" variant="outline" size="sm" :disabled="isSkipping">+8{{ t('resources.hour') }}</Button>
         <Button @click="skipTime(24)" variant="outline" size="sm" :disabled="isSkipping">+24{{ t('resources.hour') }}</Button>
       </div>
+      <!-- 快转期间副官不值班（不收费） -->
+      <p class="mt-1 text-center text-xs text-muted-foreground">{{ t('overview.timeSkipAutopilotNote') }}</p>
     </div>
 
     <!-- 放弃殖民地确认对话框 -->

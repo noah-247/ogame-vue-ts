@@ -197,6 +197,48 @@ export function dismissBillingNotice(player: Player): void {
 }
 
 /**
+ * 合约卡「可支撑小时」显示：每种资源的支撑小时 = floor(可用量 / 每小时费率)；
+ * 费率为 0（零产能不收费）→ 该资源无限，不参与瓶颈判定。
+ */
+export interface HoursSupport {
+  /** 每种资源各自可支撑的小时数（费率 0 → Infinity） */
+  perResource: ResourceTriple
+  /** 瓶颈资源：最先耗尽的那个（并列时 metal > crystal > deuterium；三费率全 0 → 'metal'） */
+  bottleneck: 'metal' | 'crystal' | 'deuterium'
+  /** 以瓶颈为准的可支撑小时数（三费率全 0 → Infinity） */
+  limitingHours: number
+}
+export function computeHoursSupported(rates: ResourceTriple, available: ResourceTriple): HoursSupport {
+  const perResource: ResourceTriple = { metal: Infinity, crystal: Infinity, deuterium: Infinity }
+  const keys = ['metal', 'crystal', 'deuterium'] as const
+  for (const k of keys) {
+    if (rates[k] > 0) perResource[k] = Math.floor(available[k] / rates[k])
+  }
+  let bottleneck: 'metal' | 'crystal' | 'deuterium' = 'metal'
+  for (const k of keys) {
+    if (perResource[k] < perResource[bottleneck]) bottleneck = k
+  }
+  return { perResource, bottleneck, limitingHours: perResource[bottleneck] }
+}
+
+/**
+ * 「恢复值班」前的余款检查（UI 级守卫）：要求付款星球三资源可用量 ≥ 一小时费率。
+ * 回传低于门槛的资源（metal → crystal → deuterium 顺序）；空数组表示足够。
+ * 费率 0 的资源跳过（零产能不收费）。不从其他星球扫——提示用户手动补资源。
+ */
+export function findInsufficientForResume(
+  rates: ResourceTriple,
+  available: ResourceTriple
+): Array<'metal' | 'crystal' | 'deuterium'> {
+  const missing: Array<'metal' | 'crystal' | 'deuterium'> = []
+  const keys = ['metal', 'crystal', 'deuterium'] as const
+  for (const k of keys) {
+    if (rates[k] > 0 && available[k] < rates[k]) missing.push(k)
+  }
+  return missing
+}
+
+/**
  * 星球 → 费率输入。能源效率沿用 updatePlanetResources 的判定语义：
  * 能源产出 >= 消耗 → 1（正常生产）；否则 0（停电，费率计算时排除）。
  */
