@@ -1004,8 +1004,6 @@
   // v3 副官计费基线：上次 tick 的 now；首个 tick 只建基线不计费，
   // 避免把历史累积的 timeOffset（快转/离线）当成一次补算
   let lastBillingTickNow: number | null = null
-  /** 单 tick 计费虚拟秒上限：后台节流/暂停后回补的大段空档不收费（暂停/离线本就不收） */
-  const MAX_BILLING_TICK_SECONDS = 10
   const updateGameAt = async (now: number, opts?: { silent?: boolean; hours?: number }) => {
     const silent = opts?.silent ?? false
     if (gameStore.isPaused) return
@@ -1073,7 +1071,7 @@
       lastBillingTickNow = now
     } else {
       const contract = gameStore.player.autopilotContract
-      const virtualSeconds = Math.min(Math.max(0, (now - lastBillingTickNow) / 1000), MAX_BILLING_TICK_SECONDS)
+      const virtualSeconds = Math.max(0, (now - lastBillingTickNow) / 1000)
       const billingTickNeeded = contract !== undefined && (
         autopilotBilling.canAutopilotWork(contract) ||
         (contract.status === 'paused_funds' && contract.autoRenew)
