@@ -604,6 +604,21 @@
   const router = useRouter()
   const gameStore = useGameStore()
   watch(() => gameStore.timeOffset, offset => setTimeOffset(offset || 0), { immediate: true, flush: 'sync' })
+  // 离开欢迎页（用户按了「开始游戏」）后，若新游戏待取名则弹出取名对话框；
+  // 直接用网址进入游戏页（初始路由即非 /）也同样触发
+  watch(() => router.currentRoute.value.path, (path) => {
+    if (path !== '/' && pendingNamePrompt.value) {
+      pendingNamePrompt.value = false
+      const nameAtPrompt = gameStore.player.name
+      try {
+        askPlayerName().then(name => {
+          if (gameStore.player.name === nameAtPrompt) {
+            gameStore.player.name = name
+          }
+        }).catch(() => {})
+      } catch { /* 对话框失败也不影响游戏 */ }
+    }
+  }, { immediate: true })
   const universeStore = useUniverseStore()
   const npcStore = useNPCStore()
   const { isDark } = useTheme()
@@ -662,6 +677,8 @@
   const newGameDialogOpen = ref(false)
   const newPlayerName = ref('')
   let newGameNameResolve: ((name: string) => void) | null = null
+  // 新游戏待取名：init 时只标记，等用户按「开始游戏」离开欢迎页后才弹对话框
+  const pendingNamePrompt = ref(false)
   // Android 退出确认对话框状态
   const exitDialogOpen = ref(false)
   // NPC 名称更新对话框状态
@@ -929,17 +946,9 @@
 
       return
     }
-    // 新游戏：先以默认名初始化，取名对话框非阻塞弹出（对话框异常时不卡死 initGame）
+    // 新游戏：先以默认名初始化；取名对话框等用户按「开始游戏」进入游戏后才弹（pendingNamePrompt 标记）
     gameStore.player = gameLogic.initializePlayer(gameStore.player.id, t('common.playerName'))
-    // 取名对话框非阻塞弹出；用户在 pending 期间若已在设置页改名，不覆盖
-    const nameAtPrompt = gameStore.player.name
-    try {
-      askPlayerName().then(name => {
-        if (gameStore.player.name === nameAtPrompt) {
-          gameStore.player.name = name
-        }
-      }).catch(() => {})
-    } catch { /* 对话框失败也不影响游戏启动 */ }
+    pendingNamePrompt.value = true
     const initialPlanet = planetLogic.createInitialPlanet(gameStore.player.id, t('planet.homePlanet'))
     gameStore.player.planets = [initialPlanet]
     gameStore.currentPlanetId = initialPlanet.id
