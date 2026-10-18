@@ -27,7 +27,7 @@ After playing it for a while, three things bugged me enough to fix:
 The original combat was simplified — no rapid fire, shields never regenerated, ships never exploded. It just didn't feel right. So I rewrote it against the real OGame rules (`src/workers/battleEngine.ts`):
 - Shields fully regenerate each round; if your attack can't break the shield it only scratches the paint, and attacks below 1% of shield strength just bounce off
 - Hull is 10% of build cost; a ship below 70% hull can explode on the spot
-- Rapid fire finally works: destroy a ship and you may immediately fire again — very satisfying
+- Rapid fire finally works: after every shot — hit or miss, destroyed or not — an RF value above 1 against that target type gives a (RF-1)/RF chance to fire again immediately — very satisfying
 - Covered by 18 deterministic tests, checked against classic OGame battle examples
 
 ### 🔧 Fixed a data bug along the way
