@@ -444,6 +444,7 @@
   import { suggestTransports } from '@/logic/autopilotTransports'
   import { executeSuggestedTransport } from '@/logic/autopilotTransportDispatch'
   import type { TransportSuggestion } from '@/logic/autopilotTransports'
+  import { createTransportThrottleState, getThrottledResult } from '@/logic/transportThrottle'
   import { collectExpeditionReminders, getExpeditionReminderMinutes } from '@/logic/autopilotExpeditions'
   import { applyBlueprintAndEnablePlanet, enablePlanetAutopilot } from '@/logic/autopilotLifecycle'
   import { getGameNow } from '@/logic/gameTime'
@@ -463,7 +464,13 @@
     const value = Number(raw)
     if (config.value && Number.isFinite(value)) config.value.expeditionReminderMinutes = Math.min(1440, Math.max(0, value))
   }
-  const transportSuggestions = computed(() => suggestTransports(gameStore.player.planets, forecastContext.value, gameStore.player))
+  const transportThrottle = createTransportThrottleState<TransportSuggestion[]>()
+  const transportSuggestions = computed(() => getThrottledResult(
+    transportThrottle,
+    gameStore.player.planets,
+    gameStore.gameTime,
+    () => suggestTransports(gameStore.player.planets, forecastContext.value, gameStore.player)
+  ))
   const confirmTransport = (suggestion: TransportSuggestion) => {
     const result = executeSuggestedTransport(gameStore.player, suggestion, gameStore.gameSpeed)
     if (result.success) toast.success(t('autopilot.transportSent'))
