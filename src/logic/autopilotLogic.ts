@@ -36,6 +36,7 @@ import * as researchLogic from './researchLogic'
 import * as resourceLogic from './resourceLogic'
 import * as waitingQueueLogic from './waitingQueueLogic'
 import * as publicLogic from './publicLogic'
+import { canAutopilotWork } from './autopilotBilling'
 
 // ---------------------------------------------------------------------------
 // 常量与默认配置
@@ -827,6 +828,13 @@ export const tickAutopilotPlanet = (
     config.lastDecision = 'autopilot.decisionMonitoring'
     return { ...emptyResult('autopilot.decisionMonitoring'), completedTargets }
   }
+
+  // v3 计费守卫（§4.1）：无有效合约（无合约/非 active/免费监控档）时不产生任何新工作。
+  // 监控模式在上方已提前返回（免费监控不受守卫限制，只撤回等待项、不产生新工作）。
+  if (!canAutopilotWork(player.autopilotContract)) {
+    config.canResumeAuto = false
+    return { ...emptyResult('autopilot.decisionDisabled'), completedTargets }
+  }
   if (config.paused) {
     config.canResumeAuto = false
     return { ...emptyResult('autopilot.decisionDisabled'), completedTargets }
@@ -1131,6 +1139,13 @@ export const tickEmpireResearch = (
     config.canResumeAuto = false
     config.lastDecision = 'autopilot.decisionMonitoring'
     return { ...emptyResult('autopilot.decisionMonitoring'), completedTargets }
+  }
+
+  // v3 计费守卫（§4.1）：无有效合约时帝国研究副官不产生任何新工作。
+  // 监控模式在上方已提前返回（免费监控不受守卫限制）。
+  if (!canAutopilotWork(player.autopilotContract)) {
+    config.canResumeAuto = false
+    return { ...emptyResult('autopilot.decisionDisabled'), completedTargets }
   }
 
   // MAJ-1：清理过期的副官研究等待项

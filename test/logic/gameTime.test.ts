@@ -14,6 +14,7 @@ import * as moonLogic from '@/logic/moonLogic'
 import * as officerLogic from '@/logic/officerLogic'
 import * as resourceLogic from '@/logic/resourceLogic'
 import { createAutopilotTarget, createDefaultContext, createDefaultPlanetAutopilot, tickAutopilotPlanet } from '@/logic/autopilotLogic'
+import { createDefaultContract } from '@/logic/autopilotBilling'
 import { HOUR, jump, restore, setNow } from '../utils/time'
 
 const NOW = 1_700_000_000_000
@@ -35,6 +36,8 @@ const makeGame = () => {
   planet.buildings[BuildingType.CrystalStorage] = 10
   planet.buildings[BuildingType.DeuteriumTank] = 10
   player.planets.push(planet)
+  // v3 计费：副官工作需要 active 合约；既有行为测试默认挂一张有效合约
+  player.autopilotContract = { ...createDefaultContract(planet.id, [planet.id]), status: 'active' as const }
   return { player, planet }
 }
 

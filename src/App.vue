@@ -571,6 +571,7 @@
   } from 'lucide-vue-next'
   import * as gameLogic from '@/logic/gameLogic'
   import * as autopilotLogic from '@/logic/autopilotLogic'
+  import * as autopilotBilling from '@/logic/autopilotBilling'
   import * as autopilotAlerts from '@/logic/autopilotAlerts'
   import { selectNewExpeditionReminders } from '@/logic/autopilotExpeditions'
   import { deliverAutopilotNotifications, type AutopilotNotification } from '@/logic/autopilotNotifications'
@@ -971,6 +972,11 @@
 
   // 游戏主更新：推进到指定时间点（now 为虚拟游戏时间）
   // silent 模式用于时间快转：通知按类型聚合为一条汇总 toast，NPC 行为决策跳过
+  // v3 副官计费基线：上次 tick 的 now；首个 tick 只建基线不计费，
+  // 避免把历史累积的 timeOffset（快转/离线）当成一次补算
+  let lastBillingTickNow: number | null = null
+  /** 单 tick 计费虚拟秒上限：后台节流/暂停后回补的大段空档不收费（暂停/离线本就不收） */
+  const MAX_BILLING_TICK_SECONDS = 10
   const updateGameAt = async (now: number, opts?: { silent?: boolean; hours?: number }) => {
     const silent = opts?.silent ?? false
     if (gameStore.isPaused) return
@@ -1027,6 +1033,37 @@
       } catch (error) {
         console.error('[autopilot] empire research tick failed:', error)
       }
+    }
+
+    // v3 副官计费（Phase 2）：每个 tick 若合约 active 则累加计费秒（增量 = 虚拟秒 × 当下 gameSpeed，
+    // 不监听速度切换事件，tick 读到的 gameSpeed 即真相来源）；每满 60 计费秒按当期费率结算一分钟。
+    // 快转 tick（silent）跳过计费（比照离线）；离线补算入口不经过 updateGameAt，自然不收费。
+    // 余额不足 → 合约转 paused_funds，后续副官工作由执行守卫自然停止（已开工项不受影响）。
+    if (lastBillingTickNow === null) {
+      lastBillingTickNow = now
+    } else {
+      const contract = gameStore.player.autopilotContract
+      const virtualSeconds = Math.min(Math.max(0, (now - lastBillingTickNow) / 1000), MAX_BILLING_TICK_SECONDS)
+      if (contract && autopilotBilling.canAutopilotWork(contract)) {
+        const payerPlanet = gameStore.player.planets.find(p => p.id === contract.payerPlanetId)
+        if (payerPlanet) {
+          const billingBonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
+          const serviceInputs = gameStore.player.planets
+            .filter(p => contract.servicePlanetIds.includes(p.id))
+            .map(p => autopilotBilling.toBillingPlanetInput(p, billingBonuses.energyProductionBonus))
+          const billingResult = autopilotBilling.processBillingTick(contract, {
+            virtualSeconds,
+            gameSpeed: gameStore.gameSpeed,
+            isFastForward: silent,
+            servicePlanetInputs: serviceInputs,
+            payerResources: payerPlanet.resources
+          })
+          if (billingResult.pausedForFunds) {
+            console.warn('[autopilot-billing] 付款星球余额不足，合约已暂停（paused_funds）')
+          }
+        }
+      }
+      lastBillingTickNow = now
     }
 
     {

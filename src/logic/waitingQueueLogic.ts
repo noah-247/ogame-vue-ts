@@ -13,6 +13,7 @@ import * as publicLogic from './publicLogic'
 import * as officerLogic from './officerLogic'
 import * as buildingValidation from './buildingValidation'
 import * as researchValidation from './researchValidation'
+import { canAutopilotWork } from './autopilotBilling'
 import * as shipValidation from './shipValidation'
 import { getGameNow } from './gameTime'
 import { checkEnergySafeWorstOrder, pendingEnergyDelta } from './autopilotLogic'
@@ -266,8 +267,12 @@ export const processPlanetWaitingQueue = (
   // 遍历等待队列（已按优先级排序）
   const waitingQueue = planet.waitingBuildQueue || []
   const itemsToProcess = [...waitingQueue]
+  // v3 计费守卫（§4.1）：副官来源的等待项无有效合约时不开工；手动项（player/缺省）不受影响。
+  // 等待队列执行早于副官 tick，只在 tick 检查不够，开工入口必须挡。
+  const autopilotMayWork = canAutopilotWork(player.autopilotContract)
   for (const waitingItem of itemsToProcess) {
     if (planet.autopilot?.mode === 'monitor' && waitingItem.source === 'autopilot') continue
+    if (waitingItem.source === 'autopilot' && !autopilotMayWork) continue
     // 检查正式队列是否还有空位
     const currentBuildQueueCount = planet.buildQueue.filter(item => item.type === 'building' || item.type === 'demolish').length
     if (currentBuildQueueCount >= maxBuildQueue) break
@@ -350,9 +355,12 @@ export const processResearchWaitingQueue = (
   // 遍历等待队列
   const waitingResearchQueue = player.waitingResearchQueue || []
   const itemsToProcess = [...waitingResearchQueue]
+  // v3 计费守卫（§4.1）：副官来源的研究等待项无有效合约时不开工；手动项不受影响。
+  const autopilotMayWork = canAutopilotWork(player.autopilotContract)
   for (const waitingItem of itemsToProcess) {
     if (player.researchQueue.length >= maxResearchQueue) break
     if (currentPlanet.autopilot?.mode === 'monitor' && waitingItem.source === 'autopilot') continue
+    if (waitingItem.source === 'autopilot' && !autopilotMayWork) continue
 
     if (waitingItem.type === 'technology') {
       const result = tryExecuteResearchWaitingItem(currentPlanet, waitingItem, player, officers)

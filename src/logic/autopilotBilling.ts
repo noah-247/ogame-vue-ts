@@ -1,4 +1,6 @@
-import type { AutopilotContract } from '@/types/game'
+import type { AutopilotContract, Planet } from '@/types/game'
+import { BuildingType } from '@/types/game'
+import { calculateEnergyConsumption, calculateEnergyProduction } from './resourceLogic'
 
 /**
  * 自动成长副官付费核心逻辑（v3：三资源收費、无试用、聘请即扣）
@@ -131,6 +133,71 @@ export function createDefaultContract(payerPlanetId: string, servicePlanetIds: s
     totalConsumedCrystal: 0,
     totalConsumedDeuterium: 0
   }
+}
+
+/**
+ * 星球 → 费率输入。能源效率沿用 updatePlanetResources 的判定语义：
+ * 能源产出 >= 消耗 → 1（正常生产）；否则 0（停电，费率计算时排除）。
+ */
+export function toBillingPlanetInput(planet: Planet, energyProductionBonus = 0): BillingPlanetInput {
+  const production = calculateEnergyProduction(planet, { energyProductionBonus })
+  const consumption = calculateEnergyConsumption(planet)
+  return {
+    metalMineLevel: planet.buildings[BuildingType.MetalMine] ?? 0,
+    crystalMineLevel: planet.buildings[BuildingType.CrystalMine] ?? 0,
+    deuteriumMineLevel: planet.buildings[BuildingType.DeuteriumSynthesizer] ?? 0,
+    energyEfficiency: production >= consumption ? 1 : 0
+  }
+}
+
+export interface BillingTickOptions {
+  /** 本 tick 虚拟秒（调用方按本次与上次 tick 的 now 差算出，快转/离线场景下调用方负责不传） */
+  virtualSeconds: number
+  /** 当前 gameSpeed（调用方每次 tick 按当下值传入，不监听切换事件） */
+  gameSpeed: number
+  /** 是否快转 tick：true 则跳过计费（比照离线） */
+  isFastForward: boolean
+  /** 服务星球的费率输入（由 toBillingPlanetInput 构造） */
+  servicePlanetInputs: BillingPlanetInput[]
+  /** 付款星球的资源对象（settleMinute 成功时就地扣款） */
+  payerResources: ResourceTriple
+}
+
+export interface BillingTickResult {
+  /** 本 tick 结算的整分钟数 */
+  settledMinutes: number
+  /** 是否因余额不足把合约转入 paused_funds */
+  pausedForFunds: boolean
+}
+
+/**
+ * 副官 tick 计费编排（v3 §3）：在线普通 tick 累加计费秒（增量 = 虚拟秒 × gameSpeed），
+ * 每满 60 计费秒按当期费率结算一分钟；快转 tick 跳过（比照离线不收费）。
+ * 任一资源余额不足 → 合约 status 转 paused_funds（小数累计冻结，未付的分钟不追讨），
+ * 后续副官工作由执行守卫自然停止（已开工项不受影响）。
+ */
+export function processBillingTick(
+  contract: AutopilotContract | undefined,
+  opts: BillingTickOptions
+): BillingTickResult {
+  if (!contract || !canAutopilotWork(contract) || opts.isFastForward || !(opts.virtualSeconds > 0)) {
+    return { settledMinutes: 0, pausedForFunds: false }
+  }
+  accrueBillingSeconds(contract, opts.virtualSeconds, opts.gameSpeed)
+  let settledMinutes = 0
+  let pausedForFunds = false
+  while (contract.dutySecondsAcc >= 60) {
+    const rates = calculateRates(opts.servicePlanetInputs)
+    const result = settleMinute(contract, rates, opts.payerResources)
+    contract.dutySecondsAcc -= 60
+    settledMinutes++
+    if (result.insufficient) {
+      contract.status = 'paused_funds'
+      pausedForFunds = true
+      break
+    }
+  }
+  return { settledMinutes, pausedForFunds }
 }
 
 /**

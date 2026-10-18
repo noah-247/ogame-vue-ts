@@ -30,6 +30,7 @@ import * as buildingLogic from '@/logic/buildingLogic'
 import * as resourceLogic from '@/logic/resourceLogic'
 import * as gameLogic from '@/logic/gameLogic'
 import { getGameNow, setTimeOffset } from '@/logic/gameTime'
+import { createDefaultContract } from '@/logic/autopilotBilling'
 import { BUILDINGS } from '@/config/gameConfig'
 
 afterEach(restore)
@@ -63,7 +64,9 @@ const makePlayer = (planets: Planet[], technologies: Partial<Record<TechnologyTy
     officers: {},
     researchQueue: [],
     waitingResearchQueue: [],
-    fleetMissions: []
+    fleetMissions: [],
+    // v3 计费：副官工作需要 active 合约；既有行为测试默认挂一张有效合约
+    autopilotContract: { ...createDefaultContract(planets[0]?.id ?? 'planet-1', planets.map(p => p.id)), status: 'active' as const }
   }) as unknown as Player
 
 const enableAutopilot = (planet: Planet, targets: Array<[BuildingType, number]>, priorityStart = 0): AutopilotPlanetConfig => {
