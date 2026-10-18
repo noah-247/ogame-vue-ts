@@ -27,7 +27,7 @@ Nach einiger Spielzeit haben mich drei Dinge so gestört, dass ich sie gleich be
 Der ursprüngliche Kampf war vereinfacht — kein Schnellfeuer, keine Schildregeneration, keine Explosionen. Das fühlte sich einfach nicht richtig an. Jetzt folgt er den echten OGame-Regeln (`src/workers/battleEngine.ts`):
 - Schilde regenerieren sich jede Runde vollständig; reicht der Angriff nicht zum Durchbrechen, kratzt er nur am Lack, und Angriffe unter 1 % der Schildstärke prallen einfach ab
 - Hülle = 10 % der Baukosten; ein Schiff unter 70 % Hülle kann auf der Stelle explodieren
-- Schnellfeuer funktioniert endlich: Nach einem Abschuss darf sofort noch einmal gefeuert werden
+- Schnellfeuer funktioniert endlich: Nach jedem Schuss — Treffer oder nicht, Abschuss oder nicht — wird bei einem RF-Wert >1 gegen den Zieltyp mit (RF-1)/RF Wahrscheinlichkeit sofort noch einmal gefeuert
 - Mit 18 deterministischen Tests abgesichert, an klassischen OGame-Schlachtbeispielen geprüft
 
 ### 🔧 Ein Datenfehler nebenbei behoben

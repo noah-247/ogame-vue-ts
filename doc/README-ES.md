@@ -27,7 +27,7 @@ Después de jugar un tiempo, hubo tres cosas que no pude aguantar y las arreglé
 El combate original estaba simplificado — sin fuego rápido, sin regeneración de escudos, sin explosiones. No se sentía bien. Ahora sigue las reglas reales de OGame (`src/workers/battleEngine.ts`):
 - Los escudos se regeneran por completo cada ronda; si el ataque no rompe el escudo solo lo araña, y los ataques por debajo del 1 % del escudo simplemente rebotan
 - El casco es el 10 % del coste de construcción; una nave por debajo del 70 % del casco puede explotar en el acto
-- El fuego rápido por fin funciona: destruyes una nave y puedes disparar de nuevo al instante
+- El fuego rápido por fin funciona: después de cada disparo — aciertes o falles, destruyas o no el objetivo — con un RF mayor que 1 contra ese tipo de objetivo hay una probabilidad de (RF-1)/RF de disparar de nuevo al instante
 - Cubierto con 18 pruebas deterministas, verificadas con ejemplos clásicos de batallas de OGame
 
 ### 🔧 Un bug de datos arreglado de paso
