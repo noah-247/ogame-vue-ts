@@ -712,10 +712,17 @@
   const planKey = computed(() => contract.value?.plan === 'standard' ? 'autopilot.contract.planStandard' : 'autopilot.contract.planFree')
 
   const confirmHire = () => {
+    const old = contract.value
     const c = autopilotBilling.createDefaultContract(
       effectivePayerPlanetId.value || gameStore.player.planets[0]?.id || '',
       [...serviceIds.value]
     )
+    // M-2：重聘保留累计扣款（不静默清空）
+    if (old) {
+      c.totalConsumedMetal = old.totalConsumedMetal
+      c.totalConsumedCrystal = old.totalConsumedCrystal
+      c.totalConsumedDeuterium = old.totalConsumedDeuterium
+    }
     // v3：无试用期，聘请即激活，下个 tick 起按分钟计费
     c.status = 'active'
     gameStore.player.autopilotContract = c
@@ -731,15 +738,15 @@
   const onResumeContract = () => {
     const c = contract.value
     if (!c) return
-    // v3：不从其他星球自动扫——余额不足就提示补资源
-    const missing = autopilotBilling.findInsufficientForResume(rates.value, availableTriple.value)
+    // v3：不从其他星球自动扫——余额不足就提示补资源；
+    // B-1：恢复即接受付费制，plan 一并设为 'standard'（迁移暂停用户 plan 为 'free'）
+    const missing = autopilotBilling.resumeBillingContract(c, rates.value, availableTriple.value)
     if (missing.length) {
       toast.error(t('autopilot.contract.resumeInsufficient', {
         resources: missing.map(r => t(`resources.${r}`)).join('、')
       }))
       return
     }
-    c.status = 'active'
     toast.success(t('autopilot.contract.resumedToast'))
   }
   const onTerminateContract = () => {

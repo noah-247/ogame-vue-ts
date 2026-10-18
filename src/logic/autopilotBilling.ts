@@ -271,6 +271,25 @@ export interface BillingTickResult {
   settledMinutes: number
   /** 是否因余额不足把合约转入 paused_funds */
   pausedForFunds: boolean
+  /** 是否因 autoRenew 自动从 paused_funds 恢复为 active（当 tick 一次性事件） */
+  autoResumed: boolean
+}
+
+/**
+ * 合约卡「恢复值班」核心（B-1）：余额检查通过 → plan 设为 'standard'（恢复即接受付费制）
+ * ＋ status 设为 'active'；余额不足 → 返回缺资源清单，合约保持不动（UI 负责提示）。
+ */
+export function resumeBillingContract(
+  contract: AutopilotContract,
+  rates: ResourceTriple,
+  available: ResourceTriple
+): Array<'metal' | 'crystal' | 'deuterium'> {
+  const missing = findInsufficientForResume(rates, available)
+  if (missing.length === 0) {
+    contract.plan = 'standard'
+    contract.status = 'active'
+  }
+  return missing
 }
 
 /**
@@ -278,13 +297,26 @@ export interface BillingTickResult {
  * 每满 60 计费秒按当期费率结算一分钟；快转 tick 跳过（比照离线不收费）。
  * 任一资源余额不足 → 合约 status 转 paused_funds（小数累计冻结，未付的分钟不追讨），
  * 后续副官工作由执行守卫自然停止（已开工项不受影响）。
+ * B-2 自动续费：合约因余额不足暂停且 autoRenew 为 true，若付款星球已补足
+ * （达到恢复值班的一小时费率门槛）→ 自动恢复 active，同 tick 继续计费。
  */
 export function processBillingTick(
   contract: AutopilotContract | undefined,
   opts: BillingTickOptions
 ): BillingTickResult {
-  if (!contract || !canAutopilotWork(contract) || opts.isFastForward || !(opts.virtualSeconds > 0)) {
-    return { settledMinutes: 0, pausedForFunds: false }
+  if (!contract || opts.isFastForward || !(opts.virtualSeconds > 0)) {
+    return { settledMinutes: 0, pausedForFunds: false, autoResumed: false }
+  }
+  let autoResumed = false
+  if (contract.plan === 'standard' && contract.status === 'paused_funds' && contract.autoRenew) {
+    const rates = calculateRates(opts.servicePlanetInputs)
+    if (findInsufficientForResume(rates, opts.payerResources).length === 0) {
+      contract.status = 'active'
+      autoResumed = true
+    }
+  }
+  if (!canAutopilotWork(contract)) {
+    return { settledMinutes: 0, pausedForFunds: false, autoResumed }
   }
   accrueBillingSeconds(contract, opts.virtualSeconds, opts.gameSpeed)
   let settledMinutes = 0
@@ -300,7 +332,7 @@ export function processBillingTick(
       break
     }
   }
-  return { settledMinutes, pausedForFunds }
+  return { settledMinutes, pausedForFunds, autoResumed }
 }
 
 /**

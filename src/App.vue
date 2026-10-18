@@ -484,23 +484,21 @@
     </AlertDialogContent>
   </AlertDialog>
 
-  <!-- 副官付费制迁移确认门（v2→v3；Phase 4 会美化＋做 i18n，文案先用设计报告原文） -->
+  <!-- 副官付费制迁移确认门（v2→v3；文案走 autopilot.contract.* i18n） -->
   <AlertDialog v-model:open="billingGateOpen">
     <AlertDialogContent @escape-key-down="onBillingGateEscape">
       <AlertDialogHeader>
-        <AlertDialogTitle>{{ billingGateConfirmMode ? '副官改為資源聘用制' : '副官聘用制上線' }}</AlertDialogTitle>
+        <AlertDialogTitle>{{ billingGateConfirmMode ? t('autopilot.contract.billingGateConfirmTitle') : t('autopilot.contract.billingGateNoticeTitle') }}</AlertDialogTitle>
         <AlertDialogDescription class="whitespace-pre-line">{{
-          billingGateConfirmMode
-            ? '副官改為資源聘用制，每遊戲小時收取金屬／晶體／重氫（各約標準產能 3%）。是否以新費率繼續使用副官？\n繼續使用將按目前費率開始計費。'
-            : '副官改為資源聘用制：每遊戲小時收取金屬／晶體／重氫（各約標準產能 3%）。聘請副官後將按費率計費，免費監控功能不受影響。'
+          billingGateConfirmMode ? t('autopilot.contract.billingGateConfirmBody') : t('autopilot.contract.billingGateNoticeBody')
         }}</AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
         <template v-if="billingGateConfirmMode">
-          <AlertDialogCancel @click="handleBillingGateChoice('pause')">暫停副官</AlertDialogCancel>
-          <AlertDialogAction @click="handleBillingGateChoice('continue')">繼續使用</AlertDialogAction>
+          <AlertDialogCancel @click="handleBillingGateChoice('pause')">{{ t('autopilot.contract.billingGatePause') }}</AlertDialogCancel>
+          <AlertDialogAction @click="handleBillingGateChoice('continue')">{{ t('autopilot.contract.billingGateContinue') }}</AlertDialogAction>
         </template>
-        <AlertDialogAction v-else @click="handleBillingNoticeDismiss">知道了</AlertDialogAction>
+        <AlertDialogAction v-else @click="handleBillingNoticeDismiss">{{ t('autopilot.contract.billingGateAcknowledge') }}</AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
@@ -1070,12 +1068,17 @@
     // 不监听速度切换事件，tick 读到的 gameSpeed 即真相来源）；每满 60 计费秒按当期费率结算一分钟。
     // 快转 tick（silent）跳过计费（比照离线）；离线补算入口不经过 updateGameAt，自然不收费。
     // 余额不足 → 合约转 paused_funds，后续副官工作由执行守卫自然停止（已开工项不受影响）。
+    // B-2：paused_funds + autoRenew 的合约也进 tick，由 processBillingTick 在资源补足时自动恢复 active。
     if (lastBillingTickNow === null) {
       lastBillingTickNow = now
     } else {
       const contract = gameStore.player.autopilotContract
       const virtualSeconds = Math.min(Math.max(0, (now - lastBillingTickNow) / 1000), MAX_BILLING_TICK_SECONDS)
-      if (contract && autopilotBilling.canAutopilotWork(contract)) {
+      const billingTickNeeded = contract !== undefined && (
+        autopilotBilling.canAutopilotWork(contract) ||
+        (contract.status === 'paused_funds' && contract.autoRenew)
+      )
+      if (contract && billingTickNeeded) {
         const payerPlanet = gameStore.player.planets.find(p => p.id === contract.payerPlanetId)
         if (payerPlanet) {
           const billingBonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, now)
@@ -1089,12 +1092,21 @@
             servicePlanetInputs: serviceInputs,
             payerResources: payerPlanet.resources
           })
+          if (billingResult.autoResumed) {
+            // B-2：自动续费恢复是当 tick 的一次性事件，不会刷屏
+            toast.success(t('autopilot.contract.autoRenewedToast'))
+          }
           if (billingResult.pausedForFunds) {
             console.warn('[autopilot-billing] 付款星球余额不足，合约已暂停（paused_funds）')
             // Phase 4：余额不足暂停是当 tick 的一次性事件（pausedForFunds 只在转入瞬间为 true），
             // 直接弹 toast 提醒用户去副官页补充资源，不会刷屏
             toast.warning(t('autopilot.contract.fundsPausedToast'))
           }
+        } else if (contract.status === 'active') {
+          // M-4：找不到付款星球 → 视为余额不足暂停（防御性，避免静默免单）；
+          // 已暂停时不再重复告警（本就暂停，不会计费）
+          console.warn('[autopilot-billing] 找不到付款星球，合约转暂停（paused_funds）', contract.payerPlanetId)
+          contract.status = 'paused_funds'
         }
       }
       lastBillingTickNow = now
@@ -2811,14 +2823,14 @@
     toast.info(t('settings.npcNameUpdateSkipped'))
   }
 
-  // 副官付费制迁移确认门（v2→v3；Phase 4 会美化＋做 i18n，文案先用设计报告原文）
+  // 副官付费制迁移确认门（v2→v3；文案走 autopilot.contract.* i18n，8 语系）
   const handleBillingGateChoice = (choice: BillingConfirmChoice) => {
     applyBillingConfirmation(gameStore.player, choice)
     billingGateOpen.value = false
     if (choice === 'continue') {
-      toast.success('副官已按新费率继续值班')
+      toast.success(t('autopilot.contract.billingGateContinuedToast'))
     } else {
-      toast.info('副官已暂停，可随时在副官页恢复值班')
+      toast.info(t('autopilot.contract.billingGatePausedToast'))
     }
   }
   const handleBillingNoticeDismiss = () => {

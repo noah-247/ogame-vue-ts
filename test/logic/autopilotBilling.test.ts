@@ -4,11 +4,13 @@ import {
   calculateRates,
   canAutopilotWork,
   createDefaultContract,
+  processBillingTick,
   rateForResource,
+  resumeBillingContract,
   settleMinute,
   standardHourlyOutput
 } from '@/logic/autopilotBilling'
-import type { AutopilotContract } from '@/types/game'
+import type { AutopilotContract, ResourceTriple } from '@/logic/autopilotBilling'
 
 const mkContract = (over: Partial<AutopilotContract> = {}): AutopilotContract => ({
   ...createDefaultContract('p1', ['p1']),
@@ -157,5 +159,74 @@ describe('settleMinute', () => {
     expect(r.insufficient).toBeNull()
     expect(r.deducted).toEqual({ metal: 1, crystal: 0, deuterium: 0 })
     expect(payer).toEqual({ metal: 4, crystal: 0, deuterium: 0 })
+  })
+})
+
+describe('resumeBillingContract（B-1 暂停→恢复）', () => {
+  const rates = { metal: 70, crystal: 50, deuterium: 30 }
+  it('迁移暂停状态（plan=free + paused_manual）恢复后：plan=standard、status=active、canAutopilotWork 为 true', () => {
+    const contract = mkContract({ plan: 'free', status: 'paused_manual' })
+    const missing = resumeBillingContract(contract, rates, { metal: 1000, crystal: 1000, deuterium: 1000 })
+    expect(missing).toEqual([])
+    expect(contract.plan).toBe('standard') // 恢复 = 接受付费制
+    expect(contract.status).toBe('active')
+    expect(canAutopilotWork(contract)).toBe(true)
+  })
+  it('余额不足时不恢复：plan/status 保持不动、canAutopilotWork 为 false', () => {
+    const contract = mkContract({ plan: 'free', status: 'paused_manual' })
+    const missing = resumeBillingContract(contract, rates, { metal: 10, crystal: 1000, deuterium: 1000 })
+    expect(missing).toEqual(['metal'])
+    expect(contract.plan).toBe('free')
+    expect(contract.status).toBe('paused_manual')
+    expect(canAutopilotWork(contract)).toBe(false)
+  })
+})
+
+describe('processBillingTick 自动续费（B-2）', () => {
+  const oneLevelInputs = [
+    { metalMineLevel: 1, crystalMineLevel: 1, deuteriumMineLevel: 1, energyEfficiency: 1 }
+  ] // 费率 70/50/30 每小时
+  const rich = (): ResourceTriple => ({ metal: 1_000_000, crystal: 1_000_000, deuterium: 1_000_000 })
+  const tick = (contract: AutopilotContract, payer: ResourceTriple, isFastForward = false) =>
+    processBillingTick(contract, {
+      virtualSeconds: 10, gameSpeed: 6, isFastForward,
+      servicePlanetInputs: oneLevelInputs, payerResources: payer
+    })
+
+  it('paused_funds + autoRenew=true + 资源补足 → 自动恢复 active 且同 tick 继续计费', () => {
+    const contract = mkContract({ status: 'paused_funds', autoRenew: true })
+    const payer = rich()
+    const result = tick(contract, payer)
+    expect(result.autoResumed).toBe(true)
+    expect(contract.status).toBe('active')
+    expect(canAutopilotWork(contract)).toBe(true)
+    expect(result.settledMinutes).toBe(1) // 10 虚拟秒 × 6 倍速 = 60 计费秒 → 结算 1 分钟
+    expect(payer.metal).toBe(999_999) // 恢复后正常扣款
+  })
+  it('paused_funds + autoRenew=false → 不自动恢复、不计费', () => {
+    const contract = mkContract({ status: 'paused_funds', autoRenew: false })
+    const payer = rich()
+    const result = tick(contract, payer)
+    expect(result.autoResumed).toBe(false)
+    expect(contract.status).toBe('paused_funds')
+    expect(result.settledMinutes).toBe(0)
+    expect(payer).toEqual(rich())
+  })
+  it('paused_funds + autoRenew=true 但资源仍不足 → 不恢复、不扣款', () => {
+    const contract = mkContract({ status: 'paused_funds', autoRenew: true })
+    const payer: ResourceTriple = { metal: 0, crystal: 1_000_000, deuterium: 1_000_000 }
+    const result = tick(contract, payer)
+    expect(result.autoResumed).toBe(false)
+    expect(contract.status).toBe('paused_funds')
+    expect(result.settledMinutes).toBe(0)
+    expect(payer.metal).toBe(0)
+  })
+  it('快转 tick 不触发自动恢复（比照离线）', () => {
+    const contract = mkContract({ status: 'paused_funds', autoRenew: true })
+    const payer = rich()
+    const result = tick(contract, payer, true)
+    expect(result.autoResumed).toBe(false)
+    expect(contract.status).toBe('paused_funds')
+    expect(payer).toEqual(rich())
   })
 })
