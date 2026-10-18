@@ -78,7 +78,7 @@ describe('save migrations', () => {
     const legacy = JSON.parse(JSON.stringify(midGame)) as Record<string, unknown>
     delete legacy.version
     delete (legacy.player as Record<string, unknown>).autopilotContract
-    const original = { ...legacy, extension: { nested: ['preserve me'] } }
+    const original: Record<string, unknown> = { ...legacy, extension: { nested: ['preserve me'] } }
     const migrated = migrateSave(original)
 
     expect(migrated.version).toBe(SAVE_VERSION)
@@ -87,7 +87,7 @@ describe('save migrations', () => {
       (midGame.player as Record<string, unknown>).autopilotContract
     )
     // 其余字段只是深拷贝（version 与 player 已单独断言）
-    const { player: _mp, version: _mv, ...restMigrated } = migrated
+    const { player: _mp, version: _mv, ...restMigrated } = migrated as Record<string, unknown>
     const { player: _op, ...restOriginal } = original
     void _mp
     void _mv

@@ -10,7 +10,8 @@ import {
   settleMinute,
   standardHourlyOutput
 } from '@/logic/autopilotBilling'
-import type { AutopilotContract, ResourceTriple } from '@/logic/autopilotBilling'
+import type { AutopilotContract } from '@/types/game'
+import type { ResourceTriple } from '@/logic/autopilotBilling'
 
 const mkContract = (over: Partial<AutopilotContract> = {}): AutopilotContract => ({
   ...createDefaultContract('p1', ['p1']),
