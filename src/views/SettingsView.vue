@@ -648,7 +648,7 @@
             return
           }
 
-          // 嘗試請求權限
+          // 嘗試請求許可權
           const reqResult = await Filesystem.requestPermissions()
           if (reqResult.publicStorage === 'granted') {
             const result = await Filesystem.writeFile({

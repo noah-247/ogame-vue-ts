@@ -852,7 +852,7 @@ describe('blueprints', () => {
 
 describe('BLK-2 waiting queue counted in energy check', () => {
   // s6/m8/c8/d5：餘量 67.7；金屬 9 單獨 +27.0（安全）、晶體 9 單獨 +27.0（安全）、合起來 -13.8（斷電）
-  // 目標 9 級不觸發機器人工廠前置門檻（10 級才要），避免前置鏈干擾本測試
+  // 目標 9 級不觸發機器人工廠前置門檻（10 級才要），避免前置鏈幹擾本測試
   const tightPlanet = () =>
     makePlanet({
       [BuildingType.SolarPlant]: 6,

@@ -130,5 +130,5 @@ console.log('T9: Wiki 經典戰例 1 Cruiser vs 2 RocketLauncher + 1 HeavyLaser'
   check('2 輪內結束', r.rounds <= 4, `rounds=${r.rounds}`)
 }
 
-console.log(`\n結果: ${pass} 通過, ${fail} 失敗`)
+console.log(`\n結果: 成功 ${pass}, 失敗 ${fail}`)
 process.exit(fail > 0 ? 1 : 0)

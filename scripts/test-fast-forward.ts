@@ -76,5 +76,5 @@ check('金屬資源增長', metalGain1 > 0, `+${metalGain1}`)
 console.log('T3: 倍率對比')
 check('100x 金屬增量 >> 1x 金屬增量', metalGain100 > metalGain1 * 10, `100x=+${metalGain100}, 1x=+${metalGain1}`)
 
-console.log(`\n${pass} 通過, ${fail} 失敗`)
+console.log(`\n成功 ${pass}, 失敗 ${fail}`)
 process.exit(fail > 0 ? 1 : 0)

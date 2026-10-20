@@ -26,7 +26,7 @@ const loadedLocales: Partial<Record<Locale, TranslationSchema>> = {
 
 /**
  * 非同步載入指定語言
- * @param locale 語言代碼
+ * @param locale 語系（如 zh-TW）
  * @returns 語言翻譯物件
  */
 export const loadLocale = async (locale: Locale): Promise<TranslationSchema> => {
@@ -54,7 +54,7 @@ export const loadLocale = async (locale: Locale): Promise<TranslationSchema> => 
 
 /**
  * 同步獲取已載入的語言（如果未載入則返回預設語言）
- * @param locale 語言代碼
+ * @param locale 語系（如 zh-TW）
  * @returns 語言翻譯物件
  */
 export const getLocale = (locale: Locale): TranslationSchema => {
@@ -63,7 +63,7 @@ export const getLocale = (locale: Locale): TranslationSchema => {
 
 /**
  * 檢查語言是否已載入
- * @param locale 語言代碼
+ * @param locale 語系（如 zh-TW）
  */
 export const isLocaleLoaded = (locale: Locale): boolean => {
   return locale in loadedLocales
@@ -82,7 +82,7 @@ export const localeNames: Record<Locale, string> = {
 
 /**
  * 根據瀏覽器語言檢測並返回應用支援的語言
- * @returns 檢測到的語言代碼
+ * @returns 偵測到的語系
  */
 export const detectBrowserLocale = (): Locale => {
   // 獲取瀏覽器語言
