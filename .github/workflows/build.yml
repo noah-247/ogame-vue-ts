@@ -1,4 +1,4 @@
-name: 构建多平台程序 (Go Server & Electron Client)
+name: 構建多平臺程式 (Go Server & Electron Client)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  # 1. 构建 Go 服务端
+  # 1. 構建 Go 服務端
   build-server:
     name: Build Server (${{ matrix.goos }}-${{ matrix.goarch }})
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
           name: server-${{ matrix.goos }}-${{ matrix.goarch }}
           path: ${{ matrix.executable }}
 
-  # 2. 构建 Android APK (ARM64, ARMv7, x86_64)
+  # 2. 構建 Android APK (ARM64, ARMv7, x86_64)
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
@@ -72,7 +72,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # 使用官方 Gradle Action（内置智能缓存）
+      # 使用官方 Gradle Action（內建智慧快取）
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -88,7 +88,7 @@ jobs:
 
       - name: Generate Android Icons
         run: |
-          # 使用 ImageMagick 生成各尺寸图标
+          # 使用 ImageMagick 生成各尺寸圖示
           convert logo.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           convert logo.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
           convert logo.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
@@ -99,7 +99,7 @@ jobs:
           convert logo.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
           convert logo.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           convert logo.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
-          # foreground 图标需要更大（108dp with 72dp safe zone）
+          # foreground 圖示需要更大（108dp with 72dp safe zone）
           convert logo.png -resize 108x108 android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
           convert logo.png -resize 162x162 android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
           convert logo.png -resize 216x216 android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
@@ -121,7 +121,7 @@ jobs:
           name: android-apk
           path: android/app/build/outputs/apk/release/*.apk
 
-  # 3. 构建 Electron 客户端
+  # 3. 構建 Electron 客戶端
   build-electron:
     name: Build Electron (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -163,7 +163,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 【关键点】这里只上传安装包后缀，不上传文件夹
+      # 【關鍵點】這裡只上傳安裝包字尾，不上傳資料夾
       - name: Upload Electron Installers
         uses: actions/upload-artifact@v4
         with:
@@ -173,7 +173,7 @@ jobs:
             pkg/*.dmg
             pkg/*.AppImage
 
-  # 4. 发布 Release
+  # 4. 釋出 Release
   release:
     needs: [build-server, build-android, build-electron]
     runs-on: ubuntu-latest
@@ -186,37 +186,37 @@ jobs:
         id: get_version
         run: echo "VERSION=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      # 1. 下载时，不使用 merge-multiple，防止覆盖冲突
+      # 1. 下載時，不使用 merge-multiple，防止覆蓋衝突
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./raw-assets
 
-      # 2. 核心步骤：手动移动文件到一个扁平目录，并强制重命名
+      # 2. 核心步驟：手動移動檔案到一個扁平目錄，並強制重新命名
       - name: Flatten and Rename Assets
         run: |
           mkdir -p ./final-release
 
-          # 移动 Server 文件并确保名字唯一
+          # 移動 Server 檔案並確保名字唯一
           cp ./raw-assets/server-windows-amd64/OGame-Vue-Ts-server-win.exe ./final-release/OGame-Vue-Ts-server-win.exe || cp ./raw-assets/server-windows-amd64/server-windows-amd64.exe ./final-release/OGame-Vue-Ts-server-win.exe || true
           cp ./raw-assets/server-linux-amd64/OGame-Vue-Ts-server-linux ./final-release/OGame-Vue-Ts-server-linux || true
           cp ./raw-assets/server-linux-arm64/OGame-Vue-Ts-server-linux-arm64 ./final-release/OGame-Vue-Ts-server-linux-arm64 || true
 
-          # 移动 Electron 安装包 (排除 unpacked 目录)
+          # 移動 Electron 安裝包 (排除 unpacked 目錄)
           find ./raw-assets/electron-* -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.zip" \) -exec cp {} ./final-release/ \;
 
-          # 移动 Android APK
+          # 移動 Android APK
           find ./raw-assets/android-apk -type f -name "*.apk" -exec cp {} ./final-release/ \; || true
 
-          # 检查结果
+          # 檢查結果
           echo "Final assets to upload:"
           ls -R ./final-release
 
-      # 3. 删除已存在的同名 APK 资源（避免 422 错误）
+      # 3. 刪除已存在的同名 APK 資源（避免 422 錯誤）
       - name: Delete existing APK assets
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
-          # 获取 release 中的现有 assets 并删除 APK 文件
+          # 獲取 release 中的現有 assets 並刪除 APK 檔案
           gh release view "$VERSION" --json assets -q '.assets[].name' 2>/dev/null | grep -i '\.apk$' | while read asset; do
             echo "Deleting existing asset: $asset"
             gh release delete-asset "$VERSION" "$asset" -y || true
@@ -224,13 +224,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. 一次性上传，禁止重复匹配
+      # 4. 一次性上傳，禁止重複匹配
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
-          # 重点：只上传这个干净目录下的所有文件，不要再写具体的通配符防止重复
+          # 重點：只上傳這個乾淨目錄下的所有檔案，不要再寫具體的萬用字元防止重複
           files: ./final-release/*
           generate_release_notes: true
         env:

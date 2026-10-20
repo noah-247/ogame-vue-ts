@@ -9,13 +9,13 @@
   [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0)
   [![Tap Tap](https://img.shields.io/badge/TapTap-OGame%20Vue%20Ts-18d6e0)](https://www.taptap.cn/app/801190)
   
-  [简体中文](../README.md) | 繁體中文 | [English](README-EN.md) | [Deutsch](README-DE.md) | [Русский](README-RU.md) | [Español](README-ES.md) | [한국어](README-KO.md) | [日本語](README-JA.md)
+  [簡體中文](../README.md) | 繁體中文 | [English](README-EN.md) | [Deutsch](README-DE.md) | [Русский](README-RU.md) | [Español](README-ES.md) | [한국어](README-KO.md) | [日本語](README-JA.md)
 
 </div>
 
 ## 關於專案
 
-OGame Vue TS 是一款受經典 OGame 遊戲啟發的單機版、基於瀏覽器的太空策略遊戲。在銀河系中建立你的帝國，研究科技，建造艦船，參與史詩般的太空戰鬥。本專案採用現代 Web 技術構建，完全在瀏覽器中運行，提供流暢且響應迅速的遊戲體驗，所有數據都儲存在本地。
+OGame Vue TS 是一款受經典 OGame 遊戲啟發的單機版、基於瀏覽器的太空策略遊戲。在銀河系中建立你的帝國，研究科技，建造艦船，參與史詩般的太空戰鬥。本專案採用現代 Web 技術構建，完全在瀏覽器中執行，提供流暢且響應迅速的遊戲體驗，所有資料都儲存在本地。
 
 ## 這個 Fork 改了什麼
 
@@ -27,10 +27,10 @@ OGame Vue TS 是一款受經典 OGame 遊戲啟發的單機版、基於瀏覽器
 原版的戰鬥是簡化過的——沒有連擊、護盾不會回、船也不會爆炸，打起來總覺得「不太對味」。現在按 OGame 的真實規則重寫了一遍（`src/workers/battleEngine.ts`）：
 - 護盾每輪回滿；攻擊不夠破盾就只蹭掉點皮，攻擊力不到護盾 1% 直接跳彈
 - 船體按造價的 10% 算，被打殘（低於 70%）了還有可能當場爆炸
-- 連擊終於能用了：每次射擊後（管它有沒有打爆），對該目標類型 RF>1 就有 (RF-1)/RF 的機率立刻再開一炮，爽感拉滿
+- 連擊終於能用了：每次射擊後（管它有沒有打爆），對該目標型別 RF>1 就有 (RF-1)/RF 的機率立刻再開一炮，爽感拉滿
 - 附了 18 個確定性測試，拿 OGame 經典戰例對過，結果都對得上
 
-### 🔧 順手修了個數據 bug
+### 🔧 順手修了個資料 bug
 間諜探測器的攻擊和護盾原來都是 0，跟 OGame 原版對不上，改回 5 / 10。
 
 ### ⏩ 後期終於不用掛機了：快轉
@@ -50,22 +50,22 @@ OGame Vue TS 是一款受經典 OGame 遊戲啟發的單機版、基於瀏覽器
 - **防禦系統** - 部署防禦設施來保護你的殖民地
 - **軍官系統** - 招募軍官以獲得戰略優勢
 - **戰鬥模擬器** - 在投入資源前測試戰鬥場景
-- **銀河視圖** - 探索宇宙並與其他星球互動
-- **本地數據持久化** - 所有遊戲數據都經過加密並儲存在瀏覽器本地
+- **銀河檢視** - 探索宇宙並與其他星球互動
+- **本地資料持久化** - 所有遊戲資料都經過加密並儲存在瀏覽器本地
 - **深色/淺色主題** - 選擇你喜歡的視覺主題
-- **隊列管理** - 管理多個建造和研究隊列
-- **月球生成** - 基於概率的月球從殘骸場生成機制
+- **佇列管理** - 管理多個建造和研究佇列
+- **月球生成** - 基於機率的月球從殘骸場生成機制
 
 ## 技術棧
 
 - **前端框架:** [Vue 3](https://vuejs.org) + Composition API (`<script setup>` 語法)
-- **開發語言:** [TypeScript](https://www.typescriptlang.org) (啟用嚴格類型檢查)
-- **構建工具:** [Vite](https://vitejs.dev) (自定義 Rolldown-Vite 7.2.5)、[Golang](https://golang.org)(構建跨平台的Web服務端)、[Electron](https://www.electronjs.org)(構建跨平台可視化介面)
-- **狀態管理:** [Pinia](https://pinia.vuejs.org) + 持久化插件
+- **開發語言:** [TypeScript](https://www.typescriptlang.org) (啟用嚴格型別檢查)
+- **構建工具:** [Vite](https://vitejs.dev) (自定義 Rolldown-Vite 7.2.5)、[Golang](https://golang.org)(構建跨平臺的Web服務端)、[Electron](https://www.electronjs.org)(構建跨平臺視覺化介面)
+- **狀態管理:** [Pinia](https://pinia.vuejs.org) + 持久化外掛
 - **路由管理:** [Vue Router 4](https://router.vuejs.org)
-- **UI 組件:** [shadcn-vue](https://www.shadcn-vue.com) (New York 風格)
+- **UI 元件:** [shadcn-vue](https://www.shadcn-vue.com) (New York 風格)
 - **樣式方案:** [Tailwind CSS v4](https://tailwindcss.com) + CSS 變數
-- **圖標庫:** [Lucide Vue Next](https://lucide.dev)
+- **圖示庫:** [Lucide Vue Next](https://lucide.dev)
 - **動畫效果:** [tw-animate-css](https://www.npmjs.com/package/tw-animate-css)
 - **國際化:** 自定義 i18n 實現
 
@@ -93,7 +93,7 @@ pnpm install
 ### 開發
 
 ```bash
-# 啟動開發服務器 (運行在端口 25121)
+# 啟動開發伺服器（連接埠 25121）
 pnpm dev
 ```
 
@@ -109,15 +109,15 @@ pnpm build
 pnpm preview
 ```
 
-## 數據安全
+## 資料安全
 
-所有遊戲數據在儲存到瀏覽器的本地存儲之前都會使用 AES 加密自動加密。您的遊戲進度是安全且私密的。
+所有遊戲資料在儲存到瀏覽器的本地儲存之前都會使用 AES 加密自動加密。您的遊戲進度是安全且私密的。
 
 ## 自定義
 
-應用支援通過 `src/style.css` 中定義的 Tailwind CSS 變數進行完整的主題自定義。您可以輕鬆地在淺色和深色模式之間切換。
+應用支援透過 `src/style.css` 中定義的 Tailwind CSS 變數進行完整的主題自定義。您可以輕鬆地在淺色和深色模式之間切換。
 
-## 文件
+## 檔案
 
 - [Docker 部署指南](DOCKER.md)
 - [遊戲參考手冊](ogame-reference.md) - 建築、科技、艦船、防禦、軍官等完整資料
@@ -131,7 +131,7 @@ pnpm preview
 本作品採用 [創用CC 姓名標示-非商業性 4.0 國際 授權條款](https://creativecommons.org/licenses/by-nc/4.0) 授權。
 
 ### 您可以自由地：
-- **分享** — 以任何媒介或格式重製及散布本素材
+- **分享** — 以任何媒介或格式重製及散佈本素材
 - **修改** — 重混、轉換本素材、及依本素材建立新素材
 
 ### 惟需遵照下列條件：
@@ -142,9 +142,9 @@ pnpm preview
 
 本專案受原版 [OGame](https://ogame.org) 瀏覽器遊戲啟發。所有遊戲機制和設計元素都是為了教育和娛樂目的而重新實現的。
 
-## 免責聲明
+## 免責宣告
 
-本專案與 Gameforge AG 或官方 OGame 遊戲沒有任何關聯、認可或聯繫。這是一個獨立的粉絲專案，創建目的僅用於教育和個人娛樂。
+本專案與 Gameforge AG 或官方 OGame 遊戲沒有任何關聯、認可或聯絡。這是一個獨立的粉絲專案，建立目的僅用於教育和個人娛樂。
 
 ---
 

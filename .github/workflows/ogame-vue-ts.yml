@@ -1,9 +1,9 @@
-name: 构建并发布 Docker 镜像
+name: 構建並發布 Docker 映象
 
 on:
   push:
     branches: [main]
-    tags: ['v*.*.*'] # 打 tag 时也触发
+    tags: ['v*.*.*'] # 打 tag 時也觸發
   workflow_dispatch:
 
 permissions:
@@ -14,25 +14,25 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
+      - name: 檢出程式碼
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      # 设置 Node.js 环境
-      - name: 设置 Node.js
+      # 設定 Node.js 環境
+      - name: 設定 Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
 
-      # 设置 pnpm
-      - name: 设置 pnpm
+      # 設定 pnpm
+      - name: 設定 pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
 
-      # 缓存 pnpm 依赖
-      - name: 缓存 pnpm 依赖
+      # 快取 pnpm 依賴
+      - name: 快取 pnpm 依賴
         uses: actions/cache@v5
         with:
           path: |
@@ -42,112 +42,112 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      # 安装依赖
-      - name: 安装依赖
+      # 安裝依賴
+      - name: 安裝依賴
         run: pnpm install --frozen-lockfile
 
-      # 构建项目
-      - name: 构建项目
+      # 構建專案
+      - name: 構建專案
         run: pnpm run build
 
-      # 验证构建产物
-      - name: 验证构建产物
+      # 驗證構建產物
+      - name: 驗證構建產物
         run: |
           if [ ! -d "docs" ]; then
-            echo "❌ 构建失败：docs 目录不存在"
+            echo "❌ 構建失敗：docs 目錄不存在"
             exit 1
           fi
           if [ ! -f "docs/index.html" ]; then
-            echo "❌ 构建失败：docs/index.html 不存在"
+            echo "❌ 構建失敗：docs/index.html 不存在"
             exit 1
           fi
           
-          # 检查构建产物的时间戳，确保是最新的
+          # 檢查構建產物的時間戳，確保是最新的
           BUILD_TIME=$(stat -c %Y docs/index.html 2>/dev/null || stat -f %m docs/index.html 2>/dev/null || echo "0")
           CURRENT_TIME=$(date +%s)
           TIME_DIFF=$((CURRENT_TIME - BUILD_TIME))
           
-          echo "📊 构建产物信息:"
-          echo "   构建时间: $(date -d @$BUILD_TIME 2>/dev/null || date -r $BUILD_TIME 2>/dev/null || echo '未知')"
-          echo "   当前时间: $(date)"
-          echo "   时间差: ${TIME_DIFF}秒"
+          echo "📊 構建產物資訊:"
+          echo "   構建時間: $(date -d @$BUILD_TIME 2>/dev/null || date -r $BUILD_TIME 2>/dev/null || echo '未知')"
+          echo "   當前時間: $(date)"
+          echo "   時間差: ${TIME_DIFF}秒"
           
           if [ $TIME_DIFF -gt 300 ]; then
-            echo "⚠️  警告: 构建产物可能不是最新的（超过5分钟）"
+            echo "⚠️  警告: 構建產物可能不是最新的（超過5分鐘）"
           fi
           
-          echo "✅ 构建产物验证通过"
+          echo "✅ 構建產物驗證透過"
           ls -la docs/
 
-      # 获取当前日期
-      - name: 获取当前日期
+      # 獲取當前日期
+      - name: 獲取當前日期
         id: date
         run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
-      # 获取版本号
-      - name: 获取版本号
+      # 獲取版本號
+      - name: 獲取版本號
         id: version
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "📦 当前版本: $VERSION"
+          echo "📦 當前版本: $VERSION"
 
-      # 准备 CI 构建环境
-      - name: 准备 CI 构建环境
+      # 準備 CI 構建環境
+      - name: 準備 CI 構建環境
         run: |
-          # 使用 CI 专用的 dockerignore
+          # 使用 CI 專用的 dockerignore
           cp .dockerignore.ci .dockerignore
-          echo "✅ 已切换到 CI 构建模式"
-          echo "📁 当前构建上下文文件："
+          echo "✅ 已切換到 CI 構建模式"
+          echo "📁 當前建構目錄檔案："
           ls -la | grep -E "(docs|nginx.conf|Dockerfile.ci|\.dockerignore)$"
 
-      # 清理可能冲突的镜像标签
-      - name: 清理可能冲突的镜像标签
+      # 清理可能衝突的映象標籤
+      - name: 清理可能衝突的映象標籤
         continue-on-error: true
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          echo "🧹 尝试清理可能冲突的镜像标签..."
+          echo "🧹 嘗試清理可能衝突的映象標籤..."
           
-          # 尝试删除 GHCR 中的现有标签（如果存在）
-          echo "清理 GHCR 标签..."
+          # 嘗試刪除 GHCR 中的現有標籤（如果存在）
+          echo "清理 GHCR 標籤..."
           docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/ogame-vue-ts:$VERSION 2>/dev/null && \
-            echo "发现现有版本标签，将被覆盖" || echo "版本标签不存在，可以安全推送"
+            echo "發現現有版本標籤，將被覆蓋" || echo "版本標籤不存在，可以安全推送"
           
-          # 如果配置了 Docker Hub，也尝试检查
+          # 如果配置了 Docker Hub，也嘗試檢查
           if [ -n "${{ vars.DOCKERHUB_USERNAME }}" ]; then
-            echo "检查 Docker Hub 标签..."
+            echo "檢查 Docker Hub 標籤..."
             docker buildx imagetools inspect ${{ vars.DOCKERHUB_USERNAME }}/ogame-vue-ts:$VERSION 2>/dev/null && \
-              echo "发现现有 Docker Hub 版本标签，将被覆盖" || echo "Docker Hub 版本标签不存在，可以安全推送"
+              echo "發現現有 Docker Hub 版本標籤，將被覆蓋" || echo "Docker Hub 版本標籤不存在，可以安全推送"
           fi
           
-          echo "✅ 标签冲突检查完成，构建将覆盖任何现有标签"
+          echo "✅ 標籤衝突檢查完成，構建將覆蓋任何現有標籤"
 
-      # QEMU 用于支持多架构构建（必须）
-      - name: 设置 QEMU
+      # QEMU 用於支援多架構構建（必須）
+      - name: 設定 QEMU
         uses: docker/setup-qemu-action@v3
 
-      # Buildx 是目前官方唯一推荐的多架构构建方式
-      - name: 设置 Docker Buildx
+      # Buildx 是目前官方唯一推薦的多架構構建方式
+      - name: 設定 Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 登录 GHCR（始终执行）
-      - name: 登录 GitHub Container Registry
+      # 登入 GHCR（始終執行）
+      - name: 登入 GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 登录 Docker Hub（只在用户名存在时执行）
-      - name: 登录 Docker Hub
-        if: vars.DOCKERHUB_USERNAME != '' # 只检查 vars，忽略 secrets
+      # 登入 Docker Hub（只在使用者名稱存在時執行）
+      - name: 登入 Docker Hub
+        if: vars.DOCKERHUB_USERNAME != '' # 只檢查 vars，忽略 secrets
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 构建并推送多架构镜像（使用构建产物）
-      - name: 构建并推送多架构镜像
+      # 構建並推送多架構映象（使用構建產物）
+      - name: 構建並推送多架構映象
         uses: docker/build-push-action@v6
         with:
           context: .

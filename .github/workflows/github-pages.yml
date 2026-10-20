@@ -1,8 +1,8 @@
-name: 构建 Github Pages
+name: 構建 Github Pages
 
 on:
   push:
-    branches: [main] # 如果你的主分支叫 master，请改为 master
+    branches: [main] # 如果你的主分支叫 master，請改為 master
 
 permissions:
   contents: read
@@ -16,20 +16,20 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: 检出代码
+      - name: 檢出程式碼
         uses: actions/checkout@v6
 
-      - name: 设置 pnpm
+      - name: 設定 pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
 
-      - name: 设置 Node.js
+      - name: 設定 Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
 
-      - name: 缓存 pnpm 依赖
+      - name: 快取 pnpm 依賴
         uses: actions/cache@v5
         with:
           path: |
@@ -39,30 +39,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-pages-
 
-      - name: 安装依赖
+      - name: 安裝依賴
         run: pnpm install --frozen-lockfile
 
-      - name: 构建前端项目
+      - name: 構建前端專案
         run: pnpm run build
 
-      - name: 验证构建产物
+      - name: 驗證構建產物
         run: |
           if [ ! -d "docs" ]; then
-            echo "❌ 构建失败：docs 目录不存在"
+            echo "❌ 構建失敗：docs 目錄不存在"
             exit 1
           fi
           if [ ! -f "docs/index.html" ]; then
-            echo "❌ 构建失败：docs/index.html 不存在"
+            echo "❌ 構建失敗：docs/index.html 不存在"
             exit 1
           fi
-          echo "✅ 构建产物验证通过"
+          echo "✅ 構建產物驗證透過"
           ls -la docs/
 
-      # 关键步骤：告诉 GitHub Actions 跳过 Jekyll 检查
+      # 關鍵步驟：告訴 GitHub Actions 跳過 Jekyll 檢查
       - name: 配置 Github Pages
         uses: actions/configure-pages@v5
 
-      - name: 上传构建版
+      - name: 上傳構建版
         uses: actions/upload-pages-artifact@v4
         with:
           path: './docs'
