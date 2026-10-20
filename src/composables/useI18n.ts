@@ -2,7 +2,7 @@ import { ref, computed, watch } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { loadLocale, getLocale, isLocaleLoaded, type Locale, type TranslationSchema } from '@/locales'
 
-// 全局加载状态
+// 全域性載入狀態
 const isLoading = ref(false)
 const currentMessages = ref<TranslationSchema | null>(null)
 
@@ -11,7 +11,7 @@ export const useI18n = () => {
 
   const currentLocale = computed(() => gameStore.locale)
 
-  // 初始化或切换语言时加载
+  // 初始化或切換語言時載入
   const ensureLocaleLoaded = async (locale: Locale) => {
     if (isLocaleLoaded(locale)) {
       currentMessages.value = getLocale(locale)
@@ -26,7 +26,7 @@ export const useI18n = () => {
     }
   }
 
-  // 监听语言变化
+  // 監聽語言變化
   watch(
     currentLocale,
     async newLocale => {
@@ -35,10 +35,10 @@ export const useI18n = () => {
     { immediate: true }
   )
 
-  // 获取当前消息（同步，使用缓存或默认语言）
+  // 獲取當前訊息（同步，使用快取或預設語言）
   const messages = computed(() => currentMessages.value || getLocale(currentLocale.value))
 
-  // 获取翻译文本的辅助函数
+  // 獲取翻譯文字的輔助函式
   const t = (key: string, params?: Record<string, string | number>): string => {
     const keys = key.split('.')
     let value: unknown = messages.value
@@ -47,13 +47,13 @@ export const useI18n = () => {
       if (value && typeof value === 'object' && k in value) {
         value = (value as Record<string, unknown>)[k]
       } else {
-        return key // 如果找不到翻译，返回原始 key
+        return key // 如果找不到翻譯，返回原始 key
       }
     }
 
     let result = typeof value === 'string' ? value : key
 
-    // 替换参数占位符
+    // 替換引數佔位符
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
         result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue))
@@ -64,9 +64,9 @@ export const useI18n = () => {
   }
 
   const setLocale = async (locale: Locale) => {
-    // 预加载语言文件
+    // 預載入語言檔案
     await ensureLocaleLoaded(locale)
-    // 然后切换
+    // 然後切換
     gameStore.locale = locale
   }
 

@@ -1,6 +1,6 @@
 /**
  * Worker 管理器
- * 统一管理所有 Worker 的创建、通信和销毁
+ * 統一管理所有 Worker 的建立、通訊和銷燬
  */
 import type { WorkerRequestMessage, WorkerResponseMessage, WorkerMessageType } from '@/types/worker'
 import { WorkerMessageType as MsgType } from '@/types/worker'
@@ -8,7 +8,7 @@ import { toRaw } from 'vue'
 import BattleWorker from './battle.worker?worker'
 
 /**
- * Worker 任务接口
+ * Worker 任務介面
  */
 interface WorkerTask {
   resolve: (data: unknown) => void
@@ -17,22 +17,22 @@ interface WorkerTask {
 }
 
 /**
- * 将 Vue 响应式对象转换为普通对象
- * 使用 toRaw() 获取原始对象，避免 Proxy 无法被 structured clone
+ * 將 Vue 響應式物件轉換為普通物件
+ * 使用 toRaw() 獲取原始物件，避免 Proxy 無法被 structured clone
  */
 const toPlainObject = <T>(obj: T): T => {
   if (obj === null || obj === undefined) return obj
   if (typeof obj !== 'object') return obj
 
-  // 使用 toRaw 获取 Vue 响应式对象的原始值
+  // 使用 toRaw 獲取 Vue 響應式物件的原始值
   const raw = toRaw(obj)
 
-  // 对于数组，递归处理每个元素
+  // 對於陣列，遞迴處理每個元素
   if (Array.isArray(raw)) {
     return raw.map(item => toPlainObject(item)) as unknown as T
   }
 
-  // 对于对象，递归处理每个属性
+  // 對於物件，遞迴處理每個屬性
   if (raw && typeof raw === 'object') {
     const plain: any = {}
     for (const key in raw) {
@@ -47,16 +47,16 @@ const toPlainObject = <T>(obj: T): T => {
 }
 
 /**
- * Worker 管理类
+ * Worker 管理類
  */
 class WorkerManager {
   private battleWorker: Worker | null = null
   private pendingTasks: Map<string, WorkerTask> = new Map()
   private messageIdCounter = 0
-  private readonly defaultTimeout = 10000 // 30秒超时
+  private readonly defaultTimeout = 10000 // 30秒超時
 
   /**
-   * 初始化战斗 Worker
+   * 初始化戰鬥 Worker
    */
   private initBattleWorker(): void {
     if (this.battleWorker) return
@@ -66,7 +66,7 @@ class WorkerManager {
   }
 
   /**
-   * 设置 Worker 消息处理器
+   * 設定 Worker 訊息處理器
    */
   private setupWorkerHandlers(worker: Worker, workerName: string): void {
     worker.onmessage = (event: MessageEvent<WorkerResponseMessage>) => {
@@ -78,15 +78,15 @@ class WorkerManager {
         return
       }
 
-      // 清除超时定时器
+      // 清除超時定時器
       if (task.timeout) {
         clearTimeout(task.timeout)
       }
 
-      // 移除任务
+      // 移除任務
       this.pendingTasks.delete(id)
 
-      // 处理响应
+      // 處理響應
       if (success) {
         task.resolve(data)
       } else {
@@ -96,14 +96,14 @@ class WorkerManager {
 
     worker.onerror = (error: ErrorEvent) => {
       console.error(`[WorkerManager] ${workerName} worker error:`, error)
-      // 拒绝所有待处理的任务
+      // 拒絕所有待處理的任務
       for (const task of this.pendingTasks.values()) {
         if (task.timeout) clearTimeout(task.timeout)
         task.reject(new Error(`${workerName} worker crashed`))
       }
       this.pendingTasks.clear()
 
-      // 清除对应的 worker 引用
+      // 清除對應的 worker 引用
       if (workerName === 'Battle') {
         this.battleWorker = null
       }
@@ -111,17 +111,17 @@ class WorkerManager {
   }
 
   /**
-   * 生成唯一的消息 ID
+   * 生成唯一的訊息 ID
    */
   private generateMessageId(): string {
     return `msg_${Date.now()}_${++this.messageIdCounter}`
   }
 
   /**
-   * 根据消息类型获取对应的 Worker
+   * 根據訊息型別獲取對應的 Worker
    */
   private getWorkerByType(type: WorkerMessageType): Worker {
-    // 战斗相关消息使用 battleWorker
+    // 戰鬥相關訊息使用 battleWorker
     if (type === MsgType.SIMULATE_BATTLE || type === MsgType.CALCULATE_PLUNDER || type === MsgType.CALCULATE_DEBRIS) {
       this.initBattleWorker()
       return this.battleWorker!
@@ -131,7 +131,7 @@ class WorkerManager {
   }
 
   /**
-   * 发送消息到 Worker 并等待响应
+   * 傳送訊息到 Worker 並等待響應
    */
   private sendMessage<T>(type: WorkerMessageType, payload: unknown, timeout: number = this.defaultTimeout): Promise<T> {
     const worker = this.getWorkerByType(type)
@@ -143,27 +143,27 @@ class WorkerManager {
     const id = this.generateMessageId()
 
     return new Promise<T>((resolve, reject) => {
-      // 设置超时
+      // 設定超時
       const timeoutId = setTimeout(() => {
         this.pendingTasks.delete(id)
         reject(new Error(`Worker task timeout after ${timeout}ms`))
       }, timeout)
 
-      // 保存任务
+      // 儲存任務
       this.pendingTasks.set(id, {
         resolve: resolve as (data: unknown) => void,
         reject,
         timeout: timeoutId
       })
 
-      // 发送消息（使用 toPlainObject 转换 Vue Proxy 对象，然后使用浏览器内置的 structured clone）
+      // 傳送訊息（使用 toPlainObject 轉換 Vue Proxy 物件，然後使用瀏覽器內建的 structured clone）
       const message: WorkerRequestMessage = { id, type, payload: toPlainObject(payload) }
       worker.postMessage(message)
     })
   }
 
   /**
-   * 战斗模拟
+   * 戰鬥模擬
    */
   public async simulateBattle(params: {
     attacker: {
@@ -186,7 +186,7 @@ class WorkerManager {
   }
 
   /**
-   * 计算掠夺资源
+   * 計算掠奪資源
    */
   public async calculatePlunder(params: {
     defenderResources: Parameters<typeof import('@/utils/battleSimulator').calculatePlunder>[0]
@@ -196,7 +196,7 @@ class WorkerManager {
   }
 
   /**
-   * 计算残骸场
+   * 計算殘骸場
    */
   public async calculateDebris(params: {
     attackerLosses: Parameters<typeof import('@/utils/battleSimulator').calculateDebrisField>[0]
@@ -206,7 +206,7 @@ class WorkerManager {
   }
 
   /**
-   * 销毁所有 Worker
+   * 銷燬所有 Worker
    */
   public destroy(): void {
     if (this.battleWorker) {
@@ -214,7 +214,7 @@ class WorkerManager {
       this.battleWorker = null
     }
 
-    // 清除所有待处理的任务
+    // 清除所有待處理的任務
     for (const task of this.pendingTasks.values()) {
       if (task.timeout) clearTimeout(task.timeout)
       task.reject(new Error('Worker manager destroyed'))
@@ -223,12 +223,12 @@ class WorkerManager {
   }
 
   /**
-   * 获取待处理任务数量
+   * 獲取待處理任務數量
    */
   public getPendingTaskCount(): number {
     return this.pendingTasks.size
   }
 }
 
-// 导出单例
+// 匯出單例
 export const workerManager = new WorkerManager()

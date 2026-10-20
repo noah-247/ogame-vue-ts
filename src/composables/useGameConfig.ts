@@ -13,13 +13,13 @@ import { BuildingType, ShipType, DefenseType, TechnologyType, OfficerType } from
 import type { BuildingConfig, ShipConfig, DefenseConfig, TechnologyConfig, OfficerConfig } from '@/types/game'
 
 /**
- * 提供翻译后的游戏配置对象的 Composable
- * 将 i18n 系统的翻译覆盖到原始 gameConfig 上
+ * 提供翻譯後的遊戲配置物件的 Composable
+ * 將 i18n 系統的翻譯覆蓋到原始 gameConfig 上
  */
 export const useGameConfig = () => {
   const { t } = useI18n()
 
-  // 建筑类型枚举值到翻译键的映射
+  // 建築型別列舉值到翻譯鍵的對映
   const buildingKeyMap: Record<BuildingType, string> = {
     [BuildingType.MetalMine]: 'metalMine',
     [BuildingType.CrystalMine]: 'crystalMine',
@@ -47,7 +47,7 @@ export const useGameConfig = () => {
     [BuildingType.University]: 'university'
   }
 
-  // 舰船类型枚举值到翻译键的映射
+  // 艦船型別列舉值到翻譯鍵的對映
   const shipKeyMap: Record<ShipType, string> = {
     [ShipType.LightFighter]: 'lightFighter',
     [ShipType.HeavyFighter]: 'heavyFighter',
@@ -66,7 +66,7 @@ export const useGameConfig = () => {
     [ShipType.Deathstar]: 'deathstar'
   }
 
-  // 防御设施类型枚举值到翻译键的映射
+  // 防禦設施型別列舉值到翻譯鍵的對映
   const defenseKeyMap: Record<DefenseType, string> = {
     [DefenseType.RocketLauncher]: 'rocketLauncher',
     [DefenseType.LightLaser]: 'lightLaser',
@@ -81,7 +81,7 @@ export const useGameConfig = () => {
     [DefenseType.PlanetaryShield]: 'planetaryShield'
   }
 
-  // 科技类型枚举值到翻译键的映射
+  // 科技型別列舉值到翻譯鍵的對映
   const technologyKeyMap: Record<TechnologyType, string> = {
     [TechnologyType.EnergyTechnology]: 'energyTechnology',
     [TechnologyType.LaserTechnology]: 'laserTechnology',
@@ -108,7 +108,7 @@ export const useGameConfig = () => {
     [TechnologyType.FuelResearch]: 'fuelResearch'
   }
 
-  // 军官类型枚举值到翻译键的映射
+  // 軍官型別列舉值到翻譯鍵的對映
   const officerKeyMap: Record<OfficerType, string> = {
     [OfficerType.Commander]: 'commander',
     [OfficerType.Admiral]: 'admiral',
@@ -118,7 +118,7 @@ export const useGameConfig = () => {
     [OfficerType.DarkMatterSpecialist]: 'darkMatterSpecialist'
   }
 
-  // 翻译后的建筑配置
+  // 翻譯後的建築配置
   const BUILDINGS = computed(() => {
     const translated: Record<BuildingType, BuildingConfig> = {} as Record<BuildingType, BuildingConfig>
     for (const [key, config] of Object.entries(ORIGINAL_BUILDINGS)) {
@@ -133,7 +133,7 @@ export const useGameConfig = () => {
     return translated
   })
 
-  // 翻译后的舰船配置
+  // 翻譯後的艦船配置
   const SHIPS = computed(() => {
     const translated: Record<ShipType, ShipConfig> = {} as Record<ShipType, ShipConfig>
     for (const [key, config] of Object.entries(ORIGINAL_SHIPS)) {
@@ -148,7 +148,7 @@ export const useGameConfig = () => {
     return translated
   })
 
-  // 翻译后的防御设施配置
+  // 翻譯後的防禦設施配置
   const DEFENSES = computed(() => {
     const translated: Record<DefenseType, DefenseConfig> = {} as Record<DefenseType, DefenseConfig>
     for (const [key, config] of Object.entries(ORIGINAL_DEFENSES)) {
@@ -163,7 +163,7 @@ export const useGameConfig = () => {
     return translated
   })
 
-  // 翻译后的科技配置
+  // 翻譯後的科技配置
   const TECHNOLOGIES = computed(() => {
     const translated: Record<TechnologyType, TechnologyConfig> = {} as Record<TechnologyType, TechnologyConfig>
     for (const [key, config] of Object.entries(ORIGINAL_TECHNOLOGIES)) {
@@ -178,7 +178,7 @@ export const useGameConfig = () => {
     return translated
   })
 
-  // 翻译后的军官配置
+  // 翻譯後的軍官配置
   const OFFICERS = computed(() => {
     const translated: Record<OfficerType, OfficerConfig> = {} as Record<OfficerType, OfficerConfig>
     for (const [key, config] of Object.entries(ORIGINAL_OFFICERS)) {

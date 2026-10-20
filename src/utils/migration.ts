@@ -18,8 +18,8 @@ import { generatePlanetTemperature } from '@/logic/planetLogic'
 import pkg from '../../package.json'
 
 /**
- * 数据迁移工具
- * 用于从旧版本数据结构迁移到新版本
+ * 資料遷移工具
+ * 用於從舊版本資料結構遷移到新版本
  */
 
 type PlanetKind = 'planet' | 'moon'
@@ -180,7 +180,7 @@ const resolveRemappedPlanetId = (
     const byKind = getPlanetEntriesFor(planetId, idMap, context.position)
     if (!byKind) return undefined
 
-    // 只有在位置或名称足够区分目标时才重写引用，避免把旧引用误指到错误星球
+    // 只有在位置或名稱足夠區分目標時才重寫引用，避免把舊引用誤指到錯誤星球
     if (context.isMoon !== undefined) {
       return byKind.get(getPlanetKindKey(context.isMoon))?.newId
     }
@@ -371,7 +371,7 @@ const fixPlayerPlanetsAndQueues = (player: Player, idMap: DuplicatePlanetIdMap):
       mutated = true
     }
 
-    // 等待队列里的 planetId 应始终与所属星球保持一致
+    // 等待佇列裡的 planetId 應始終與所屬星球保持一致
     planet.waitingBuildQueue?.forEach(item => {
       if (item.planetId && item.planetId !== planet.id) {
         item.planetId = planet.id
@@ -453,7 +453,7 @@ const fixNpcPlayerSpyReports = (npc: NPC, idMap: DuplicatePlanetIdMap): boolean 
   let mutated = false
   const remappedPlayerSpyReports: Record<string, SpyReport> = {}
 
-  // playerSpyReports 的 key 就是玩家星球 ID，需要和报告内容一起迁移
+  // playerSpyReports 的 key 就是玩家星球 ID，需要和報告內容一起遷移
   Object.entries(npc.playerSpyReports).forEach(([planetId, report]) => {
     if (updateSpyReportTargetPlanetId(report, idMap)) {
       mutated = true
@@ -496,9 +496,9 @@ const fixNpcReferences = (npcs: NPC[], idMap: DuplicatePlanetIdMap): boolean => 
 }
 
 /**
- * 修复玩家星球的重复ID，并同步更新可被可靠识别的旧引用。
- * 缺少位置或名称上下文、无法安全判定归属的旧引用会保留原ID，
- * 继续指向保留下来的首个星球，避免把数据误指到错误目标。
+ * 修復玩家星球的重複ID，並同步更新可被可靠識別的舊引用。
+ * 缺少位置或名稱上下文、無法安全判定歸屬的舊引用會保留原ID，
+ * 繼續指向保留下來的首個星球，避免把資料誤指到錯誤目標。
  */
 const fixDuplicatePlanetIds = (data: MigratableGameData): boolean => {
   const player = data.player
@@ -511,8 +511,8 @@ const fixDuplicatePlanetIds = (data: MigratableGameData): boolean => {
     return false
   }
 
-  // buildDuplicatePlanetIdMap 已经在上一步直接修复了重复星球 ID，
-  // 只要 idMap 非空，就说明当前迁移已经发生了实际修改。
+  // buildDuplicatePlanetIdMap 已經在上一步直接修復了重複星球 ID，
+  // 只要 idMap 非空，就說明當前遷移已經發生了實際修改。
   let mutated = true
 
   if (fixPlayerPlanetsAndQueues(player, idMap)) {
@@ -531,54 +531,54 @@ const fixDuplicatePlanetIds = (data: MigratableGameData): boolean => {
 }
 
 /**
- * 执行数据迁移
- * 将旧版本的 universePlanets 和 debrisFields 从 gameStore 迁移到 universeStore
+ * 執行資料遷移
+ * 將舊版本的 universePlanets 和 debrisFields 從 gameStore 遷移到 universeStore
  */
 export const migrateGameData = (): void => {
   try {
     const storageKey = pkg.name
     const universeStorageKey = `${pkg.name}-universe`
 
-    // 读取旧的加密存档
+    // 讀取舊的加密存檔
     const oldEncryptedData = localStorage.getItem(storageKey)
     if (!oldEncryptedData) return
 
-    // 尝试解密（如果是加密格式）
+    // 嘗試解密（如果是加密格式）
     let oldData: MigratableGameData
     try {
       oldData = decryptData(oldEncryptedData) as MigratableGameData
     } catch {
-      // 解密失败，可能是新格式（未加密），直接解析
+      // 解密失敗，可能是新格式（未加密），直接解析
       try {
         oldData = JSON.parse(oldEncryptedData) as MigratableGameData
       } catch {
-        return // 无法解析，放弃迁移
+        return // 無法解析，放棄遷移
       }
     }
 
-    // 标记是否有数据需要保存
+    // 標記是否有資料需要儲存
     let needsSave = false
 
-    // 修复NPC数据（确保所有必需字段都存在）
+    // 修復NPC資料（確保所有必需欄位都存在）
     if (oldData.npcs && Array.isArray(oldData.npcs)) {
       const now = Date.now()
       const playerId = oldData.player?.id
 
       oldData.npcs.forEach((npc: NPC) => {
-        // 确保NPC有必需的时间字段，并设置随机冷却避免同时行动
+        // 確保NPC有必需的時間欄位，並設定隨機冷卻避免同時行動
         if (npc.lastSpyTime === undefined || npc.lastSpyTime === 0) {
-          // 0-4分钟的随机延迟
+          // 0-4分鐘的隨機延遲
           const randomSpyOffset = Math.random() * 240 * 1000
           npc.lastSpyTime = now - randomSpyOffset
           needsSave = true
         }
         if (npc.lastAttackTime === undefined || npc.lastAttackTime === 0) {
-          // 0-8分钟的随机延迟
+          // 0-8分鐘的隨機延遲
           const randomAttackOffset = Math.random() * 480 * 1000
           npc.lastAttackTime = now - randomAttackOffset
           needsSave = true
         }
-        // 确保NPC有必需的数组字段
+        // 確保NPC有必需的陣列欄位
         if (!npc.fleetMissions) {
           npc.fleetMissions = []
           needsSave = true
@@ -600,7 +600,7 @@ export const migrateGameData = (): void => {
           needsSave = true
         }
 
-        // 如果NPC与玩家没有建立关系，自动建立中立关系
+        // 如果NPC與玩家沒有建立關係，自動建立中立關係
         if (playerId && !npc.relations[playerId]) {
           npc.relations[playerId] = {
             fromId: npc.id,
@@ -615,38 +615,38 @@ export const migrateGameData = (): void => {
       })
     }
 
-    // 初始化玩家积分（如果不存在）
+    // 初始化玩家積分（如果不存在）
     if (oldData.player && oldData.player.points === undefined) {
-      // 积分会在游戏启动时通过 initGame 计算，这里设置为0
+      // 積分會在遊戲啟動時透過 initGame 計算，這裡設定為0
       oldData.player.points = 0
       needsSave = true
     }
 
-    // 修复重复的星球ID
+    // 修復重複的星球ID
     if (fixDuplicatePlanetIds(oldData)) {
       needsSave = true
     }
 
-    // 迁移温度数据：为没有温度的星球生成温度
+    // 遷移溫度資料：為沒有溫度的星球生成溫度
     // 玩家星球
     if (oldData.player?.planets && Array.isArray(oldData.player.planets)) {
       oldData.player.planets.forEach((planet: Planet) => {
-        // 月球不需要温度
+        // 月球不需要溫度
         if (!planet.isMoon && !planet.temperature) {
           planet.temperature = generatePlanetTemperature(planet.position.position)
           needsSave = true
         }
-        // 迁移矿脉数据：确保所有矿脉都有 position 字段
+        // 遷移礦脈資料：確保所有礦脈都有 position 欄位
         if (planet.oreDeposits && !planet.isMoon) {
           const deposits = planet.oreDeposits as any
-          // 情况1：旧格式有 initialMetal，需要删除并添加 position
+          // 情況1：舊格式有 initialMetal，需要刪除並新增 position
           if (deposits.initialMetal !== undefined) {
             delete deposits.initialMetal
             delete deposits.initialCrystal
             delete deposits.initialDeuterium
             needsSave = true
           }
-          // 情况2：没有 position 字段，需要添加
+          // 情況2：沒有 position 欄位，需要新增
           if (!deposits.position) {
             deposits.position = { ...planet.position }
             needsSave = true
@@ -660,22 +660,22 @@ export const migrateGameData = (): void => {
       oldData.npcs.forEach((npc: NPC) => {
         if (npc.planets && Array.isArray(npc.planets)) {
           npc.planets.forEach((planet: Planet) => {
-            // 月球不需要温度
+            // 月球不需要溫度
             if (!planet.isMoon && !planet.temperature) {
               planet.temperature = generatePlanetTemperature(planet.position.position)
               needsSave = true
             }
-            // 迁移矿脉数据：确保所有矿脉都有 position 字段
+            // 遷移礦脈資料：確保所有礦脈都有 position 欄位
             if (planet.oreDeposits && !planet.isMoon) {
               const deposits = planet.oreDeposits as any
-              // 情况1：旧格式有 initialMetal，需要删除
+              // 情況1：舊格式有 initialMetal，需要刪除
               if (deposits.initialMetal !== undefined) {
                 delete deposits.initialMetal
                 delete deposits.initialCrystal
                 delete deposits.initialDeuterium
                 needsSave = true
               }
-              // 情况2：没有 position 字段，需要添加
+              // 情況2：沒有 position 欄位，需要新增
               if (!deposits.position) {
                 deposits.position = { ...planet.position }
                 needsSave = true
@@ -686,9 +686,9 @@ export const migrateGameData = (): void => {
       })
     }
 
-    // 迁移 player.diplomaticRelations 到 npc.relations
-    // 旧版本使用 player.diplomaticRelations[npcId] 存储玩家对NPC的关系
-    // 新版本统一使用 npc.relations[playerId] 存储NPC对玩家的关系
+    // 遷移 player.diplomaticRelations 到 npc.relations
+    // 舊版本使用 player.diplomaticRelations[npcId] 儲存玩家對NPC的關係
+    // 新版本統一使用 npc.relations[playerId] 儲存NPC對玩家的關係
     if (oldData.player?.diplomaticRelations && oldData.npcs && Array.isArray(oldData.npcs)) {
       const playerId = oldData.player.id
       const npcs = oldData.npcs
@@ -700,7 +700,7 @@ export const migrateGameData = (): void => {
           if (!npc.relations) {
             npc.relations = {}
           }
-          // 如果NPC对玩家的关系不存在，使用玩家对NPC的关系数据
+          // 如果NPC對玩家的關係不存在，使用玩家對NPC的關係資料
           if (!npc.relations[playerId]) {
             npc.relations[playerId] = {
               ...relation,
@@ -709,7 +709,7 @@ export const migrateGameData = (): void => {
             }
             needsSave = true
           } else {
-            // 如果两边都有数据，使用声望值更极端的那个（偏离0更远的）
+            // 如果兩邊都有資料，使用聲望值更極端的那個（偏離0更遠的）
             const existingReputation = npc.relations[playerId].reputation || 0
             const playerReputation = relation.reputation || 0
             if (Math.abs(playerReputation) > Math.abs(existingReputation)) {
@@ -721,16 +721,16 @@ export const migrateGameData = (): void => {
         }
       })
 
-      // 删除旧的 diplomaticRelations 字段
+      // 刪除舊的 diplomaticRelations 欄位
       delete oldData.player.diplomaticRelations
       needsSave = true
     }
 
-    // 检查是否需要迁移地图数据
+    // 檢查是否需要遷移地圖資料
     const hasOldMapData = oldData.universePlanets || oldData.debrisFields
 
     if (hasOldMapData) {
-      // 准备 universeStore 数据
+      // 準備 universeStore 資料
       const universeData: {
         planets: Record<string, Planet>
         debrisFields: Record<string, DebrisField>
@@ -739,15 +739,15 @@ export const migrateGameData = (): void => {
         debrisFields: {}
       }
 
-      // 迁移星球数据（排除玩家星球）
+      // 遷移星球資料（排除玩家星球）
       if (oldData.universePlanets) {
         const oldPlanets = oldData.universePlanets as Record<string, Planet>
         const playerPlanets = oldData.player?.planets || []
         const playerPlanetIds = new Set(playerPlanets.map((p: Planet) => p.id))
         Object.entries(oldPlanets).forEach(([key, planet]) => {
-          // 只迁移非玩家星球
+          // 只遷移非玩家星球
           if (!playerPlanetIds.has(planet.id)) {
-            // 为没有温度的星球生成温度
+            // 為沒有溫度的星球生成溫度
             if (!planet.isMoon && !planet.temperature) {
               planet.temperature = generatePlanetTemperature(planet.position.position)
             }
@@ -758,18 +758,18 @@ export const migrateGameData = (): void => {
         needsSave = true
       }
 
-      // 迁移残骸场数据
+      // 遷移殘骸場資料
       if (oldData.debrisFields) {
         universeData.debrisFields = oldData.debrisFields
         delete oldData.debrisFields
         needsSave = true
       }
 
-      // 保存universeStore数据
+      // 儲存universeStore資料
       localStorage.setItem(universeStorageKey, encryptData(universeData))
     }
 
-    // 检查并更新已存在的 universeStore 数据中的星球温度
+    // 檢查並更新已存在的 universeStore 資料中的星球溫度
     const existingUniverseData = localStorage.getItem(universeStorageKey)
     if (existingUniverseData) {
       try {
@@ -798,7 +798,7 @@ export const migrateGameData = (): void => {
       }
     }
 
-    // 如果有任何数据被修改，保存gameStore数据
+    // 如果有任何資料被修改，儲存gameStore資料
     if (needsSave) {
       localStorage.setItem(storageKey, encryptData(oldData))
     }

@@ -1,19 +1,19 @@
 /**
- * 弱引导系统 - 非阻塞式、可关闭的页面提示
- * 用温和的引导替代强制性教程
+ * 弱引導系統 - 非阻塞式、可關閉的頁面提示
+ * 用溫和的引導替代強制性教程
  */
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
 
-// 提示定义 - 用户首次访问页面时显示一次
+// 提示定義 - 使用者首次訪問頁面時顯示一次
 export interface Hint {
   id: string
-  route: string // 显示此提示的路由路径
-  titleKey: string // 标题的 i18n 键
-  messageKey: string // 消息的 i18n 键
-  icon?: string // 可选的图标名称
-  delay?: number // 显示前的延迟毫秒数（默认 500）
+  route: string // 顯示此提示的路由路徑
+  titleKey: string // 標題的 i18n 鍵
+  messageKey: string // 訊息的 i18n 鍵
+  icon?: string // 可選的圖示名稱
+  delay?: number // 顯示前的延遲毫秒數（預設 500）
 }
 
 // 所有可用的提示
@@ -148,7 +148,7 @@ const hints: Hint[] = [
   }
 ]
 
-// 全局UI状态（不需要持久化）
+// 全域性UI狀態（不需要持久化）
 const currentHint = ref<Hint | null>(null)
 const isHintVisible = ref(false)
 
@@ -158,43 +158,43 @@ export const useHints = () => {
   const router = useRouter()
   const gameStore = useGameStore()
 
-  // 确保 dismissedHints 数组已初始化
+  // 確保 dismissedHints 陣列已初始化
   if (!gameStore.player.dismissedHints) {
     gameStore.player.dismissedHints = []
   }
 
-  // 确保 hintsEnabled 已初始化（默认为 true）
+  // 確保 hintsEnabled 已初始化（預設為 true）
   if (gameStore.player.hintsEnabled === undefined) {
     gameStore.player.hintsEnabled = true
   }
 
-  // 检查提示是否已被关闭
+  // 檢查提示是否已被關閉
   const isHintDismissed = (hintId: string): boolean => {
     return gameStore.player.dismissedHints?.includes(hintId) ?? false
   }
 
-  // 检查当前路由是否应该显示提示
+  // 檢查當前路由是否應該顯示提示
   const checkForHint = (routePath: string) => {
     if (!gameStore.player.hintsEnabled) return
 
-    // 清除任何待显示的提示
+    // 清除任何待顯示的提示
     if (hintTimeout) {
       clearTimeout(hintTimeout)
       hintTimeout = null
     }
 
-    // 导航时隐藏当前提示
+    // 導航時隱藏當前提示
     isHintVisible.value = false
     currentHint.value = null
 
-    // 查找此路由对应的提示
+    // 查詢此路由對應的提示
     const hint = hints.find(h => routePath.startsWith(h.route))
     if (!hint) return
 
-    // 检查是否已经关闭过
+    // 檢查是否已經關閉過
     if (isHintDismissed(hint.id)) return
 
-    // 延迟后显示提示
+    // 延遲後顯示提示
     const delay = hint.delay ?? 500
     hintTimeout = setTimeout(() => {
       currentHint.value = hint
@@ -202,7 +202,7 @@ export const useHints = () => {
     }, delay)
   }
 
-  // 关闭当前提示（不再显示）
+  // 關閉當前提示（不再顯示）
   const dismissHint = (dontShowAgain = true) => {
     if (currentHint.value && dontShowAgain) {
       if (!gameStore.player.dismissedHints) {
@@ -216,18 +216,18 @@ export const useHints = () => {
     currentHint.value = null
   }
 
-  // 暂时关闭提示（下次访问还会显示）
+  // 暫時關閉提示（下次訪問還會顯示）
   const closeHint = () => {
     isHintVisible.value = false
     currentHint.value = null
   }
 
-  // 重置所有提示（重新显示）
+  // 重置所有提示（重新顯示）
   const resetHints = () => {
     gameStore.player.dismissedHints = []
   }
 
-  // 切换提示开关
+  // 切換提示開關
   const setHintsEnabled = (enabled: boolean) => {
     gameStore.player.hintsEnabled = enabled
     if (!enabled) {
@@ -236,7 +236,7 @@ export const useHints = () => {
     }
   }
 
-  // 监听路由变化
+  // 監聽路由變化
   watch(
     () => router.currentRoute.value.path,
     newPath => {
@@ -246,7 +246,7 @@ export const useHints = () => {
   )
 
   return {
-    // 状态
+    // 狀態
     currentHint: computed(() => currentHint.value),
     isHintVisible: computed(() => isHintVisible.value),
     hintsEnabled: computed(() => gameStore.player.hintsEnabled ?? true),

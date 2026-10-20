@@ -1,6 +1,6 @@
 /**
- * 统一生成带前缀的业务ID
- * 便于后续集中调整ID规则
+ * 統一生成帶字首的業務ID
+ * 便於後續集中調整ID規則
  */
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now()

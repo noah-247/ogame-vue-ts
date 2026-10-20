@@ -8,27 +8,27 @@ const isDark = ref<boolean>(false)
 export const useTheme = () => {
   const gameStore = useGameStore()
 
-  // 初始化主题
+  // 初始化主題
   onMounted(() => {
     if (!gameStore.isDark) {
-      // 首次访问，使用系统主题偏好
+      // 首次訪問，使用系統主題偏好
       isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
       gameStore.isDark = isDark.value ? 'dark' : 'light'
     } else {
-      // 从 gameStore 读取保存的主题（Pinia会自动从localStorage恢复）
+      // 從 gameStore 讀取儲存的主題（Pinia會自動從localStorage恢復）
       const savedTheme = gameStore.isDark as Theme
       isDark.value = savedTheme === 'dark'
     }
     applyTheme()
   })
 
-  // 监听主题变化
+  // 監聽主題變化
   watch(isDark, () => {
     applyTheme()
     gameStore.isDark = isDark.value ? 'dark' : 'light'
   })
 
-  // 应用主题
+  // 應用主題
   const applyTheme = () => {
     if (isDark.value) {
       document.documentElement.classList.add('dark')
@@ -37,7 +37,7 @@ export const useTheme = () => {
     }
   }
 
-  // 切换主题
+  // 切換主題
   const toggleTheme = () => {
     isDark.value = !isDark.value
   }

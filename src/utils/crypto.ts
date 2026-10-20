@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js'
 import pkg from '../../package.json'
 
-// 数据加密
+// 資料加密
 export const encryptData = (data: any): string => {
   try {
     const jsonStr = JSON.stringify(data)
@@ -12,7 +12,7 @@ export const encryptData = (data: any): string => {
   return ''
 }
 
-// 数据解密
+// 資料解密
 export const decryptData = (data: string, options: { throwOnError?: boolean } = {}): any => {
   try {
     const bytes = CryptoJS.AES.decrypt(data, pkg.name)

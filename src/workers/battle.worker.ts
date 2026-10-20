@@ -1,9 +1,9 @@
 /**
- * 战斗模拟 Worker
- * 在独立线程中处理计算密集型的战斗模拟任务
+ * 戰鬥模擬 Worker
+ * 在獨立執行緒中處理計算密集型的戰鬥模擬任務
  *
- * 战斗公式实现见 ./battleEngine.ts（OGame 原版公式）；
- * 本文件仅保留掠夺/残骸计算与 Worker 消息分发，接口保持不变。
+ * 戰鬥公式實現見 ./battleEngine.ts（OGame 原版公式）；
+ * 本檔案僅保留掠奪/殘骸計算與 Worker 訊息分發，介面保持不變。
  */
 import type { Fleet, Resources } from '@/types/game'
 import { ShipType, DefenseType } from '@/types/game'
@@ -13,7 +13,7 @@ import { WorkerMessageType } from '@/types/worker'
 import { simulateBattle } from './battleEngine'
 
 /**
- * 计算掠夺的资源
+ * 計算掠奪的資源
  */
 const calculatePlunder = (defenderResources: Resources, attackerFleet: Partial<Fleet>): Resources => {
   let totalCapacity = 0
@@ -48,7 +48,7 @@ const calculatePlunder = (defenderResources: Resources, attackerFleet: Partial<F
 }
 
 /**
- * 计算残骸场
+ * 計算殘骸場
  */
 const calculateDebrisField = (
   attackerLosses: Partial<Fleet>,
@@ -88,7 +88,7 @@ const calculateDebrisField = (
 }
 
 // ============================================================================
-// Worker 消息处理
+// Worker 訊息處理
 // ============================================================================
 
 self.onmessage = (event: MessageEvent<WorkerRequestMessage>) => {
@@ -137,7 +137,7 @@ self.onmessage = (event: MessageEvent<WorkerRequestMessage>) => {
         throw new Error(`Unknown message type: ${type}`)
     }
 
-    // 发送成功响应
+    // 傳送成功響應
     const response: WorkerResponseMessage = {
       id,
       type: WorkerMessageType.SUCCESS,
@@ -146,7 +146,7 @@ self.onmessage = (event: MessageEvent<WorkerRequestMessage>) => {
     }
     self.postMessage(response)
   } catch (error) {
-    // 发送错误响应
+    // 傳送錯誤響應
     const response: WorkerResponseMessage = {
       id,
       type: WorkerMessageType.ERROR,

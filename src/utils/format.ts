@@ -1,8 +1,8 @@
 /**
- * 格式化数字为英文单位（K, M, B, T, Q）
- * @param num 数字
- * @param decimals 小数位数，默认2
- * @returns 格式化后的字符串
+ * 格式化數字為英文單位（K, M, B, T, Q）
+ * @param num 數字
+ * @param decimals 小數位數，預設2
+ * @returns 格式化後的字串
  */
 export const formatNumber = (num: number, decimals: number = 2): string => {
   if (num >= 1_000_000_000_000_000) {
@@ -20,10 +20,10 @@ export const formatNumber = (num: number, decimals: number = 2): string => {
 }
 
 /**
- * 获取资源颜色类（根据占用率）
- * @param current 当前数量
+ * 獲取資源顏色類（根據佔用率）
+ * @param current 當前數量
  * @param max 最大容量
- * @returns Tailwind CSS 类名
+ * @returns Tailwind CSS 類名
  */
 export const getResourceColor = (current: number, max: number): string => {
   const ratio = current / max
@@ -32,10 +32,10 @@ export const getResourceColor = (current: number, max: number): string => {
   return ''
 }
 /**
- * 格式化相对时间（用于显示"多久之前"）
- * @param seconds 秒数
- * @param t 翻译函数
- * @returns 格式化后的相对时间字符串
+ * 格式化相對時間（用於顯示"多久之前"）
+ * @param seconds 秒數
+ * @param t 翻譯函式
+ * @returns 格式化後的相對時間字串
  */
 export const formatRelativeTime = (seconds: number, t: (key: string) => string): string => {
   const days = Math.floor(seconds / 86400)
@@ -56,9 +56,9 @@ export const formatRelativeTime = (seconds: number, t: (key: string) => string):
 }
 
 /**
- * 格式化时间（秒转为 年:天:时:分:秒）
- * @param seconds 秒数
- * @returns 格式化后的时间字符串
+ * 格式化時間（秒轉為 年:天:時:分:秒）
+ * @param seconds 秒數
+ * @returns 格式化後的時間字串
  * 例如：
  * 1:02:03:04:05
  * 02:03:04:05
@@ -88,8 +88,8 @@ export const formatTime = (seconds: number): string => {
 
 /**
  * 格式化日期
- * @param timestamp 时间戳
- * @returns 格式化后的日期字符串
+ * @param timestamp 時間戳
+ * @returns 格式化後的日期字串
  */
 export const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp)
@@ -103,10 +103,10 @@ export const formatDate = (timestamp: number): string => {
 }
 
 /**
- * 检查资源是否充足并返回对应的颜色类
- * @param available 当前可用资源数量
- * @param required 所需资源数量
- * @returns Tailwind CSS 类名（资源不足时返回红色）
+ * 檢查資源是否充足並返回對應的顏色類
+ * @param available 當前可用資源數量
+ * @param required 所需資源數量
+ * @returns Tailwind CSS 類名（資源不足時返回紅色）
  */
 export const getResourceCostColor = (available: number, required: number): string => {
   if (available < required) {

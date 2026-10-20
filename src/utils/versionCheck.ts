@@ -6,12 +6,12 @@ export interface VersionInfo {
   downloadUrl: string
 }
 
-// 检查GitHub最新版本
+// 檢查GitHub最新版本
 export const checkLatestVersion = async (lastCheckTime: number, updateCheckTime: (time: number) => void): Promise<VersionInfo | null> => {
   const now = Date.now()
-  const oneHour = 60 * 60 * 1000 // 1小时
+  const oneHour = 60 * 60 * 1000 // 1小時
 
-  // 如果距离上次检查不到1小时，跳过
+  // 如果距離上次檢查不到1小時，跳過
   if (now - lastCheckTime < oneHour) {
     return null
   }
@@ -21,18 +21,18 @@ export const checkLatestVersion = async (lastCheckTime: number, updateCheckTime:
 
     if (!response.ok) {
       console.error('Failed to fetch latest version:', response.status)
-      // 更新检查时间，避免频繁请求失败的API
+      // 更新檢查時間，避免頻繁請求失敗的API
       updateCheckTime(now)
       throw new Error(`Failed to fetch version: ${response.status}`)
     }
 
     const data = await response.json()
-    const githubVersion = data.tag_name?.replace(/^v/, '') // 移除开头的 'v' (如 v1.2.0 -> 1.2.0)
+    const githubVersion = data.tag_name?.replace(/^v/, '') // 移除開頭的 'v' (如 v1.2.0 -> 1.2.0)
 
-    // 更新最后检查时间
+    // 更新最後檢查時間
     updateCheckTime(now)
 
-    // 比较版本号
+    // 比較版本號
     if (githubVersion && githubVersion !== pkg.version) {
       return {
         version: githubVersion,
@@ -43,15 +43,15 @@ export const checkLatestVersion = async (lastCheckTime: number, updateCheckTime:
     return null
   } catch (error) {
     console.error('Error checking version:', error)
-    // 更新检查时间，避免频繁请求失败的API
+    // 更新檢查時間，避免頻繁請求失敗的API
     updateCheckTime(now)
     throw error
   }
 }
 
-// 检查是否可以进行版本检查（距离上次检查是否超过1小时）
+// 檢查是否可以進行版本檢查（距離上次檢查是否超過1小時）
 export const canCheckVersion = (lastCheckTime: number): boolean => {
   const now = Date.now()
-  const oneHour = 60 * 60 * 1000 // 1小时
+  const oneHour = 60 * 60 * 1000 // 1小時
   return now - lastCheckTime >= oneHour
 }
