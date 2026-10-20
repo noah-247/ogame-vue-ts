@@ -7,7 +7,7 @@ import * as officerLogic from './officerLogic'
 import { getGameNow } from './gameTime'
 
 /**
- * 验证科技研究的所有条件
+ * 驗證科技研究的所有條件
  */
 export const validateTechnologyResearch = (
   planet: Planet,
@@ -22,24 +22,24 @@ export const validateTechnologyResearch = (
   const targetLevel = currentLevel + 1
   const cost = researchLogic.calculateTechnologyCost(techType, targetLevel)
 
-  // 检查队列中是否已存在该科技的研究任务
+  // 檢查佇列中是否已存在該科技的研究任務
   const existingQueueItem = researchQueue.find(item => item.type === 'technology' && item.itemType === techType)
   if (existingQueueItem) {
     return { valid: false, reason: 'errors.technologyAlreadyInQueue' }
   }
 
-  // 检查研究队列是否已满
+  // 檢查研究佇列是否已滿
   const maxQueue = publicLogic.getMaxResearchQueue(technologies)
   if (researchQueue.length >= maxQueue) {
     return { valid: false, reason: 'errors.researchQueueFull' }
   }
 
-  // 检查前置条件
+  // 檢查前置條件
   if (!researchLogic.checkTechnologyRequirements(techType, planet.buildings, technologies)) {
     return { valid: false, reason: 'errors.requirementsNotMet' }
   }
 
-  // 检查资源
+  // 檢查資源
   if (!resourceLogic.checkResourcesAvailable(planet.resources, cost)) {
     return { valid: false, reason: 'errors.insufficientResources' }
   }
@@ -48,7 +48,7 @@ export const validateTechnologyResearch = (
 }
 
 /**
- * 执行科技研究（扣除资源，创建队列项）
+ * 執行科技研究（扣除資源，建立佇列項）
  */
 export const executeTechnologyResearch = (
   planet: Planet,
@@ -61,13 +61,13 @@ export const executeTechnologyResearch = (
   const targetLevel = currentLevel + 1
   const cost = researchLogic.calculateTechnologyCost(techType, targetLevel)
 
-  // 计算军官加成
+  // 計算軍官加成
   const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
 
-  // 获取星际研究网络等级
+  // 獲取星際研究網路等級
   const intergalacticResearchNetworkLevel = technologies[TechnologyType.IntergalacticResearchNetwork] || 0
 
-  // 计算有效研究实验室等级（考虑星际研究网络）
+  // 計算有效研究實驗室等級（考慮星際研究網路）
   let researchLabLevel: number
   if (allPlanets && intergalacticResearchNetworkLevel > 0) {
     researchLabLevel = researchLogic.calculateEffectiveLabLevel(allPlanets, planet.id, intergalacticResearchNetworkLevel)
@@ -76,7 +76,7 @@ export const executeTechnologyResearch = (
   }
 
   const energyTechLevel = technologies[TechnologyType.EnergyTechnology] || 0
-  // 获取大学等级（加速研究）
+  // 獲取大學等級（加速研究）
   const universityLevel = planet.buildings[BuildingType.University] || 0
 
   const time = researchLogic.calculateTechnologyTime(
@@ -89,17 +89,17 @@ export const executeTechnologyResearch = (
     universityLevel
   )
 
-  // 扣除资源
+  // 扣除資源
   resourceLogic.deductResources(planet.resources, cost)
 
-  // 创建队列项
+  // 建立佇列項
   const queueItem = researchLogic.createResearchQueueItem(techType, targetLevel, time)
 
   return { queueItem }
 }
 
 /**
- * 取消研究并计算返还资源
+ * 取消研究並計算返還資源
  */
 export const cancelTechnologyResearch = (queueItem: BuildQueueItem): Resources => {
   const cost = researchLogic.calculateTechnologyCost(queueItem.itemType as TechnologyType, queueItem.targetLevel || 1)

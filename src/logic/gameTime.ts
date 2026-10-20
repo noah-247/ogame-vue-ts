@@ -1,22 +1,22 @@
 /**
- * 游戏虚拟时间（BLK-1 修复）。
+ * 遊戲虛擬時間（BLK-1 修復）。
  *
- * gameNow = Date.now() + timeOffset。时间快转只增加 timeOffset，
- * 游戏时钟之后随真实时间持续推进：不会冻结（旧 Math.max 方案的 bug）、
- * 不会倒退（重复快转不再回拨 gameTime）。
+ * gameNow = Date.now() + timeOffset。時間快轉只增加 timeOffset，
+ * 遊戲時鐘之後隨真實時間持續推進：不會凍結（舊 Math.max 方案的 bug）、
+ * 不會倒退（重複快轉不再回撥 gameTime）。
  *
- * 所有游戏内时间戳（建造/研究/舰船/拆除队列的 startTime/endTime、
- * 舰队与导弹任务的到达时间、军官加成判定）统一用 getGameNow()。
- * 纯墙钟用途（云存档限流、UI 相对时间显示、ID 唯一性）继续用 Date.now()。
+ * 所有遊戲內時間戳（建造/研究/艦船/拆除佇列的 startTime/endTime、
+ * 艦隊與導彈任務的到達時間、軍官加成判定）統一用 getGameNow()。
+ * 純牆鍾用途（雲存檔限流、UI 相對時間顯示、ID 唯一性）繼續用 Date.now()。
  */
 let timeOffsetMs = 0
 
-/** 从存档恢复时调用，同步持久化的偏移 */
+/** 從存檔恢復時呼叫，同步持久化的偏移 */
 export const setTimeOffset = (ms: number): void => {
   timeOffsetMs = ms
 }
 
 export const getTimeOffset = (): number => timeOffsetMs
 
-/** 当前游戏虚拟时间（毫秒时间戳） */
+/** 當前遊戲虛擬時間（毫秒時間戳） */
 export const getGameNow = (): number => Date.now() + timeOffsetMs

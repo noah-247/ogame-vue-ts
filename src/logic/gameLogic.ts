@@ -12,7 +12,7 @@ import * as waitingQueueLogic from './waitingQueueLogic'
 import type { UnlockedItem } from './unlockLogic'
 
 /**
- * 初始化玩家数据
+ * 初始化玩家資料
  */
 export const initializePlayer = (playerId: string, playerName: string = 'Commander'): Player => {
   const player: Player = {
@@ -22,7 +22,7 @@ export const initializePlayer = (playerId: string, playerName: string = 'Command
     technologies: {} as Record<TechnologyType, number>,
     officers: {} as Record<OfficerType, Officer>,
     researchQueue: [],
-    waitingResearchQueue: [], // 研究等待队列
+    waitingResearchQueue: [], // 研究等待佇列
     fleetMissions: [],
     missileAttacks: [],
     battleReports: [],
@@ -37,12 +37,12 @@ export const initializePlayer = (playerId: string, playerName: string = 'Command
     points: 0
   }
 
-  // 初始化科技等级
+  // 初始化科技等級
   Object.values(TechnologyType).forEach(tech => {
     player.technologies[tech] = 0
   })
 
-  // 初始化军官状态
+  // 初始化軍官狀態
   Object.values(OfficerType).forEach(officer => {
     player.officers[officer] = officerLogic.createInactiveOfficer(officer)
   })
@@ -51,14 +51,14 @@ export const initializePlayer = (playerId: string, playerName: string = 'Command
 }
 
 /**
- * 检查是否需要初始化游戏
+ * 檢查是否需要初始化遊戲
  */
 export const shouldInitializeGame = (planets: Planet[]): boolean => {
   return planets.length === 0
 }
 
 /**
- * 更新所有星球的最后更新时间
+ * 更新所有星球的最後更新時間
  */
 export const updatePlanetsLastUpdate = (planets: Planet[], now: number): void => {
   planets.forEach(planet => {
@@ -82,7 +82,7 @@ export const generateSystemPositions = (
 }
 
 /**
- * 生成随机NPC星球位置
+ * 生成隨機NPC星球位置
  */
 export const generateRandomPosition = (): { galaxy: number; system: number; position: number } => {
   return {
@@ -93,14 +93,14 @@ export const generateRandomPosition = (): { galaxy: number; system: number; posi
 }
 
 /**
- * 生成位置键
+ * 生成位置鍵
  */
 export const generatePositionKey = (galaxy: number, system: number, position: number): string => {
   return `${galaxy}:${system}:${position}`
 }
 
 /**
- * 更新游戏状态 - 处理所有星球和任务
+ * 更新遊戲狀態 - 處理所有星球和任務
  */
 export const processGameUpdate = (
   player: Player,
@@ -111,7 +111,7 @@ export const processGameUpdate = (
 ): {
   updatedResearchQueue: BuildQueueItem[]
 } => {
-  // 确保成就统计数据存在
+  // 確保成就統計資料存在
   if (!player.achievementStats) {
     player.achievementStats = achievementLogic.initializeAchievementStats()
   }
@@ -119,23 +119,23 @@ export const processGameUpdate = (
     player.achievements = achievementLogic.initializeAchievements()
   }
 
-  // 获取军官加成
+  // 獲取軍官加成
   const bonuses = officerLogic.calculateActiveBonuses(player.officers, now)
 
-  // 创建积分回调函数
+  // 建立積分回撥函式
   const onPointsEarned = (points: number, _type: string, _itemType: string, _level?: number, _quantity?: number) => {
     pointsLogic.addPoints(player, points)
   }
 
-  // 保存完成前的状态（用于解锁检查）
+  // 儲存完成前的狀態（用於解鎖檢查）
   const previousTechnologies = { ...player.technologies }
 
-  // 通知回调 + 成就统计更新
+  // 通知回撥 + 成就統計更新
   const onCompleted = (type: string, itemType: string, level?: number, quantity?: number) => {
     if (onNotification) {
       onNotification(type, itemType, level)
     }
-    // 更新成就统计
+    // 更新成就統計
     if (player.achievementStats) {
       if (type === 'building' && level !== undefined) {
         achievementLogic.updateBuildingStats(player.achievementStats, itemType as any, level)
@@ -149,12 +149,12 @@ export const processGameUpdate = (
     }
   }
 
-  // 收集所有新解锁的内容
+  // 收集所有新解鎖的內容
   const allUnlockedItems: UnlockedItem[] = []
 
-  // 获取采矿技术等级（用于矿脉恢复上限计算）
+  // 獲取採礦技術等級（用於礦脈恢復上限計算）
   const miningTechLevel = player.technologies[TechnologyType.MiningTechnology] || 0
-  // 获取资源研究科技等级
+  // 獲取資源研究科技等級
   const techBonuses = {
     mineralResearchLevel: player.technologies[TechnologyType.MineralResearch] || 0,
     crystalResearchLevel: player.technologies[TechnologyType.CrystalResearch] || 0,
@@ -162,11 +162,11 @@ export const processGameUpdate = (
   }
 
   /**
-   * B1 修复：逐事件结算。
-   * 旧逻辑先完成区间内所有建筑、再用完工后等级结算整段时间——若离线期间
-   * 任何时点断电（某矿/设施完工导致用电超过发电），整段离线产量归零。
-   * 新逻辑按完工时间点切分区间：每段用该段起始时的建筑等级结算资源，
-   * 再结算该时间点的完工事件；中途断电只影响断电后的分段，不吞掉整段。
+   * B1 修復：逐事件結算。
+   * 舊邏輯先完成區間內所有建築、再用完工後等級結算整段時間——若離線期間
+   * 任何時點斷電（某礦/設施完工導致用電超過發電），整段離線產量歸零。
+   * 新邏輯按完工時間點切分割槽間：每段用該段起始時的建築等級結算資源，
+   * 再結算該時間點的完工事件；中途斷電隻影響斷電後的分段，不吞掉整段。
    */
   const settlePlanetEventStepped = (planet: Planet): void => {
     const from = planet.lastUpdate
@@ -176,19 +176,19 @@ export const processGameUpdate = (
     }
     const sortedTimes = [...eventTimes].sort((a, b) => a - b)
 
-    // 计算更新前的资源（用于成就生产统计：整段口径，与旧逻辑一致）
+    // 計算更新前的資源（用於成就生產統計：整段口徑，與舊邏輯一致）
     const resourcesBefore = { ...planet.resources }
 
     for (const eventTime of sortedTimes) {
-      // 先用完工前等级结算 [lastUpdate, eventTime]，再结算该时间点的完工
+      // 先用完工前等級結算 [lastUpdate, eventTime]，再結算該時間點的完工
       resourceLogic.updatePlanetResources(planet, eventTime, bonuses, gameSpeed, miningTechLevel, techBonuses)
       buildingLogic.completeBuildQueue(planet, now, onPointsEarned, onCompleted, eventTime)
     }
-    // 最后一段：[最后事件, now]
+    // 最後一段：[最後事件, now]
     resourceLogic.updatePlanetResources(planet, now, bonuses, gameSpeed, miningTechLevel, techBonuses)
     buildingLogic.completeBuildQueue(planet, now, onPointsEarned, onCompleted, now)
 
-    // 追踪资源生产统计
+    // 追蹤資源生產統計
     if (player.achievementStats) {
       const metalProduced = Math.max(0, planet.resources.metal - resourcesBefore.metal)
       const crystalProduced = Math.max(0, planet.resources.crystal - resourcesBefore.crystal)
@@ -206,20 +206,20 @@ export const processGameUpdate = (
     }
   }
 
-  // 逐星球：逐事件结算建造与资源（取代旧的「先全完成、再整段结算」）
+  // 逐星球：逐事件結算建造與資源（取代舊的「先全完成、再整段結算」）
   player.planets.forEach(planet => {
-    // 保存完成前的建筑状态
+    // 儲存完成前的建築狀態
     const previousBuildings = { ...planet.buildings }
 
     settlePlanetEventStepped(planet)
 
-    // 检查新解锁（只在主星球上检查，避免重复通知）
+    // 檢查新解鎖（只在主星球上檢查，避免重複通知）
     if (!planet.isMoon && onUnlock) {
       const unlockedItems = unlockLogic.checkAllNewlyUnlocked(planet, player.technologies, previousBuildings, previousTechnologies)
       allUnlockedItems.push(...unlockedItems)
     }
 
-    // 更新星球最大空间
+    // 更新星球最大空間
     if (planet.isMoon) {
       planet.maxSpace = planetLogic.calculateMoonMaxSpace(planet)
     } else {
@@ -228,7 +228,7 @@ export const processGameUpdate = (
     }
   })
 
-  // 检查研究队列
+  // 檢查研究佇列
   const updatedResearchQueue = researchLogic.completeResearchQueue(
     player.researchQueue,
     player.technologies,
@@ -237,32 +237,32 @@ export const processGameUpdate = (
     onCompleted
   )
 
-  // 重要：先更新 player.researchQueue，再处理等待队列
-  // 这样等待队列处理时可以正确 push 新项目到队列中
+  // 重要：先更新 player.researchQueue，再處理等待佇列
+  // 這樣等待佇列處理時可以正確 push 新專案到佇列中
   player.researchQueue = updatedResearchQueue
 
-  // 处理等待队列自动执行
+  // 處理等待佇列自動執行
   const waitingResult = waitingQueueLogic.processAllWaitingQueues(player, now)
-  // 如果有等待队列项被执行，可以在这里添加通知（可选）
+  // 如果有等待佇列項被執行，可以在這裡新增通知（可選）
   if (waitingResult.executed.length > 0 && onNotification) {
     waitingResult.executed.forEach(item => {
-      // 通知等待队列项已移至正式队列
+      // 通知等待佇列項已移至正式佇列
       onNotification('waitingQueueMoved', item.itemType as string, item.targetLevel || item.quantity)
     })
   }
 
-  // 如果科技完成，再次检查解锁（使用第一个非月球星球）
+  // 如果科技完成，再次檢查解鎖（使用第一個非月球星球）
   if (onUnlock && player.technologies !== previousTechnologies) {
     const mainPlanet = player.planets.find(p => !p.isMoon)
     if (mainPlanet) {
-      // 这里使用完成后的建筑状态，因为我们只关心科技完成带来的解锁
+      // 這裡使用完成後的建築狀態，因為我們只關心科技完成帶來的解鎖
       const techUnlockedItems = unlockLogic.checkAllNewlyUnlocked(
         mainPlanet,
         player.technologies,
         mainPlanet.buildings,
         previousTechnologies
       )
-      // 去重（避免与建筑完成时的解锁重复）
+      // 去重（避免與建築完成時的解鎖重複）
       techUnlockedItems.forEach(item => {
         if (!allUnlockedItems.some(existing => existing.type === item.type && existing.id === item.id)) {
           allUnlockedItems.push(item)
@@ -271,26 +271,26 @@ export const processGameUpdate = (
     }
   }
 
-  // 触发解锁通知
+  // 觸發解鎖通知
   if (onUnlock && allUnlockedItems.length > 0) {
     onUnlock(allUnlockedItems)
   }
 
-  // 返回当前的研究队列（包含等待队列处理后添加的新项）
+  // 返回當前的研究佇列（包含等待佇列處理後新增的新項）
   return {
     updatedResearchQueue: player.researchQueue
   }
 }
 
 /**
- * 检查并返回过期的军官列表
+ * 檢查並返回過期的軍官列表
  */
 export const checkOfficersExpiration = (officers: Record<OfficerType, Officer>, now: number): void => {
   officerLogic.checkAndDeactivateExpiredOfficers(officers, now)
 }
 
 /**
- * 检查成就进度并解锁新成就
+ * 檢查成就進度並解鎖新成就
  */
 export const checkAndUnlockAchievements = (player: Player): achievementLogic.AchievementUnlock[] => {
   if (!player.achievementStats || !player.achievements) {
@@ -299,7 +299,7 @@ export const checkAndUnlockAchievements = (player: Player): achievementLogic.Ach
 
   const unlocks = achievementLogic.checkAchievements(player)
 
-  // 应用奖励
+  // 應用獎勵
   unlocks.forEach(unlock => {
     achievementLogic.applyAchievementReward(player, unlock.reward)
   })
@@ -308,7 +308,7 @@ export const checkAndUnlockAchievements = (player: Player): achievementLogic.Ach
 }
 
 /**
- * 更新资源消耗统计
+ * 更新資源消耗統計
  */
 export const trackResourceConsumption = (
   player: Player,
@@ -321,7 +321,7 @@ export const trackResourceConsumption = (
 }
 
 /**
- * 更新攻击统计（玩家作为攻击者）
+ * 更新攻擊統計（玩家作為攻擊者）
  */
 export const trackAttackStats = (player: Player, battleResult: any, won: boolean, debrisValue: number): void => {
   if (!player.achievementStats) {
@@ -331,7 +331,7 @@ export const trackAttackStats = (player: Player, battleResult: any, won: boolean
 }
 
 /**
- * 更新防御统计（玩家作为防御者）
+ * 更新防禦統計（玩家作為防禦者）
  */
 export const trackDefenseStats = (player: Player, battleResult: any, won: boolean, debrisValue: number): void => {
   if (!player.achievementStats) {
@@ -341,7 +341,7 @@ export const trackDefenseStats = (player: Player, battleResult: any, won: boolea
 }
 
 /**
- * 更新任务统计
+ * 更新任務統計
  */
 export const trackMissionStats = (
   player: Player,
@@ -378,7 +378,7 @@ export const trackMissionStats = (
       achievementLogic.updateExpeditionStats(stats, details?.successful ?? false)
       break
     case 'recycle':
-      // 回收任务总是计入任务次数，但只有有资源时才增加回收资源量
+      // 回收任務總是計入任務次數，但只有有資源時才增加回收資源量
       achievementLogic.updateRecyclingStats(stats, details?.resourcesAmount ?? 0)
       break
     case 'destroy':
@@ -392,7 +392,7 @@ export const trackMissionStats = (
 }
 
 /**
- * 更新外交统计
+ * 更新外交統計
  */
 export const trackDiplomacyStats = (
   player: Player,
@@ -438,7 +438,7 @@ export const trackDiplomacyStats = (
 }
 
 /**
- * 追踪燃料消耗（在舰队出发时调用）
+ * 追蹤燃料消耗（在艦隊出發時呼叫）
  */
 export const trackFuelConsumption = (player: Player, fuelAmount: number): void => {
   if (!player.achievementStats) {

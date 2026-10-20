@@ -1,20 +1,20 @@
 /**
  * NPC 名字生成器
- * 为 NPC 生成有代入感的随机名字，支持多语言
+ * 為 NPC 生成有代入感的隨機名字，支援多語言
  */
 
 export type SupportedLocale = 'zh-CN' | 'zh-TW' | 'en' | 'de' | 'ru' | 'ko' | 'ja'
 
-// 各语言的名字数据
+// 各語言的名字資料
 const nameData: Record<
   SupportedLocale,
   {
     prefixes: string[]
-    firstNames: string[] // 对于中文是"姓"
-    lastNames: string[] // 对于中文是"名"
+    firstNames: string[] // 對於中文是"姓"
+    lastNames: string[] // 對於中文是"名"
   }
 > = {
-  // 简体中文 - 采用"姓+名"格式，可选头衔
+  // 簡體中文 - 採用"姓+名"格式，可選頭銜
   'zh-CN': {
     prefixes: [
       '将军',
@@ -102,7 +102,7 @@ const nameData: Record<
     ]
   },
 
-  // 繁体中文 - 採用"姓+名"格式，可選頭銜
+  // 繁體中文 - 採用"姓+名"格式，可選頭銜
   'zh-TW': {
     prefixes: [
       '將軍',
@@ -512,7 +512,7 @@ const nameData: Record<
   }
 }
 
-// 使用 id 作为种子的伪随机数生成器
+// 使用 id 作為種子的偽隨機數生成器
 const seededRandom = (seed: string): (() => number) => {
   let hash = 0
   for (let i = 0; i < seed.length; i++) {
@@ -528,10 +528,10 @@ const seededRandom = (seed: string): (() => number) => {
 }
 
 /**
- * 根据语言代码获取对应的名字数据
+ * 根據語言程式碼獲取對應的名字資料
  */
 const getNameDataForLocale = (locale: string): (typeof nameData)[SupportedLocale] => {
-  // 标准化语言代码
+  // 標準化語言程式碼
   const normalizedLocale = locale.toLowerCase()
 
   if (normalizedLocale.startsWith('zh-tw') || normalizedLocale.startsWith('zh-hant')) {
@@ -553,13 +553,13 @@ const getNameDataForLocale = (locale: string): (typeof nameData)[SupportedLocale
     return nameData['ja']
   }
 
-  // 默认英语
+  // 預設英語
   return nameData['en']
 }
 
 /**
- * 检查是否是东亚语言（中文、日文、韩文）
- * 这些语言的名字不使用空格分隔
+ * 檢查是否是東亞語言（中文、日文、韓文）
+ * 這些語言的名字不使用空格分隔
  */
 const isEastAsianLocale = (locale: string): boolean => {
   const normalized = locale.toLowerCase()
@@ -568,18 +568,18 @@ const isEastAsianLocale = (locale: string): boolean => {
 
 /**
  * 生成 NPC 名字
- * @param npcId NPC 的唯一 ID，用作随机种子确保同一 NPC 名字一致
- * @param locale 语言代码，如 'zh-CN', 'en', 'de' 等
- * @param options 可选配置
+ * @param npcId NPC 的唯一 ID，用作隨機種子確保同一 NPC 名字一致
+ * @param locale 語言程式碼，如 'zh-CN', 'en', 'de' 等
+ * @param options 可選配置
  * @returns 生成的名字
  */
 export const generateNPCName = (
   npcId: string,
   locale: string = 'en',
   options?: {
-    includePrefix?: boolean // 是否包含头衔前缀
+    includePrefix?: boolean // 是否包含頭銜字首
     includeLastName?: boolean // 是否包含姓氏
-    style?: 'simple' | 'full' | 'titled' // 名字风格
+    style?: 'simple' | 'full' | 'titled' // 名字風格
   }
 ): string => {
   const random = seededRandom(npcId)
@@ -589,29 +589,29 @@ export const generateNPCName = (
   const style = options?.style ?? 'full'
   const includePrefix = options?.includePrefix ?? style === 'titled'
 
-  // 头衔前缀 (30% 概率，或指定包含)
+  // 頭銜字首 (30% 機率，或指定包含)
   let prefix = ''
   if (includePrefix || random() < 0.3) {
     const prefixIndex = Math.floor(random() * data.prefixes.length)
     prefix = data.prefixes[prefixIndex]!
   }
 
-  // 名字主体 (必须) - 对于中文是"姓"
+  // 名字主體 (必須) - 對於中文是"姓"
   const firstNameIndex = Math.floor(random() * data.firstNames.length)
   const firstName = data.firstNames[firstNameIndex]!
 
-  // 姓氏/名 (必须包含) - 对于中文是"名"
+  // 姓氏/名 (必須包含) - 對於中文是"名"
   const lastNameIndex = Math.floor(random() * data.lastNames.length)
   const lastName = data.lastNames[lastNameIndex]!
 
-  // 根据语言组合名字
+  // 根據語言組合名字
   if (isEastAsian) {
-    // 东亚语言：姓名不用空格，头衔与名字用空格分隔
-    // 格式：[头衔] 姓名  例如：将军 云天翔
+    // 東亞語言：姓名不用空格，頭銜與名字用空格分隔
+    // 格式：[頭銜] 姓名  例如：將軍 雲天翔
     const fullName = firstName + lastName
     return prefix ? `${prefix} ${fullName}` : fullName
   } else {
-    // 西方语言：所有部分用空格分隔
+    // 西方語言：所有部分用空格分隔
     // 格式：[Title] FirstName LastName  例如：Admiral Orion Darkblade
     const parts: string[] = []
     if (prefix) parts.push(prefix)
@@ -622,11 +622,11 @@ export const generateNPCName = (
 }
 
 /**
- * 批量生成不重复的 NPC 名字
- * @param count 需要生成的数量
- * @param locale 语言代码
- * @param existingNames 已存在的名字列表（避免重复）
- * @returns 名字数组
+ * 批次生成不重複的 NPC 名字
+ * @param count 需要生成的數量
+ * @param locale 語言程式碼
+ * @param existingNames 已存在的名字列表（避免重複）
+ * @returns 名字陣列
  */
 export const generateUniqueNPCNames = (count: number, locale: string = 'en', existingNames: string[] = []): string[] => {
   const names: string[] = []
@@ -649,31 +649,31 @@ export const generateUniqueNPCNames = (count: number, locale: string = 'en', exi
 }
 
 /**
- * 旧版英文名字的特征模式
- * 用于检测是否是旧格式的 NPC 名字
+ * 舊版英文名字的特徵模式
+ * 用於檢測是否是舊格式的 NPC 名字
  */
 const oldEnglishNamePatterns = [
-  // 英文头衔
+  // 英文頭銜
   /^(Admiral|Commander|Captain|General|Marshal|Warlord|Lord|Duke|Baron|Emperor|King|Prince|Dr\.|Master|Elder|Oracle|Archon|Overseer|Sentinel|Guardian)\s/i,
-  // 英文名字特征（常见的科幻名字）
+  // 英文名字特徵（常見的科幻名字）
   /\b(Maximus|Aurelius|Tiberius|Corvus|Theron|Darius|Cyrus|Orion|Atlas|Phoenix|Ragnar|Magnus|Zarak|Kael|Vorn|Xander|Drax|Raven|Storm|Nova|Vector|Reaper|Vortex|Aldaris|Zeratul|Artanis|Arcturus|Valerian|Raynor|Fenix)\b/i,
-  // 英文姓氏特征
+  // 英文姓氏特徵
   /\b(Darkblade|Ironforge|Stormwind|Blackwood|Stargazer|Voidwalker|Skybreaker|Nebula|Ironside|Steelheart|the Wise|the Bold|the Merciless|the Conqueror|the Destroyer|the Eternal)\b/i
 ]
 
 /**
- * 旧版中文名字的特征模式（之前的错误格式）
- * 例如：星辰 征服者、长老 暗影 执法者
+ * 舊版中文名字的特徵模式（之前的錯誤格式）
+ * 例如：星辰 征服者、長老 暗影 執法者
  */
 const oldChineseNamePatterns = [
-  // 旧版后缀（之主、之王等直接作为名字的一部分）
+  // 舊版字尾（之主、之王等直接作為名字的一部分）
   /\s(之主|之王|天尊|霸主|守护者|征服者|毁灭者|创世者|裁决者|先驱者|开拓者|统治者|复仇者|守望者|执法者|追猎者)$/,
-  // 旧版繁体后缀
+  // 舊版繁體字尾
   /\s(之主|之王|天尊|霸主|守護者|征服者|毀滅者|創世者|裁決者|先驅者|開拓者|統治者|復仇者|守望者|執法者|追獵者)$/
 ]
 
 /**
- * 检测 NPC 名字是否是原始 ID 格式（如 NPC-npc_10）
+ * 檢測 NPC 名字是否是原始 ID 格式（如 NPC-npc_10）
  */
 const isRawIdFormat = (name: string): boolean => {
   // 匹配 NPC-npc_XX 或 npc_XX 格式
@@ -681,28 +681,28 @@ const isRawIdFormat = (name: string): boolean => {
 }
 
 /**
- * 检测 NPC 名字是否是旧格式
- * @param name NPC 当前的名字
- * @param locale 当前语言
- * @returns 是否是旧格式
+ * 檢測 NPC 名字是否是舊格式
+ * @param name NPC 當前的名字
+ * @param locale 當前語言
+ * @returns 是否是舊格式
  */
 export const isOldFormatNPCName = (name: string, locale: string): boolean => {
-  // 首先检测是否是原始 ID 格式（所有语言都需要更新）
+  // 首先檢測是否是原始 ID 格式（所有語言都需要更新）
   if (isRawIdFormat(name)) {
     return true
   }
 
   const normalizedLocale = locale.toLowerCase()
 
-  // 对于中文用户，检测是否是英文名字或旧版中文格式
+  // 對於中文使用者，檢測是否是英文名字或舊版中文格式
   if (normalizedLocale.startsWith('zh')) {
-    // 检测英文名字模式
+    // 檢測英文名字模式
     for (const pattern of oldEnglishNamePatterns) {
       if (pattern.test(name)) {
         return true
       }
     }
-    // 检测旧版中文格式
+    // 檢測舊版中文格式
     for (const pattern of oldChineseNamePatterns) {
       if (pattern.test(name)) {
         return true
@@ -711,7 +711,7 @@ export const isOldFormatNPCName = (name: string, locale: string): boolean => {
     return false
   }
 
-  // 对于日语用户，检测是否是英文名字
+  // 對於日語使用者，檢測是否是英文名字
   if (normalizedLocale.startsWith('ja')) {
     for (const pattern of oldEnglishNamePatterns) {
       if (pattern.test(name)) {
@@ -721,7 +721,7 @@ export const isOldFormatNPCName = (name: string, locale: string): boolean => {
     return false
   }
 
-  // 对于韩语用户，检测是否是英文名字
+  // 對於韓語使用者，檢測是否是英文名字
   if (normalizedLocale.startsWith('ko')) {
     for (const pattern of oldEnglishNamePatterns) {
       if (pattern.test(name)) {
@@ -731,35 +731,35 @@ export const isOldFormatNPCName = (name: string, locale: string): boolean => {
     return false
   }
 
-  // 对于德语/俄语等西方语言用户，不需要特别检测
-  // 因为英文名字格式与它们类似，不影响代入感
+  // 對於德語/俄語等西方語言使用者，不需要特別檢測
+  // 因為英文名字格式與它們類似，不影響代入感
   return false
 }
 
 /**
- * 检测 NPC 列表中是否有旧格式的名字
+ * 檢測 NPC 列表中是否有舊格式的名字
  * @param npcs NPC 列表
- * @param locale 当前语言
- * @returns 需要更新的 NPC 数量
+ * @param locale 當前語言
+ * @returns 需要更新的 NPC 數量
  */
 export const countOldFormatNPCs = (npcs: Array<{ id: string; name: string }>, locale: string): number => {
   return npcs.filter(npc => isOldFormatNPCName(npc.name, locale)).length
 }
 
 /**
- * 更新 NPC 名字为新格式
- * @param npc NPC 对象
- * @param locale 当前语言
- * @returns 更新后的名字
+ * 更新 NPC 名字為新格式
+ * @param npc NPC 物件
+ * @param locale 當前語言
+ * @returns 更新後的名字
  */
 export const updateNPCName = (npcId: string, locale: string): string => {
   return generateNPCName(npcId, locale)
 }
 
 /**
- * 根据 NPC 名称语言设置解析实际用于生成名字的 locale
- * @param npcNameLocale 设置值：'en' 固定英文，'auto' 跟随界面语言
- * @param uiLocale 当前界面语言
+ * 根據 NPC 名稱語言設定解析實際用於生成名字的 locale
+ * @param npcNameLocale 設定值：'en' 固定英文，'auto' 跟隨介面語言
+ * @param uiLocale 當前介面語言
  */
 export const resolveNPCNameLocale = (npcNameLocale: 'en' | 'auto', uiLocale: string): string => {
   return npcNameLocale === 'auto' ? uiLocale : 'en'

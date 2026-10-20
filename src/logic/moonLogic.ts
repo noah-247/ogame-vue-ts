@@ -5,57 +5,57 @@ import { MOON_CONFIG, FLEET_STORAGE_CONFIG } from '@/config/gameConfig'
 import { generateId } from '@/utils/id'
 
 /**
- * 计算月球生成概率
- * OGame规则：每100,000残骸(金属+晶体) = 1%概率，最高20%（需要2,000,000残骸）
- * @param debrisField 战斗产生的残骸场
- * @returns 生成概率（0-20）
+ * 計算月球生成機率
+ * OGame規則：每100,000殘骸(金屬+晶體) = 1%機率，最高20%（需要2,000,000殘骸）
+ * @param debrisField 戰鬥產生的殘骸場
+ * @returns 生成機率（0-20）
  */
 export const calculateMoonGenerationChance = (debrisField: Resources): number => {
   const totalDebris = debrisField.metal + debrisField.crystal
 
-  // 残骸不足最小值，无法生成月球
+  // 殘骸不足最小值，無法生成月球
   if (totalDebris < MOON_CONFIG.minDebrisField) {
     return 0
   }
 
-  // 计算概率：每100k残骸 = 1%
+  // 計算機率：每100k殘骸 = 1%
   const chance = Math.floor(totalDebris / MOON_CONFIG.chancePerDebris)
 
-  // 限制在最大概率内（20%）
+  // 限制在最大機率內（20%）
   return Math.min(chance, MOON_CONFIG.maxChance)
 }
 
 /**
- * 计算月球直径
- * OGame规则：直径基于生成时的moonchance，20%概率保证直径>8000km
- * @param moonChance 月球生成概率（1-20）
- * @returns 月球直径(km)
+ * 計算月球直徑
+ * OGame規則：直徑基於生成時的moonchance，20%機率保證直徑>8000km
+ * @param moonChance 月球生成機率（1-20）
+ * @returns 月球直徑(km)
  */
 export const calculateMoonDiameter = (moonChance: number): number => {
-  // 基础直径 + 每%概率增加的直径 + 随机波动
+  // 基礎直徑 + 每%機率增加的直徑 + 隨機波動
   const baseDiameter = MOON_CONFIG.baseDiameter
   const bonusDiameter = moonChance * MOON_CONFIG.diameterPerChance
-  // 添加±10%的随机波动
+  // 新增±10%的隨機波動
   const randomFactor = 0.9 + Math.random() * 0.2
   const diameter = Math.floor((baseDiameter + bonusDiameter) * randomFactor)
 
-  // 确保在合理范围内
+  // 確保在合理範圍內
   return Math.max(MOON_CONFIG.minDiameter, Math.min(MOON_CONFIG.maxDiameter, diameter))
 }
 
 /**
- * 尝试生成月球
- * OGame规则：
- * - 每100k残骸 = 1%概率
- * - 最高20%概率（需要2M残骸）
- * - 月球初始只有1格空间
- * - 直径基于moonchance计算
+ * 嘗試生成月球
+ * OGame規則：
+ * - 每100k殘骸 = 1%機率
+ * - 最高20%機率（需要2M殘骸）
+ * - 月球初始只有1格空間
+ * - 直徑基於moonchance計算
  *
- * @param debrisField 战斗产生的残骸场
- * @param planetPosition 星球坐标
+ * @param debrisField 戰鬥產生的殘骸場
+ * @param planetPosition 星球座標
  * @param planetId 母星ID
  * @param playerId 玩家ID
- * @returns 生成的月球对象，如果未生成则返回null
+ * @returns 生成的月球物件，如果未生成則返回null
  */
 export const tryGenerateMoon = (
   debrisField: Resources,
@@ -65,18 +65,18 @@ export const tryGenerateMoon = (
 ): Planet | null => {
   const chance = calculateMoonGenerationChance(debrisField)
 
-  // 无法生成
+  // 無法生成
   if (chance === 0) {
     return null
   }
 
-  // 随机判断是否生成
+  // 隨機判斷是否生成
   const roll = Math.random() * 100
   if (roll >= chance) {
     return null
   }
 
-  // 计算月球直径
+  // 計算月球直徑
   const diameter = calculateMoonDiameter(chance)
 
   // 生成月球
@@ -118,16 +118,16 @@ export const tryGenerateMoon = (
       [DefenseType.PlanetaryShield]: 0
     },
     buildQueue: [],
-    waitingBuildQueue: [], // 等待队列
+    waitingBuildQueue: [], // 等待佇列
     lastUpdate: getGameNow(),
-    maxSpace: MOON_CONFIG.baseFields, // OGame规则：月球初始只有1格空间
+    maxSpace: MOON_CONFIG.baseFields, // OGame規則：月球初始只有1格空間
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: true,
     parentPlanetId: planetId,
-    diameter: diameter // 月球直径(km)
+    diameter: diameter // 月球直徑(km)
   }
 
-  // 初始化所有建筑为0级
+  // 初始化所有建築為0級
   Object.values(BuildingType).forEach(building => {
     moon.buildings[building] = 0
   })
@@ -136,9 +136,9 @@ export const tryGenerateMoon = (
 }
 
 /**
- * 检查坐标是否已有月球
+ * 檢查座標是否已有月球
  * @param planets 所有星球列表
- * @param position 坐标
+ * @param position 座標
  * @returns 是否已有月球
  */
 export const hasMoonAtPosition = (planets: Planet[], position: { galaxy: number; system: number; position: number }): boolean => {
@@ -152,21 +152,21 @@ export const hasMoonAtPosition = (planets: Planet[], position: { galaxy: number;
 }
 
 /**
- * 月球销毁结果类型
+ * 月球銷燬結果型別
  */
 export interface MoonDestructionResult {
-  moonDestroyed: boolean // 月球是否被销毁
-  deathstarsDestroyed: boolean // 死星是否被反向销毁
-  moonDestructionChance: number // 月球销毁概率
-  deathstarDestructionChance: number // 死星被销毁概率
+  moonDestroyed: boolean // 月球是否被銷燬
+  deathstarsDestroyed: boolean // 死星是否被反向銷燬
+  moonDestructionChance: number // 月球銷燬機率
+  deathstarDestructionChance: number // 死星被銷燬機率
 }
 
 /**
- * 计算月球销毁概率
- * OGame规则：销毁概率 = (100 - √diameter) × √deathstars
- * @param moonDiameter 月球直径(km)
- * @param deathstarCount 死星数量
- * @returns 销毁概率(0-100)
+ * 計算月球銷燬機率
+ * OGame規則：銷燬機率 = (100 - √diameter) × √deathstars
+ * @param moonDiameter 月球直徑(km)
+ * @param deathstarCount 死星數量
+ * @returns 銷燬機率(0-100)
  */
 export const calculateMoonDestructionChance = (moonDiameter: number, deathstarCount: number): number => {
   if (deathstarCount <= 0) return 0
@@ -174,36 +174,36 @@ export const calculateMoonDestructionChance = (moonDiameter: number, deathstarCo
   // 公式：(100 - √diameter) × √deathstars
   const chance = (100 - Math.sqrt(moonDiameter)) * Math.sqrt(deathstarCount)
 
-  // 限制在0-100之间
+  // 限制在0-100之間
   return Math.max(0, Math.min(100, chance))
 }
 
 /**
- * 计算死星被反向销毁的概率
- * OGame规则：反向销毁概率 = √diameter / 2
- * @param moonDiameter 月球直径(km)
- * @returns 死星被销毁概率(0-100)
+ * 計算死星被反向銷燬的機率
+ * OGame規則：反向銷燬機率 = √diameter / 2
+ * @param moonDiameter 月球直徑(km)
+ * @returns 死星被銷燬機率(0-100)
  */
 export const calculateDeathstarDestructionChance = (moonDiameter: number): number => {
   // 公式：√diameter / 2
   const chance = Math.sqrt(moonDiameter) / 2
 
-  // 限制在0-100之间
+  // 限制在0-100之間
   return Math.max(0, Math.min(100, chance))
 }
 
 /**
- * 尝试销毁月球（死星攻击月球时调用）
- * OGame规则：
- * - 死星攻击月球时，先进行正常战斗
- * - 战斗后，如果死星存活，则判定月球销毁
- * - 月球销毁概率 = (100 - √diameter) × √deathstars
- * - 死星反向销毁概率 = √diameter / 2
- * - 两个概率独立判定
+ * 嘗試銷燬月球（死星攻擊月球時呼叫）
+ * OGame規則：
+ * - 死星攻擊月球時，先進行正常戰鬥
+ * - 戰鬥後，如果死星存活，則判定月球銷燬
+ * - 月球銷燬機率 = (100 - √diameter) × √deathstars
+ * - 死星反向銷燬機率 = √diameter / 2
+ * - 兩個機率獨立判定
  *
- * @param moon 目标月球
- * @param deathstarCount 攻击的死星数量
- * @returns 销毁结果
+ * @param moon 目標月球
+ * @param deathstarCount 攻擊的死星數量
+ * @returns 銷燬結果
  */
 export const tryDestroyMoon = (moon: Planet, deathstarCount: number): MoonDestructionResult => {
   if (!moon.isMoon || deathstarCount <= 0) {
@@ -217,11 +217,11 @@ export const tryDestroyMoon = (moon: Planet, deathstarCount: number): MoonDestru
 
   const diameter = moon.diameter || MOON_CONFIG.minDiameter
 
-  // 计算概率
+  // 計算機率
   const moonDestructionChance = calculateMoonDestructionChance(diameter, deathstarCount)
   const deathstarDestructionChance = calculateDeathstarDestructionChance(diameter)
 
-  // 独立判定
+  // 獨立判定
   const moonRoll = Math.random() * 100
   const deathstarRoll = Math.random() * 100
 
@@ -237,10 +237,10 @@ export const tryDestroyMoon = (moon: Planet, deathstarCount: number): MoonDestru
 }
 
 /**
- * 计算传感器阵列扫描范围
- * OGame规则：范围 = level² - 1 个星系
- * @param sensorPhalanxLevel 传感器阵列等级
- * @returns 可扫描的星系范围（单向）
+ * 計算感測器陣列掃描範圍
+ * OGame規則：範圍 = level² - 1 個星系
+ * @param sensorPhalanxLevel 感測器陣列等級
+ * @returns 可掃描的星系範圍（單向）
  */
 export const calculateSensorPhalanxRange = (sensorPhalanxLevel: number): number => {
   if (sensorPhalanxLevel <= 0) return 0
@@ -248,18 +248,18 @@ export const calculateSensorPhalanxRange = (sensorPhalanxLevel: number): number 
 }
 
 /**
- * 检查目标坐标是否在传感器阵列扫描范围内
- * @param moonPosition 月球坐标
- * @param targetPosition 目标坐标
- * @param sensorPhalanxLevel 传感器阵列等级
- * @returns 是否在扫描范围内
+ * 檢查目標座標是否在感測器陣列掃描範圍內
+ * @param moonPosition 月球座標
+ * @param targetPosition 目標座標
+ * @param sensorPhalanxLevel 感測器陣列等級
+ * @returns 是否在掃描範圍內
  */
 export const isInSensorPhalanxRange = (
   moonPosition: { galaxy: number; system: number; position: number },
   targetPosition: { galaxy: number; system: number; position: number },
   sensorPhalanxLevel: number
 ): boolean => {
-  // 必须在同一银河系
+  // 必須在同一銀河系
   if (moonPosition.galaxy !== targetPosition.galaxy) return false
 
   const range = calculateSensorPhalanxRange(sensorPhalanxLevel)
@@ -269,10 +269,10 @@ export const isInSensorPhalanxRange = (
 }
 
 /**
- * 检查跳跃门是否可用（冷却是否结束）
- * OGame规则：跳跃门使用后有1小时冷却时间
- * @param moon 月球对象
- * @returns 是否可以使用跳跃门
+ * 檢查跳躍門是否可用（冷卻是否結束）
+ * OGame規則：跳躍門使用後有1小時冷卻時間
+ * @param moon 月球物件
+ * @returns 是否可以使用跳躍門
  */
 export const isJumpGateReady = (moon: Planet): boolean => {
   if (!moon.isMoon) return false
@@ -285,9 +285,9 @@ export const isJumpGateReady = (moon: Planet): boolean => {
 }
 
 /**
- * 获取跳跃门剩余冷却时间（毫秒）
- * @param moon 月球对象
- * @returns 剩余冷却时间（毫秒），0表示已冷却完成
+ * 獲取跳躍門剩餘冷卻時間（毫秒）
+ * @param moon 月球物件
+ * @returns 剩餘冷卻時間（毫秒），0表示已冷卻完成
  */
 export const getJumpGateCooldownRemaining = (moon: Planet): number => {
   if (!moon.isMoon) return 0
@@ -301,8 +301,8 @@ export const getJumpGateCooldownRemaining = (moon: Planet): number => {
 }
 
 /**
- * 使用跳跃门（记录使用时间）
- * @param moon 月球对象
+ * 使用跳躍門（記錄使用時間）
+ * @param moon 月球物件
  */
 export const useJumpGate = (moon: Planet): void => {
   if (moon.isMoon) {
@@ -311,21 +311,21 @@ export const useJumpGate = (moon: Planet): void => {
 }
 
 /**
- * 检查两个月球之间是否可以使用跳跃门传送
- * OGame规则：两个月球都必须有跳跃门，且都必须冷却完成
+ * 檢查兩個月球之間是否可以使用跳躍門傳送
+ * OGame規則：兩個月球都必須有跳躍門，且都必須冷卻完成
  * @param sourceMoon 源月球
- * @param targetMoon 目标月球
- * @returns 是否可以传送
+ * @param targetMoon 目標月球
+ * @returns 是否可以傳送
  */
 export const canUseJumpGate = (sourceMoon: Planet, targetMoon: Planet): boolean => {
-  // 两个都必须是月球
+  // 兩個都必須是月球
   if (!sourceMoon.isMoon || !targetMoon.isMoon) return false
 
-  // 两个都必须有跳跃门
+  // 兩個都必須有跳躍門
   const sourceHasGate = sourceMoon.buildings[BuildingType.JumpGate] > 0
   const targetHasGate = targetMoon.buildings[BuildingType.JumpGate] > 0
   if (!sourceHasGate || !targetHasGate) return false
 
-  // 两个跳跃门都必须冷却完成
+  // 兩個跳躍門都必須冷卻完成
   return isJumpGateReady(sourceMoon) && isJumpGateReady(targetMoon)
 }

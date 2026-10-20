@@ -1,6 +1,6 @@
 /**
- * 解锁检查逻辑
- * 用于检测建筑/科技完成后新解锁的内容
+ * 解鎖檢查邏輯
+ * 用於檢測建築/科技完成後新解鎖的內容
  */
 
 import { BuildingType, TechnologyType, type Planet } from '@/types/game'
@@ -15,7 +15,7 @@ export interface UnlockedItem {
 }
 
 /**
- * 检查哪些建筑在完成建筑/科技后被新解锁
+ * 檢查哪些建築在完成建築/科技後被新解鎖
  */
 export const checkNewlyUnlockedBuildings = (
   planet: Planet,
@@ -25,21 +25,21 @@ export const checkNewlyUnlockedBuildings = (
 ): UnlockedItem[] => {
   const newlyUnlocked: UnlockedItem[] = []
 
-  // 遍历所有建筑类型
+  // 遍歷所有建築型別
   for (const buildingType of Object.values(BuildingType)) {
     const config = BUILDINGS[buildingType]
     if (!config) continue
 
-    // 跳过已经建造过的建筑（等级 > 0）
+    // 跳過已經建造過的建築（等級 > 0）
     if ((planet.buildings[buildingType] || 0) > 0) continue
 
-    // 检查之前是否已解锁
+    // 檢查之前是否已解鎖
     const wasUnlockedBefore = checkBuildingRequirementsWith(buildingType, previousBuildings, previousTechnologies)
 
-    // 检查现在是否解锁
+    // 檢查現在是否解鎖
     const isUnlockedNow = buildingLogic.checkBuildingRequirements(buildingType, planet, technologies)
 
-    // 如果之前未解锁，现在解锁了，则是新解锁
+    // 如果之前未解鎖，現在解鎖了，則是新解鎖
     if (!wasUnlockedBefore && isUnlockedNow) {
       newlyUnlocked.push({
         type: 'building',
@@ -53,7 +53,7 @@ export const checkNewlyUnlockedBuildings = (
 }
 
 /**
- * 检查哪些科技在完成建筑/科技后被新解锁
+ * 檢查哪些科技在完成建築/科技後被新解鎖
  */
 export const checkNewlyUnlockedTechnologies = (
   buildings: Partial<Record<BuildingType, number>>,
@@ -63,21 +63,21 @@ export const checkNewlyUnlockedTechnologies = (
 ): UnlockedItem[] => {
   const newlyUnlocked: UnlockedItem[] = []
 
-  // 遍历所有科技类型
+  // 遍歷所有科技型別
   for (const techType of Object.values(TechnologyType)) {
     const config = TECHNOLOGIES[techType]
     if (!config) continue
 
-    // 跳过已经研究过的科技（等级 > 0）
+    // 跳過已經研究過的科技（等級 > 0）
     if ((technologies[techType] || 0) > 0) continue
 
-    // 检查之前是否已解锁
+    // 檢查之前是否已解鎖
     const wasUnlockedBefore = researchLogic.checkTechnologyRequirements(techType, previousBuildings, previousTechnologies)
 
-    // 检查现在是否解锁
+    // 檢查現在是否解鎖
     const isUnlockedNow = researchLogic.checkTechnologyRequirements(techType, buildings, technologies)
 
-    // 如果之前未解锁，现在解锁了，则是新解锁
+    // 如果之前未解鎖，現在解鎖了，則是新解鎖
     if (!wasUnlockedBefore && isUnlockedNow) {
       newlyUnlocked.push({
         type: 'technology',
@@ -91,8 +91,8 @@ export const checkNewlyUnlockedTechnologies = (
 }
 
 /**
- * 使用指定的建筑和科技等级检查建筑需求
- * （用于与之前状态比较）
+ * 使用指定的建築和科技等級檢查建築需求
+ * （用於與之前狀態比較）
  */
 const checkBuildingRequirementsWith = (
   buildingType: BuildingType,
@@ -119,7 +119,7 @@ const checkBuildingRequirementsWith = (
 }
 
 /**
- * 检查所有新解锁的内容（建筑 + 科技）
+ * 檢查所有新解鎖的內容（建築 + 科技）
  */
 export const checkAllNewlyUnlocked = (
   planet: Planet,

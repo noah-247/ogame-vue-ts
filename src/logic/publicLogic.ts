@@ -1,6 +1,6 @@
 /**
- * 公共业务逻辑模块
- * 提供跨模块共享的通用业务逻辑功能
+ * 公共業務邏輯模組
+ * 提供跨模組共享的通用業務邏輯功能
  */
 
 import { BuildingType, TechnologyType, ShipType, DefenseType } from '@/types/game'
@@ -13,11 +13,11 @@ import { BUILDINGS, TECHNOLOGIES, SHIPS, DEFENSES } from '@/config/gameConfig'
 import { getGameNow } from './gameTime'
 
 /**
- * 获取特定等级的升级条件
- * 合并基础 requirements 和等级门槛 levelRequirements
- * @param config 建筑或科技配置
- * @param targetLevel 目标等级
- * @returns 合并后的前置条件
+ * 獲取特定等級的升級條件
+ * 合併基礎 requirements 和等級門檻 levelRequirements
+ * @param config 建築或科技配置
+ * @param targetLevel 目標等級
+ * @returns 合併後的前置條件
  */
 export const getLevelRequirements = (
   config: BuildingConfig | TechnologyConfig,
@@ -25,24 +25,24 @@ export const getLevelRequirements = (
 ): Partial<Record<BuildingType | TechnologyType, number>> => {
   const requirements: Partial<Record<BuildingType | TechnologyType, number>> = {}
 
-  // 1. 添加基础 requirements（如果存在）
+  // 1. 新增基礎 requirements（如果存在）
   if (config.requirements) {
     Object.assign(requirements, config.requirements)
   }
 
-  // 2. 添加等级门槛 requirements（如果存在）
+  // 2. 新增等級門檻 requirements（如果存在）
   if (config.levelRequirements) {
-    // 找出所有小于等于目标等级的门槛
+    // 找出所有小於等於目標等級的門檻
     const applicableLevels = Object.keys(config.levelRequirements)
       .map(Number)
       .filter(level => level <= targetLevel)
       .sort((a, b) => a - b)
 
-    // 依次合并所有适用的等级要求（后面的覆盖前面的）
+    // 依次合併所有適用的等級要求（後面的覆蓋前面的）
     for (const level of applicableLevels) {
       const levelReqs = config.levelRequirements[level]
       if (levelReqs) {
-        // 合并要求，取最大值
+        // 合併要求，取最大值
         for (const [key, value] of Object.entries(levelReqs)) {
           const currentValue = requirements[key as BuildingType | TechnologyType] || 0
           requirements[key as BuildingType | TechnologyType] = Math.max(currentValue, value)
@@ -55,29 +55,29 @@ export const getLevelRequirements = (
 }
 
 /**
- * 检查建造/研发前置条件是否满足
- * @param planet 星球对象
- * @param technologies 已研究的科技等级
- * @param requirements 前置条件要求（建筑等级或科技等级）
- * @returns 是否满足前置条件
+ * 檢查建造/研發前置條件是否滿足
+ * @param planet 星球物件
+ * @param technologies 已研究的科技等級
+ * @param requirements 前置條件要求（建築等級或科技等級）
+ * @returns 是否滿足前置條件
  */
 export const checkRequirements = (
   planet: Planet | undefined,
   technologies: Partial<Record<TechnologyType, number>>,
   requirements?: Partial<Record<BuildingType | TechnologyType, number>>
 ): boolean => {
-  // 如果星球不存在或没有前置条件，默认返回 true
+  // 如果星球不存在或沒有前置條件，預設返回 true
   if (!planet || !requirements) return true
 
-  // 检查所有前置条件
+  // 檢查所有前置條件
   for (const [key, requiredLevel] of Object.entries(requirements)) {
-    // 检查是否为建筑类型
+    // 檢查是否為建築型別
     if (Object.values(BuildingType).includes(key as BuildingType)) {
       const requiredBuildingType = key as BuildingType
       const requiredBuildingConfig = BUILDINGS[requiredBuildingType]
 
-      // 如果当前是月球，且所需建筑是星球专属建筑（planetOnly），则跳过此前置条件
-      // 这允许在月球上建造机器人工厂等建筑，即使它们的前置条件是无法在月球建造的矿场
+      // 如果當前是月球，且所需建築是星球專屬建築（planetOnly），則跳過此前置條件
+      // 這允許在月球上建造機器人工廠等建築，即使它們的前置條件是無法在月球建造的礦場
       if (planet.isMoon && requiredBuildingConfig?.planetOnly) {
         continue
       }
@@ -87,7 +87,7 @@ export const checkRequirements = (
         return false
       }
     }
-    // 检查是否为科技类型
+    // 檢查是否為科技型別
     else if (Object.values(TechnologyType).includes(key as TechnologyType)) {
       const currentLevel = technologies[key as TechnologyType] || 0
       if (currentLevel < requiredLevel) {
@@ -100,12 +100,12 @@ export const checkRequirements = (
 }
 
 /**
- * 计算星球的资源产量（包含军官加成和科技加成）
- * @param planet 星球对象
- * @param officers 玩家的军官对象
- * @param resourceSpeed 游戏速度
- * @param techBonuses 科技加成（可选，矿物研究/晶体研究/燃料研究）
- * @returns 每小时各类资源的产量
+ * 計算星球的資源產量（包含軍官加成和科技加成）
+ * @param planet 星球物件
+ * @param officers 玩家的軍官物件
+ * @param resourceSpeed 遊戲速度
+ * @param techBonuses 科技加成（可選，礦物研究/晶體研究/燃料研究）
+ * @returns 每小時各類資源的產量
  */
 export const getResourceProduction = (
   planet: Planet,
@@ -117,31 +117,31 @@ export const getResourceProduction = (
     fuelResearchLevel?: number
   }
 ): Resources => {
-  // 计算当前激活的军官加成
+  // 計算當前啟用的軍官加成
   const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
-  // 根据建筑等级和军官加成计算资源产量
+  // 根據建築等級和軍官加成計算資源產量
   const base = resourceLogic.calculateResourceProduction(planet, bonuses, techBonuses)
   return scaleResources(base, resourceSpeed)
 }
 
 /**
- * 计算星球的资源存储容量（包含军官加成）
- * @param planet 星球对象
- * @param officers 玩家的军官对象
- * @returns 各类资源的最大存储容量
+ * 計算星球的資源儲存容量（包含軍官加成）
+ * @param planet 星球物件
+ * @param officers 玩家的軍官物件
+ * @returns 各類資源的最大儲存容量
  */
 export const getResourceCapacity = (planet: Planet, officers: Record<OfficerType, Officer>): Resources => {
-  // 计算当前激活的军官加成
+  // 計算當前啟用的軍官加成
   const bonuses = officerLogic.calculateActiveBonuses(officers, getGameNow())
-  // 根据仓库建筑等级和军官加成计算存储容量
+  // 根據倉庫建築等級和軍官加成計算儲存容量
   return resourceLogic.calculateResourceCapacity(planet, bonuses.storageCapacityBonus)
 }
 
 /**
- * 计算最大建造队列数量
- * @param planet 星球对象
- * @param additionalBuildQueue 军官提供的额外队列数量
- * @returns 最大建造队列数量（基础3个 + 纳米工厂等级 + 军官加成，最多10个）
+ * 計算最大建造佇列數量
+ * @param planet 星球物件
+ * @param additionalBuildQueue 軍官提供的額外佇列數量
+ * @returns 最大建造佇列數量（基礎3個 + 奈米工廠等級 + 軍官加成，最多10個）
  */
 export const getMaxBuildQueue = (planet: Planet, additionalBuildQueue: number = 0): number => {
   const naniteFactoryLevel = planet.buildings[BuildingType.NaniteFactory] || 0
@@ -149,9 +149,9 @@ export const getMaxBuildQueue = (planet: Planet, additionalBuildQueue: number = 
 }
 
 /**
- * 计算最大研究队列数量
- * @param technologies 已研究的科技等级
- * @returns 最大研究队列数量（基础3个 + 计算机技术等级，最多10个）
+ * 計算最大研究佇列數量
+ * @param technologies 已研究的科技等級
+ * @returns 最大研究佇列數量（基礎3個 + 計算機技術等級，最多10個）
  */
 export const getMaxResearchQueue = (technologies: Partial<Record<TechnologyType, number>>): number => {
   const computerTechLevel = technologies[TechnologyType.ComputerTechnology] || 0
@@ -159,20 +159,20 @@ export const getMaxResearchQueue = (technologies: Partial<Record<TechnologyType,
 }
 
 /**
- * 计算最大舰队任务数量
- * @param additionalFleetSlots 军官提供的额外槽位数量
- * @param computerTechnologyLevel 计算机技术等级
- * @returns 最大舰队任务数量（基础3个 + 计算机技术等级 + 军官加成，最多20个）
+ * 計算最大艦隊任務數量
+ * @param additionalFleetSlots 軍官提供的額外槽位數量
+ * @param computerTechnologyLevel 計算機技術等級
+ * @returns 最大艦隊任務數量（基礎3個 + 計算機技術等級 + 軍官加成，最多20個）
  */
 export const getMaxFleetMissions = (additionalFleetSlots: number = 0, computerTechnologyLevel: number = 0): number => {
   return Math.min(3 + computerTechnologyLevel + additionalFleetSlots, 20)
 }
 
 /**
- * 计算建筑的总成本（从等级1到目标等级的累计成本）
- * @param buildingType 建筑类型
- * @param level 目标等级
- * @returns 总资源成本（金属+水晶+重氢）
+ * 計算建築的總成本（從等級1到目標等級的累計成本）
+ * @param buildingType 建築型別
+ * @param level 目標等級
+ * @returns 總資源成本（金屬+水晶+重氫）
  */
 export const calculateBuildingTotalCost = (buildingType: BuildingType, level: number): number => {
   if (level <= 0) return 0
@@ -183,7 +183,7 @@ export const calculateBuildingTotalCost = (buildingType: BuildingType, level: nu
   let totalCost = 0
   const { baseCost, costMultiplier } = config
 
-  // 累加从等级1到目标等级的所有成本
+  // 累加從等級1到目標等級的所有成本
   for (let i = 1; i <= level; i++) {
     const levelCost = {
       metal: Math.floor(baseCost.metal * Math.pow(costMultiplier, i - 1)),
@@ -197,10 +197,10 @@ export const calculateBuildingTotalCost = (buildingType: BuildingType, level: nu
 }
 
 /**
- * 计算科技的总成本（从等级1到目标等级的累计成本）
- * @param techType 科技类型
- * @param level 目标等级
- * @returns 总资源成本（金属+水晶+重氢）
+ * 計算科技的總成本（從等級1到目標等級的累計成本）
+ * @param techType 科技型別
+ * @param level 目標等級
+ * @returns 總資源成本（金屬+水晶+重氫）
  */
 export const calculateTechnologyTotalCost = (techType: TechnologyType, level: number): number => {
   if (level <= 0) return 0
@@ -211,7 +211,7 @@ export const calculateTechnologyTotalCost = (techType: TechnologyType, level: nu
   let totalCost = 0
   const { baseCost, costMultiplier } = config
 
-  // 累加从等级1到目标等级的所有成本
+  // 累加從等級1到目標等級的所有成本
   for (let i = 1; i <= level; i++) {
     const levelCost = {
       metal: Math.floor(baseCost.metal * Math.pow(costMultiplier, i - 1)),
@@ -225,9 +225,9 @@ export const calculateTechnologyTotalCost = (techType: TechnologyType, level: nu
 }
 
 /**
- * 计算单个舰船的成本
- * @param shipType 舰船类型
- * @returns 单个舰船的资源成本（金属+水晶+重氢）
+ * 計算單個艦船的成本
+ * @param shipType 艦船型別
+ * @returns 單個艦船的資源成本（金屬+水晶+重氫）
  */
 export const calculateShipUnitCost = (shipType: ShipType): number => {
   const config = SHIPS[shipType]
@@ -237,9 +237,9 @@ export const calculateShipUnitCost = (shipType: ShipType): number => {
 }
 
 /**
- * 计算单个防御的成本
- * @param defenseType 防御类型
- * @returns 单个防御的资源成本（金属+水晶+重氢）
+ * 計算單個防禦的成本
+ * @param defenseType 防禦型別
+ * @returns 單個防禦的資源成本（金屬+水晶+重氫）
  */
 export const calculateDefenseUnitCost = (defenseType: DefenseType): number => {
   const config = DEFENSES[defenseType]
@@ -249,44 +249,44 @@ export const calculateDefenseUnitCost = (defenseType: DefenseType): number => {
 }
 
 /**
- * 计算玩家的总积分
- * 积分规则：(建筑成本 + 科技成本 + 舰队成本 + 防御成本) / 1000
- * @param player 玩家对象
- * @returns 玩家总积分
+ * 計算玩家的總積分
+ * 積分規則：(建築成本 + 科技成本 + 艦隊成本 + 防禦成本) / 1000
+ * @param player 玩家物件
+ * @returns 玩家總積分
  */
 export const calculatePlayerPoints = (player: Player): number => {
   let totalCost = 0
 
-  // 1. 计算所有星球的建筑成本
+  // 1. 計算所有星球的建築成本
   player.planets.forEach(planet => {
     Object.entries(planet.buildings).forEach(([buildingType, level]) => {
       totalCost += calculateBuildingTotalCost(buildingType as BuildingType, level)
     })
   })
 
-  // 2. 计算科技成本
+  // 2. 計算科技成本
   Object.entries(player.technologies).forEach(([techType, level]) => {
     totalCost += calculateTechnologyTotalCost(techType as TechnologyType, level)
   })
 
-  // 3. 计算所有星球的舰队成本
+  // 3. 計算所有星球的艦隊成本
   player.planets.forEach(planet => {
     Object.entries(planet.fleet).forEach(([shipType, count]) => {
       totalCost += calculateShipUnitCost(shipType as ShipType) * count
     })
   })
 
-  // 4. 计算所有星球的防御成本
+  // 4. 計算所有星球的防禦成本
   player.planets.forEach(planet => {
     Object.entries(planet.defense).forEach(([defenseType, count]) => {
       totalCost += calculateDefenseUnitCost(defenseType as DefenseType) * count
     })
   })
 
-  // 每1000资源 = 1积分（基础积分）
+  // 每1000資源 = 1積分（基礎積分）
   const basePoints = Math.floor(totalCost / 1000)
 
-  // 加上奖励积分（战役、成就等奖励的积分）
+  // 加上獎勵積分（戰役、成就等獎勵的積分）
   const bonusPoints = player.bonusPoints || 0
 
   return basePoints + bonusPoints

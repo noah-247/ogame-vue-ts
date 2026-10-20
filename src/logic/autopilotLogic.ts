@@ -1,20 +1,20 @@
 /**
- * 自动成长副官 · 目标清单引擎（方案 A 核心）
+ * 自動成長副官 · 目標清單引擎（方案 A 核心）
  *
- * 设计依据：~/workspace/ogame-report/自动成长副官-完整报告.md
- * （Codex 设计报告 + Opus 5.5 review，帕吉已拍板「照推荐组合开工」）
+ * 設計依據：~/workspace/ogame-report/自動成長副官-完整報告.md
+ * （Codex 設計報告 + Opus 5.5 review，帕吉已拍板「照推薦組合開工」）
  *
- * 核心语义（方案 A「目标等级清单」）：
- * - 玩家（或蓝图预设）为每颗星球设定「建筑 → 目标等级」清单；副官负责
- *   目标持久化（B3）、递归前置展开（B4）、槽位排程、能源最坏顺序验证（B1）、
- *   资源预留、工时门槛与滞后降级（B8）。
- * - 「目标」是持续到完成的意图（B3）；「工作」是单级升级（current+1），
- *   通过既有等待队列 + 正式队列执行；副官排入的等待项带 source 标记（B11）。
- * - 研究授权在帝国层级（B6），不由各星球副官互抢研究槽。
- * - 每 tick 从实际等级重推目标进度（B12）。
+ * 核心語義（方案 A「目標等級清單」）：
+ * - 玩家（或藍圖預設）為每顆星球設定「建築 → 目標等級」清單；副官負責
+ *   目標持久化（B3）、遞迴前置展開（B4）、槽位排程、能源最壞順序驗證（B1）、
+ *   資源預留、工時門檻與滯後降級（B8）。
+ * - 「目標」是持續到完成的意圖（B3）；「工作」是單級升級（current+1），
+ *   透過既有等待佇列 + 正式佇列執行；副官排入的等待項帶 source 標記（B11）。
+ * - 研究授權在帝國層級（B6），不由各星球副官互搶研究槽。
+ * - 每 tick 從實際等級重推目標進度（B12）。
  *
- * 副官永远不直接改建筑等级、不另写成本/工时/前置公式，
- * 一律沿用 buildingLogic / researchLogic / resourceLogic 的既有函数。
+ * 副官永遠不直接改建築等級、不另寫成本/工時/前置公式，
+ * 一律沿用 buildingLogic / researchLogic / resourceLogic 的既有函式。
  */
 import type {
   AutopilotMode,
@@ -39,16 +39,16 @@ import * as publicLogic from './publicLogic'
 import { canAutopilotWork } from './autopilotBilling'
 
 // ---------------------------------------------------------------------------
-// 常量与默认配置
+// 常量與預設配置
 // ---------------------------------------------------------------------------
 
-/** 自主模式单级工时上限默认值：2 小时（秒） */
+/** 自主模式單級工時上限預設值：2 小時（秒） */
 export const DEFAULT_WORK_HOUR_THRESHOLD = 7200
-/** 滞后恢复阈值默认值：1.5 小时（秒）；低于此值才提示可恢复自主（B8） */
+/** 滯後恢復閾值預設值：1.5 小時（秒）；低於此值才提示可恢復自主（B8） */
 export const DEFAULT_RESUME_THRESHOLD = 5400
-/** 工时门槛可选档位（秒）：2h / 4h / 8h */
+/** 工時門檻可選檔位（秒）：2h / 4h / 8h */
 export const WORK_HOUR_THRESHOLD_OPTIONS = [7200, 14400, 28800] as const
-/** B5：空间预留默认值（格） */
+/** B5：空間預留預設值（格） */
 export const DEFAULT_MIN_FREE_SPACE = 10
 
 let autopilotIdCounter = 0
@@ -104,19 +104,19 @@ export const createAutopilotResearchTarget = (
 })
 
 // ---------------------------------------------------------------------------
-// 引擎上下文（由调用方从军官/游戏状态组装，保持引擎纯函数可测）
+// 引擎上下文（由呼叫方從軍官/遊戲狀態組裝，保持引擎純函式可測）
 // ---------------------------------------------------------------------------
 
 export interface AutopilotContext {
-  /** 建筑速度加成百分比（军官等） */
+  /** 建築速度加成百分比（軍官等） */
   buildSpeedBonus: number
-  /** 军官提供的额外建造槽 */
+  /** 軍官提供的額外建造槽 */
   additionalBuildQueue: number
-  /** 能源产出加成百分比 */
+  /** 能源產出加成百分比 */
   energyProductionBonus: number
-  /** 能源加成最早到期时间（毫秒，缺省=稳定；MAJ-7） */
+  /** 能源加成最早到期時間（毫秒，預設=穩定；MAJ-7） */
   energyBonusExpiresAt?: number
-  /** 仓储加成百分比 */
+  /** 倉儲加成百分比 */
   storageCapacityBonus: number
   /** 研究速度加成百分比 */
   researchSpeedBonus: number
@@ -131,51 +131,51 @@ export const createDefaultContext = (): AutopilotContext => ({
 })
 
 // ---------------------------------------------------------------------------
-// 步骤模型
+// 步驟模型
 // ---------------------------------------------------------------------------
 
 export type AutopilotStepKind = 'target' | 'prereq' | 'energy' | 'warehouse'
 
 export interface AutopilotBlocker {
   kind: 'technology' | 'building' | 'prereqDisabled'
-  /** 缺失的前置类型 */
+  /** 缺失的前置型別 */
   itemType: BuildingType | TechnologyType
-  /** 需要的等级 */
+  /** 需要的等級 */
   level: number
-  /** 人类可读原因 */
+  /** 人類可讀原因 */
   reason: string
 }
 
 export interface AutopilotStep {
   buildingType: BuildingType
-  /** 本次要建到的等级 = 当前+1（B3：等待项只执行+1，目标由规划层持有） */
+  /** 本次要建到的等級 = 當前+1（B3：等待項只執行+1，目標由規劃層持有） */
   nextLevel: number
-  /** 归属目标 id（energy/warehouse 步骤为 ''） */
+  /** 歸屬目標 id（energy/warehouse 步驟為 ''） */
   targetId: string
-  /** 继承目标的优先级；能源/仓库救援为最高（-1） */
+  /** 繼承目標的優先順序；能源/倉庫救援為最高（-1） */
   priority: number
   kind: AutopilotStepKind
   cost: Resources
-  /** 预估单级工时（秒） */
+  /** 預估單級工時（秒） */
   buildTime: number
-  /** 完工后能源产出增量（太阳能/聚变升级为正） */
+  /** 完工後能源產出增量（太陽能/聚變升級為正） */
   prodDelta: number
-  /** 完工后能源消耗增量（矿场/设施升级为正） */
+  /** 完工後能源消耗增量（礦場/設施升級為正） */
   consDelta: number
-  /** 不可自动执行时的阻塞原因 */
+  /** 不可自動執行時的阻塞原因 */
   blockedBy?: AutopilotBlocker
 }
 
 export interface AutopilotTickResult<TTarget = AutopilotTarget> {
-  /** 本 tick 新排入等待队列的步数 */
+  /** 本 tick 新排入等待佇列的步數 */
   enqueued: number
-  /** 是否发生了自主→执行降级 */
+  /** 是否發生了自主→執行降級 */
   downgraded: boolean
-  /** 本 tick 新达标的目标（达标即保留在清单中，不再删除，见 Minor-9/E） */
+  /** 本 tick 新達標的目標（達標即保留在清單中，不再刪除，見 Minor-9/E） */
   completedTargets: TTarget[]
-  /** 本 tick 遇到的阻塞原因（去重后） */
+  /** 本 tick 遇到的阻塞原因（去重後） */
   blockers: AutopilotBlocker[]
-  /** 人类可读的决策摘要 */
+  /** 人類可讀的決策摘要 */
   decision: string
 }
 
@@ -188,14 +188,14 @@ const emptyResult = (decision: string): AutopilotTickResult => ({
 })
 
 // ---------------------------------------------------------------------------
-// B12：从实际等级重推目标进度
+// B12：從實際等級重推目標進度
 // ---------------------------------------------------------------------------
 
 /**
- * 对照星球实际等级重推目标进度（Minor-9/E：目标=期望状态，持久保存）。
- * 达标不删除目标（达标=无工作可做）；玩家在达标前或达标后拆除到目标以下，
- * 目标都会变回未完成，下次 tick 重新规划（行为一致）。
- * 返回本 tick 新达标的目标（已达标的不再重复报告，避免决策摘要每 tick 刷屏）。
+ * 對照星球實際等級重推目標進度（Minor-9/E：目標=期望狀態，持久儲存）。
+ * 達標不刪除目標（達標=無工作可做）；玩家在達標前或達標後拆除到目標以下，
+ * 目標都會變回未完成，下次 tick 重新規劃（行為一致）。
+ * 返回本 tick 新達標的目標（已達標的不再重複報告，避免決策摘要每 tick 刷屏）。
  */
 export const reconcileTargets = (
   config: AutopilotPlanetConfig,
@@ -204,7 +204,7 @@ export const reconcileTargets = (
   const newlyCompleted: AutopilotTarget[] = []
   for (const target of config.targets) {
     const current = planet.buildings[target.buildingType] || 0
-    // BLK-4 防御：非法目标等级（NaN/非正数）不判完成，留待 UI 修正
+    // BLK-4 防禦：非法目標等級（NaN/非正數）不判完成，留待 UI 修正
     if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) continue
     const wasCompleted = target.completed === true
     target.completed = current >= target.targetLevel
@@ -220,7 +220,7 @@ export const reconcileResearchTargets = (
   const newlyCompleted: AutopilotResearchTarget[] = []
   for (const target of config.targets) {
     const current = technologies[target.technology] || 0
-    // BLK-4 防御：非法目标等级不判完成，留待 UI 修正
+    // BLK-4 防禦：非法目標等級不判完成，留待 UI 修正
     if (!Number.isFinite(target.targetLevel) || target.targetLevel <= 0) continue
     const wasCompleted = target.completed === true
     target.completed = current >= target.targetLevel
@@ -230,12 +230,12 @@ export const reconcileResearchTargets = (
 }
 
 // ---------------------------------------------------------------------------
-// B4：递归前置展开
+// B4：遞迴前置展開
 // ---------------------------------------------------------------------------
 
 type RequirementMap = Partial<Record<BuildingType | TechnologyType, number>>
 
-/** 合并基础 requirements + 所有 ≤ level 的 levelRequirements 门槛 */
+/** 合併基礎 requirements + 所有 ≤ level 的 levelRequirements 門檻 */
 const collectRequirements = (
   kind: 'building' | 'technology',
   key: BuildingType | TechnologyType,
@@ -257,18 +257,18 @@ const isBuildingKey = (key: string): key is BuildingType =>
 
 export interface PrereqChainStep {
   buildingType: BuildingType
-  /** 需要补到的等级（从当前+1 逐级列出，调用方取首个即下一步） */
+  /** 需要補到的等級（從當前+1 逐級列出，呼叫方取首個即下一步） */
   level: number
-  /** 缺失的科技前置（副官不能自动研究，需帝国研究授权或玩家手动） */
+  /** 缺失的科技前置（副官不能自動研究，需帝國研究授權或玩家手動） */
   blockedByTech?: { technology: TechnologyType; level: number }
 }
 
 /**
- * 递归展开「把 buildingType 建到 requiredLevel」的完整前置链（B4）。
- * 返回按建造顺序排列的步骤（含自身各级的步骤，前置在前）。
- * - 科技前置不展开为建造步骤，标记为 blockedByTech（由帝国研究副官/玩家处理）。
- * - 月球跳过 planetOnly 前置（沿用 checkBuildingRequirements 的既有规则）。
- * - 环保护：同一建筑只展开到历史最高需求等级。
+ * 遞迴展開「把 buildingType 建到 requiredLevel」的完整前置鏈（B4）。
+ * 返回按建造順序排列的步驟（含自身各級的步驟，前置在前）。
+ * - 科技前置不展開為建造步驟，標記為 blockedByTech（由帝國研究副官/玩家處理）。
+ * - 月球跳過 planetOnly 前置（沿用 checkBuildingRequirements 的既有規則）。
+ * - 環保護：同一建築只展開到歷史最高需求等級。
  */
 export const expandPrerequisiteChain = (
   planet: Planet,
@@ -277,7 +277,7 @@ export const expandPrerequisiteChain = (
   requiredLevel: number
 ): PrereqChainStep[] => {
   const steps: PrereqChainStep[] = []
-  const seen = new Map<BuildingType, number>() // buildingType -> 已展开到的最高等级
+  const seen = new Map<BuildingType, number>() // buildingType -> 已展開到的最高等級
   const emitted = new Set<string>() // `${type}:${level}` 去重
 
   const emit = (type: BuildingType, level: number, blockedByTech?: { technology: TechnologyType; level: number }) => {
@@ -288,7 +288,7 @@ export const expandPrerequisiteChain = (
   }
 
   const need = (type: BuildingType, level: number, depth: number): void => {
-    // Minor-6：深度截断时告警，避免链静默缺段
+    // Minor-6：深度截斷時告警，避免鏈靜默缺段
     if (depth > 24) {
       console.warn(`[autopilot] prerequisite chain truncated at depth 24 for ${type}:${level}`)
       return
@@ -303,7 +303,7 @@ export const expandPrerequisiteChain = (
 
     const config = BUILDINGS[type]
     for (let nextLevel = fromLevel + 1; nextLevel <= level; nextLevel++) {
-      // maxLevel 保护
+      // maxLevel 保護
       if (config.maxLevel !== undefined && nextLevel > config.maxLevel) break
       const reqs = collectRequirements('building', type, nextLevel)
       let blockedByTech: { technology: TechnologyType; level: number } | undefined
@@ -312,7 +312,7 @@ export const expandPrerequisiteChain = (
         if (isBuildingKey(reqKey)) {
           const reqBuilding = reqKey as BuildingType
           const reqConfig = BUILDINGS[reqBuilding]
-          // 月球跳过星球专属前置（与 checkBuildingRequirements 一致）
+          // 月球跳過星球專屬前置（與 checkBuildingRequirements 一致）
           if (planet.isMoon && reqConfig?.planetOnly) continue
           need(reqBuilding, needed, depth + 1)
         } else {
@@ -330,7 +330,7 @@ export const expandPrerequisiteChain = (
   return steps
 }
 
-/** 帝国研究前置递归展开（只展开科技链；建筑前置标记为阻塞） */
+/** 帝國研究前置遞迴展開（只展開科技鏈；建築前置標記為阻塞） */
 export const expandResearchPrerequisiteChain = (
   technologies: Partial<Record<TechnologyType, number>>,
   planetBuildings: Partial<Record<BuildingType, number>>,
@@ -379,12 +379,12 @@ export const expandResearchPrerequisiteChain = (
 }
 
 // ---------------------------------------------------------------------------
-// 能源：最坏完工顺序验证（B1）
+// 能源：最壞完工順序驗證（B1）
 // ---------------------------------------------------------------------------
 
 export interface EnergyCheckResult {
   safe: boolean
-  /** 最坏顺序下的最小能量余量（产出-消耗） */
+  /** 最壞順序下的最小能量餘量（產出-消耗） */
   margin: number
   production: number
   consumption: number
@@ -405,7 +405,7 @@ export const pendingEnergyDelta = (
   const beforePlanet = { ...planet, buildings: { ...planet.buildings, [buildingType]: previous } } as Planet
   const hypothetical = { ...planet.buildings, [buildingType]: target }
   const probe = { ...planet, buildings: hypothetical } as Planet
-  // 用完整公式算差值，避免手写分项公式漂移（Minor-1）
+  // 用完整公式算差值，避免手寫分項公式漂移（Minor-1）
   const bonuses = { energyProductionBonus }
   const before = {
     prod: resourceLogic.calculateEnergyProduction(beforePlanet, bonuses),
@@ -419,12 +419,12 @@ export const pendingEnergyDelta = (
 }
 
 /**
- * B1 能源验证：用「最坏完工顺序」检查待完工项。
+ * B1 能源驗證：用「最壞完工順序」檢查待完工項。
  *
- * 原理：每个待完工项只改变 (prod, cons)。对手要让余量最小，
- * 会先完成所有「增耗/减产」的项、最后才完成「增产」的项。
- * 因此最坏顺序下的最小余量 = P0 - C0 - Σ增耗 - Σ减产，
- * 与具体顺序无关，一次 O(n) 即可精确判定。
+ * 原理：每個待完工項只改變 (prod, cons)。對手要讓餘量最小，
+ * 會先完成所有「增耗/減產」的項、最後才完成「增產」的項。
+ * 因此最壞順序下的最小余量 = P0 - C0 - Σ增耗 - Σ減產，
+ * 與具體順序無關，一次 O(n) 即可精確判定。
  */
 export const checkEnergySafeWorstOrder = (
   planet: Planet,
@@ -451,10 +451,10 @@ export const checkEnergySafeWorstOrder = (
 }
 
 // ---------------------------------------------------------------------------
-// 步骤规划：目标 → 前置链 → 单级步骤
+// 步驟規劃：目標 → 前置鏈 → 單級步驟
 // ---------------------------------------------------------------------------
 
-/** 为一步计算成本/工时/能源增量 */
+/** 為一步計算成本/工時/能源增量 */
 const toStep = (
   planet: Planet,
   buildingType: BuildingType,
@@ -484,8 +484,8 @@ const toStep = (
 }
 
 /**
- * 为单个目标生成有序步骤：递归前置在前，目标自身的下一步在后。
- * allowPrereqAutoBuild=false 时，前置缺失 → 整个目标标记阻塞，不自动补。
+ * 為單個目標生成有序步驟：遞迴前置在前，目標自身的下一步在後。
+ * allowPrereqAutoBuild=false 時，前置缺失 → 整個目標標記阻塞，不自動補。
  */
 export const planTargetSteps = (
   planet: Planet,
@@ -500,7 +500,7 @@ export const planTargetSteps = (
   const steps: AutopilotStep[] = []
   for (const link of chain) {
     const linkCurrent = planet.buildings[link.buildingType] || 0
-    // 只取每条链的下一步（current+1）；更远的等级等本级完成后再规划
+    // 只取每條鏈的下一步（current+1）；更遠的等級等本級完成後再規劃
     if (link.level !== linkCurrent + 1) continue
     const isTargetStep = link.buildingType === target.buildingType
     const kind: AutopilotStepKind = isTargetStep ? 'target' : 'prereq'
@@ -516,7 +516,7 @@ export const planTargetSteps = (
     const blockedBy: AutopilotBlocker | undefined = link.blockedByTech
       ? { kind: 'technology', itemType: link.blockedByTech.technology, level: link.blockedByTech.level, reason: 'autopilot.blockedByTech' }
       : undefined
-    // 月球不兼容检查
+    // 月球不相容檢查
     const config = BUILDINGS[link.buildingType]
     const moonBlocked: AutopilotBlocker | undefined =
       planet.isMoon && config.planetOnly
@@ -527,7 +527,7 @@ export const planTargetSteps = (
   return steps
 }
 
-/** 所有目标的步骤合并：按目标优先级排序，同优先级工时最长的先排（关键路径） */
+/** 所有目標的步驟合併：按目標優先順序排序，同優先順序工時最長的先排（關鍵路徑） */
 export const planAllSteps = (
   planet: Planet,
   technologies: Partial<Record<TechnologyType, number>>,
@@ -545,7 +545,7 @@ export const planAllSteps = (
       merged.push(step)
     }
   }
-  // 同一 priority 内按工时降序（关键路径最长先排），不同 priority 保持目标顺序
+  // 同一 priority 內按工時降序（關鍵路徑最長先排），不同 priority 保持目標順序
   const byPriority = new Map<number, AutopilotStep[]>()
   for (const step of merged) {
     const list = byPriority.get(step.priority) ?? []
@@ -558,7 +558,7 @@ export const planAllSteps = (
 }
 
 // ---------------------------------------------------------------------------
-// 能源救援 / 仓库救援
+// 能源救援 / 倉庫救援
 // ---------------------------------------------------------------------------
 
 const ENERGY_PRODUCERS = [BuildingType.SolarPlant, BuildingType.FusionReactor] as const
@@ -568,7 +568,7 @@ const WAREHOUSES: Record<'metal' | 'crystal' | 'deuterium', BuildingType> = {
   deuterium: BuildingType.DeuteriumTank
 }
 
-/** 规划能源救援步骤：选产出增量最大的可行能源建筑下一步 */
+/** 規劃能源救援步驟：選產出增量最大的可行能源建築下一步 */
 export const planEnergyRescue = (
   planet: Planet,
   technologies: Partial<Record<TechnologyType, number>>,
@@ -590,16 +590,16 @@ export const planEnergyRescue = (
 }
 
 /**
- * 规划仓库救援：若某步费用超过当前容量，返回对应仓库的下一步。
- * 仓库等级目标 = 刚好装下该笔费用的最小等级。
+ * 規劃倉庫救援：若某步費用超過當前容量，返回對應倉庫的下一步。
+ * 倉庫等級目標 = 剛好裝下該筆費用的最小等級。
  *
- * Minor-7：仓库达到上限也装不下时（12 级都装不下 / 已到 maxLevel），
- * 不再返回 null 让调用方误判为 blockedNoResource，而是给出明确的阻塞原因。
+ * Minor-7：倉庫達到上限也裝不下時（12 級都裝不下 / 已到 maxLevel），
+ * 不再返回 null 讓呼叫方誤判為 blockedNoResource，而是給出明確的阻塞原因。
  */
 export interface WarehouseRescuePlan {
-  /** 可执行的仓库救援步骤；null = 无需救援，或需要救援但无法执行 */
+  /** 可執行的倉庫救援步驟；null = 無需救援，或需要救援但無法執行 */
   step: AutopilotStep | null
-  /** step 为 null 且确实需要救援时，说明无法救援的明确原因 */
+  /** step 為 null 且確實需要救援時，說明無法救援的明確原因 */
   blocked?: AutopilotBlocker
 }
 
@@ -621,7 +621,7 @@ export const planWarehouseRescue = (
         blocked: { kind: 'building', itemType: warehouse, level: config.maxLevel, reason: 'autopilot.blockedWarehouseCap' }
       }
     }
-    // 找装下费用的最小仓库等级（上限 +12 级，避免无穷循环）
+    // 找裝下費用的最小倉庫等級（上限 +12 級，避免無窮迴圈）
     for (let level = current + 1; level <= current + 12; level++) {
       const probe = { ...planet, buildings: { ...planet.buildings, [warehouse]: level } } as Planet
       const cap = resourceLogic.calculateResourceCapacity(probe, storageCapacityBonus)
@@ -641,7 +641,7 @@ export const planWarehouseRescue = (
         return { step: toStep(planet, warehouse, current + 1, '', -1, 'warehouse', ctx) }
       }
     }
-    // 12 级都装不下：明确报告仓库上限阻塞（Minor-7）
+    // 12 級都裝不下：明確報告倉庫上限阻塞（Minor-7）
     return {
       step: null,
       blocked: { kind: 'building', itemType: warehouse, level: current + 12, reason: 'autopilot.blockedWarehouseCap' }
@@ -650,7 +650,7 @@ export const planWarehouseRescue = (
   return { step: null }
 }
 
-/** 检查科技在目标等级的前置（含等级门槛；既有 checkTechnologyRequirements 只查基础前置） */
+/** 檢查科技在目標等級的前置（含等級門檻；既有 checkTechnologyRequirements 只查基礎前置） */
 export const checkResearchLevelRequirements = (
   techType: TechnologyType,
   buildings: Partial<Record<BuildingType, number>>,
@@ -670,23 +670,23 @@ export const checkResearchLevelRequirements = (
 }
 
 // ---------------------------------------------------------------------------
-// 主 tick：单星球
+// 主 tick：單星球
 // ---------------------------------------------------------------------------
 
-/** 该建筑是否已有在途工作（正式队列）或等待项（任何来源：玩家优先） */
+/** 該建築是否已有在途工作（正式佇列）或等待項（任何來源：玩家優先） */
 const isBuildingBusy = (planet: Planet, buildingType: BuildingType): boolean => {
   if (planet.buildQueue.some(i => (i.type === 'building' || i.type === 'demolish') && i.itemType === buildingType)) return true
   if (planet.waitingBuildQueue.some(i => (i.type === 'building' || i.type === 'demolish') && i.itemType === buildingType)) return true
   return false
 }
 
-/** 副官建筑/研究/等待队列的通用资源检查已统一走 hasResourcesAfterSoftReserve（MAJ-8 改版后此函数无调用方，已移除，见 git 历史） */
+/** 副官建築/研究/等待佇列的通用資源檢查已統一走 hasResourcesAfterSoftReserve（MAJ-8 改版後此函式無呼叫方，已移除，見 git 歷史） */
 
 /**
- * MAJ-1：清理过期的副官等待项。
- * 副官排入等待后，若玩家手动先把该建筑建到目标等级（或更高），等待项转正时会判
- * levelAlreadyReached 且不移除，永久卡住队列、虚增 B7 槽位计数、挡住该建筑后续规划。
- * 每 tick 在重推目标后执行，只移除已过期（targetLevel <= 当前等级）的副官建筑等待项。
+ * MAJ-1：清理過期的副官等待項。
+ * 副官排入等待後，若玩家手動先把該建築建到目標等級（或更高），等待項轉正時會判
+ * levelAlreadyReached 且不移除，永久卡住佇列、虛增 B7 槽位計數、擋住該建築後續規劃。
+ * 每 tick 在重推目標後執行，只移除已過期（targetLevel <= 當前等級）的副官建築等待項。
  */
 export const pruneAutopilotWaiting = (planet: Planet): number => {
   const before = planet.waitingBuildQueue.length
@@ -699,9 +699,9 @@ export const pruneAutopilotWaiting = (planet: Planet): number => {
 }
 
 /**
- * MAJ-6：撤回副官的建筑等待项（接管/删除目标时调用）。
- * 不传 targetId 则撤回该星球全部副官建筑等待项；传 targetId 只撤回归属该目标的项。
- * 已开工（正式队列）的项不受影响。
+ * MAJ-6：撤回副官的建築等待項（接管/刪除目標時呼叫）。
+ * 不傳 targetId 則撤回該星球全部副官建築等待項；傳 targetId 只撤回歸屬該目標的項。
+ * 已開工（正式佇列）的項不受影響。
  */
 export const withdrawAutopilotWaiting = (planet: Planet, targetId?: string): number => {
   const before = planet.waitingBuildQueue.length
@@ -713,7 +713,7 @@ export const withdrawAutopilotWaiting = (planet: Planet, targetId?: string): num
   return before - planet.waitingBuildQueue.length
 }
 
-/** MAJ-1（研究）：清理过期的副官研究等待项 */
+/** MAJ-1（研究）：清理過期的副官研究等待項 */
 export const pruneAutopilotResearchWaiting = (player: Player): number => {
   const before = player.waitingResearchQueue.length
   player.waitingResearchQueue = player.waitingResearchQueue.filter(item => {
@@ -724,7 +724,7 @@ export const pruneAutopilotResearchWaiting = (player: Player): number => {
   return before - player.waitingResearchQueue.length
 }
 
-/** MAJ-6（研究）：撤回副官的研究等待项 */
+/** MAJ-6（研究）：撤回副官的研究等待項 */
 export const withdrawAutopilotResearchWaiting = (player: Player, targetId?: string): number => {
   const before = player.waitingResearchQueue.length
   player.waitingResearchQueue = player.waitingResearchQueue.filter(item => {
@@ -750,21 +750,21 @@ const pushBlocker = (blockers: AutopilotBlocker[], blocker: AutopilotBlocker): v
 }
 
 /**
- * MAJ-8 软预留改版（死锁修复）：高优先级步骤被资源挡住时，不再从 planningResources
- * 直接扣掉其成本（会误杀收入型建筑：收入建筑自己的成本检查会撞上被扣成负数的快照，
- * 而它正是赚回资源去盖高优先级建筑的收入来源 → 自己卡自己，零收入下等于死锁）。
- * 改用独立的软预留累加器，只累加「扣掉显式 reserve 后还差多少」的缺口，不累加全额。
+ * MAJ-8 軟預留改版（死鎖修復）：高優先順序步驟被資源擋住時，不再從 planningResources
+ * 直接扣掉其成本（會誤殺收入型建築：收入建築自己的成本檢查會撞上被扣成負數的快照，
+ * 而它正是賺回資源去蓋高優先順序建築的收入來源 → 自己卡自己，零收入下等於死鎖）。
+ * 改用獨立的軟預留累加器，只累加「扣掉顯式 reserve 後還差多少」的缺口，不累加全額。
  */
 const zeroSoftReserve = (): Resources => ({ metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 })
 
-/** 把缺口按资源种类累加进软预留（只累加缺口，避免超额预留） */
+/** 把缺口按資源種類累加進軟預留（只累加缺口，避免超額預留） */
 const addSoftReserveGap = (soft: Resources, planning: Resources, reserve: AutopilotReserve, cost: Resources): void => {
   soft.metal += Math.max(0, cost.metal - (planning.metal - reserve.metal))
   soft.crystal += Math.max(0, cost.crystal - (planning.crystal - reserve.crystal))
   soft.deuterium += Math.max(0, cost.deuterium - (planning.deuterium - reserve.deuterium))
 }
 
-/** 资源生产建筑 → 其生产的资源种类（太阳能电站不产金属/晶体/重氢，不在其中） */
+/** 資源生產建築 → 其生產的資源種類（太陽能電站不產金屬/晶體/重氫，不在其中） */
 const INCOME_RESOURCE: Partial<Record<BuildingType, 'metal' | 'crystal' | 'deuterium'>> = {
   [BuildingType.MetalMine]: 'metal',
   [BuildingType.CrystalMine]: 'crystal',
@@ -772,8 +772,8 @@ const INCOME_RESOURCE: Partial<Record<BuildingType, 'metal' | 'crystal' | 'deute
 }
 
 /**
- * 资源检查（含显式 reserve 和 MAJ-8 软预留）。
- * incomeBypass 传入时只豁免该种资源的软预留部分，显式 config.reserve 永不豁免。
+ * 資源檢查（含顯式 reserve 和 MAJ-8 軟預留）。
+ * incomeBypass 傳入時只豁免該種資源的軟預留部分，顯式 config.reserve 永不豁免。
  */
 const hasResourcesAfterSoftReserve = (
   available: Resources,
@@ -791,8 +791,8 @@ const hasResourcesAfterSoftReserve = (
 }
 
 /**
- * 求当前步骤的软预留豁免：仅当它是收入型建筑、且该资源确实存在软预留缺口
- * （soft > 0）时返回豁免种类，否则 undefined。仓库/研究/太阳能电站恒为 undefined。
+ * 求當前步驟的軟預留豁免：僅當它是收入型建築、且該資源確實存在軟預留缺口
+ * （soft > 0）時返回豁免種類，否則 undefined。倉庫/研究/太陽能電站恆為 undefined。
  */
 const softReserveBypassFor = (
   soft: Resources,
@@ -803,8 +803,8 @@ const softReserveBypassFor = (
 }
 
 /**
- * 单星球副官 tick。在线每秒调用（由 App.vue 的 updateGameAt 驱动），
- * 快转时同样经过 updateGameAt。离线返回时只做资源结算（B2），副官不追补。
+ * 單星球副官 tick。線上每秒呼叫（由 App.vue 的 updateGameAt 驅動），
+ * 快轉時同樣經過 updateGameAt。離線返回時只做資源結算（B2），副官不追補。
  */
 export const tickAutopilotPlanet = (
   player: Player,
@@ -814,12 +814,12 @@ export const tickAutopilotPlanet = (
 ): AutopilotTickResult => {
   const config = planet.autopilot
   if (!config || !config.enabled) {
-    // Minor-4：停用/暂停时清理滞后恢复标记，避免 UI 显示过期状态
+    // Minor-4：停用/暫停時清理滯後恢復標記，避免 UI 顯示過期狀態
     if (config) config.canResumeAuto = false
     return emptyResult('autopilot.decisionDisabled')
   }
 
-  // B12：每 tick 从实际等级重推目标进度
+  // B12：每 tick 從實際等級重推目標進度
   const completedTargets = reconcileTargets(config, planet)
 
   if (config.mode === 'monitor') {
@@ -829,8 +829,8 @@ export const tickAutopilotPlanet = (
     return { ...emptyResult('autopilot.decisionMonitoring'), completedTargets }
   }
 
-  // v3 计费守卫（§4.1）：无有效合约（无合约/非 active/免费监控档）时不产生任何新工作。
-  // 监控模式在上方已提前返回（免费监控不受守卫限制，只撤回等待项、不产生新工作）。
+  // v3 計費守衛（§4.1）：無有效合約（無合約/非 active/免費監控檔）時不產生任何新工作。
+  // 監控模式在上方已提前返回（免費監控不受守衛限制，只撤回等待項、不產生新工作）。
   if (!canAutopilotWork(player.autopilotContract)) {
     config.canResumeAuto = false
     return { ...emptyResult('autopilot.decisionDisabled'), completedTargets }
@@ -840,8 +840,8 @@ export const tickAutopilotPlanet = (
     return { ...emptyResult('autopilot.decisionDisabled'), completedTargets }
   }
 
-  // MAJ-1：清理过期的副官等待项（玩家手动先建好导致 targetLevel <= 当前等级），
-  // 避免 levelAlreadyReached 的死项永久占槽
+  // MAJ-1：清理過期的副官等待項（玩家手動先建好導致 targetLevel <= 當前等級），
+  // 避免 levelAlreadyReached 的死項永久佔槽
   pruneAutopilotWaiting(planet)
 
   const technologies = player.technologies
@@ -850,8 +850,8 @@ export const tickAutopilotPlanet = (
   let enqueued = 0
   let downgraded = false
 
-  // B7：副官永远给玩家留一个建造槽
-  // MAJ-2：只计建筑槽位项（building/demolish），舰船/防御/拆船不占建筑槽
+  // B7：副官永遠給玩家留一個建造槽
+  // MAJ-2：只計建築槽位項（building/demolish），艦船/防禦/拆船不佔建築槽
   const capacity = publicLogic.getMaxBuildQueue(planet, ctx.additionalBuildQueue)
   const isBuildSlotItem = (i: { type: string }): boolean => i.type === 'building' || i.type === 'demolish'
   const autopilotPending = (): number =>
@@ -859,9 +859,9 @@ export const tickAutopilotPlanet = (
     planet.waitingBuildQueue.filter(i => i.source === 'autopilot' && isBuildSlotItem(i)).length
   const maxAutopilotPending = Math.max(0, capacity - 1)
 
-  // 规划用资源快照：逐笔模拟扣款，避免等待队列超发（等待项开工时才真扣款）
+  // 規劃用資源快照：逐筆模擬扣款，避免等待佇列超發（等待項開工時才真扣款）
   let planningResources: Resources = { ...planet.resources }
-  // MAJ-8 软预留累加器（死锁修复）：高优先级步骤被资源挡住时只累加缺口，不再从 planningResources 扣款
+  // MAJ-8 軟預留累加器（死鎖修復）：高優先順序步驟被資源擋住時只累加缺口，不再從 planningResources 扣款
   const softReserved: Resources = zeroSoftReserve()
 
   const enqueueStep = (step: AutopilotStep, opts: { exemptSpaceReserve?: boolean } = {}): boolean => {
@@ -878,7 +878,7 @@ export const tickAutopilotPlanet = (
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedWaitingFull' })
       return false
     }
-    // B5：空间预留。Minor-2：能源救援豁免空间预留，否则断电时无法自救
+    // B5：空間預留。Minor-2：能源救援豁免空間預留，否則斷電時無法自救
     if (!opts.exemptSpaceReserve) {
       const usedSpace = buildingLogic.calculateUsedSpace(planet)
       const spaceUsage = BUILDINGS[step.buildingType].spaceUsage
@@ -896,7 +896,7 @@ export const tickAutopilotPlanet = (
       addedTime: now,
       planetId: planet.id,
       source: 'autopilot', // B11
-      targetId: step.targetId || undefined // MAJ-1/MAJ-6：目标归属，用于精准撤回
+      targetId: step.targetId || undefined // MAJ-1/MAJ-6：目標歸屬，用於精準撤回
     }
     waitingQueueLogic.addToBuildWaitingQueue(planet, item)
     planningResources = subtractCost(planningResources, step.cost)
@@ -904,20 +904,20 @@ export const tickAutopilotPlanet = (
     return true
   }
 
-  /** 尝试排入一步：依次做阻塞检查 → 工时门槛 → 资源/仓库/能源检查 */
+  /** 嘗試排入一步：依次做阻塞檢查 → 工時門檻 → 資源/倉庫/能源檢查 */
   const tryEnqueue = (step: AutopilotStep): 'enqueued' | 'blocked' | 'downgraded' => {
     if (step.blockedBy) {
       pushBlocker(blockers, step.blockedBy)
       return 'blocked'
     }
     if (isBuildingBusy(planet, step.buildingType)) return 'blocked'
-    // 前置满足检查（含等级门槛）：不满足则本 tick 跳过，等前置链先完成
+    // 前置滿足檢查（含等級門檻）：不滿足則本 tick 跳過，等前置鏈先完成
     if (!buildingLogic.checkBuildingRequirements(step.buildingType, planet, technologies, step.nextLevel)) {
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedPrereq' })
       return 'blocked'
     }
-    // 自主模式工时门槛（B8）：超限 → 降级为执行模式，停止自主挑步。
-    // MAJ-4：只对「真要排入」的步骤做降级判定；被科技/前置挡住、或玩家手动在建的长工时步骤不触发降级。
+    // 自主模式工時門檻（B8）：超限 → 降級為執行模式，停止自主挑步。
+    // MAJ-4：只對「真要排入」的步驟做降級判定；被科技/前置擋住、或玩家手動在建的長工時步驟不觸發降級。
     if (config.mode === 'auto' && step.buildTime > config.workHourThreshold) {
       config.mode = 'execute'
       config.downgradeReason = 'autopilot.downgradeWorkTime'
@@ -925,12 +925,12 @@ export const tickAutopilotPlanet = (
       downgraded = true
       return 'downgraded'
     }
-    // 仓库救援：费用超过容量先扩仓库
+    // 倉庫救援：費用超過容量先擴倉庫
     const rescueOutcome = planWarehouseRescue(planet, step.cost, ctx.storageCapacityBonus, ctx)
     const warehouseStep = rescueOutcome.step
     if (warehouseStep) {
-      // BLK-3：仓库本身已在途（等待/在建）时不再重复排入，否则同一 targetLevel 的
-      // 重复项转正后判 levelAlreadyReached 且不移除，永久卡住等待队列
+      // BLK-3：倉庫本身已在途（等待/在建）時不再重複排入，否則同一 targetLevel 的
+      // 重複項轉正後判 levelAlreadyReached 且不移除，永久卡住等待佇列
       if (isBuildingBusy(planet, warehouseStep.buildingType)) {
         pushBlocker(blockers, { kind: 'building', itemType: warehouseStep.buildingType, level: warehouseStep.nextLevel, reason: 'autopilot.blockedWaitingWarehouse' })
         return 'blocked'
@@ -944,27 +944,27 @@ export const tickAutopilotPlanet = (
       }
       if (!hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, warehouseStep.cost, softReserveBypassFor(softReserved, warehouseStep.buildingType))) {
         pushBlocker(blockers, { kind: 'building', itemType: warehouseStep.buildingType, level: warehouseStep.nextLevel, reason: 'autopilot.blockedNoResource' })
-        // MAJ-8（改版）：救援项被资源挡住只累加缺口进软预留，避免低优先级步骤吃掉它要攒的资源
+        // MAJ-8（改版）：救援項被資源擋住只累加缺口進軟預留，避免低優先順序步驟吃掉它要攢的資源
         addSoftReserveGap(softReserved, planningResources, config.reserve, warehouseStep.cost)
         return 'blocked'
       }
       return enqueueStep(warehouseStep) ? 'enqueued' : 'blocked'
     }
-    // Minor-7：仓库上限导致无法救援（12 级都装不下），给出明确阻塞原因
+    // Minor-7：倉庫上限導致無法救援（12 級都裝不下），給出明確阻塞原因
     if (rescueOutcome.blocked) {
       pushBlocker(blockers, rescueOutcome.blocked)
       return 'blocked'
     }
-    // 资源检查（含显式预留和 MAJ-8 软预留；收入型建筑在软预留有缺口时豁免该资源，避免死锁）
+    // 資源檢查（含顯式預留和 MAJ-8 軟預留；收入型建築在軟預留有缺口時豁免該資源，避免死鎖）
     if (!hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, step.cost, softReserveBypassFor(softReserved, step.buildingType))) {
       pushBlocker(blockers, { kind: 'building', itemType: step.buildingType, level: step.nextLevel, reason: 'autopilot.blockedNoResource' })
-      // MAJ-8（改版）：高优先级步骤因资源被挡时只把缺口累加进软预留，
-      // 低优先级只能用剩下的部分；收入型建筑豁免软预留放行时不 push 误导性 blocker、不累加。
+      // MAJ-8（改版）：高優先順序步驟因資源被擋時只把缺口累加進軟預留，
+      // 低優先順序只能用剩下的部分；收入型建築豁免軟預留放行時不 push 誤導性 blocker、不累加。
       addSoftReserveGap(softReserved, planningResources, config.reserve, step.cost)
       return 'blocked'
     }
-    // B1：最坏完工顺序能源验证（含本步）
-    // MAJ-7：若能源加成军官在待完工项最晚完工前到期，验证按无加成计算（保守）
+    // B1：最壞完工順序能源驗證（含本步）
+    // MAJ-7：若能源加成軍官在待完工項最晚完工前到期，驗證按無加成計算（保守）
     const energyHorizon = Math.max(
       now,
       ...planet.buildQueue
@@ -978,8 +978,8 @@ export const tickAutopilotPlanet = (
     const energyCheck = checkEnergySafeWorstOrder(planet, energyBonus, [{ type: 'building', itemType: step.buildingType, targetLevel: step.nextLevel }])
     if (!energyCheck.safe) {
       const rescue = planEnergyRescue(planet, technologies, ctx)
-      // Minor-2：救援步骤同样受自主模式工时门槛约束；排入失败不再记「已救援」；
-      // 能源救援豁免 B5 空间预留，否则断电时无法自救
+      // Minor-2：救援步驟同樣受自主模式工時門檻約束；排入失敗不再記「已救援」；
+      // 能源救援豁免 B5 空間預留，否則斷電時無法自救
       if (rescue &&
           !(config.mode === 'auto' && rescue.buildTime > config.workHourThreshold) &&
           hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, rescue.cost) &&
@@ -1000,12 +1000,12 @@ export const tickAutopilotPlanet = (
       decision = 'autopilot.decisionDowngraded'
       break
     }
-    // blocked/enqueued 都继续尝试后续步骤（低优先级不饿死，但受预留约束）
+    // blocked/enqueued 都繼續嘗試後續步驟（低優先順序不餓死，但受預留約束）
   }
 
-  // B8 滞后恢复判定：执行模式下，若所有剩余步骤工时 < resumeThreshold，提示可恢复
-  // MAJ-4：排除在建/等待中的步骤（玩家手动在建的长工时项不应挡住恢复）；
-  // 若目标未完成但无可规划步骤（全在途），恢复自主同样安全
+  // B8 滯後恢復判定：執行模式下，若所有剩餘步驟工時 < resumeThreshold，提示可恢復
+  // MAJ-4：排除在建/等待中的步驟（玩家手動在建的長工時項不應擋住恢復）；
+  // 若目標未完成但無可規劃步驟（全在途），恢復自主同樣安全
   if (config.mode === 'execute') {
     const remaining = planAllSteps(planet, technologies, config, ctx)
       .filter(s => !s.blockedBy && !isBuildingBusy(planet, s.buildingType))
@@ -1026,7 +1026,7 @@ export const tickAutopilotPlanet = (
   return { enqueued, downgraded, completedTargets, blockers, decision }
 }
 
-/** 玩家确认后从执行模式恢复自主模式（B6/B8：恢复必须玩家确认；星球与帝国研究共用） */
+/** 玩家確認後從執行模式恢復自主模式（B6/B8：恢復必須玩家確認；星球與帝國研究共用） */
 export const resumeAutoMode = (
   config: Pick<AutopilotPlanetConfig, 'mode' | 'canResumeAuto' | 'downgradeReason' | 'lastDecision'>
 ): boolean => {
@@ -1038,8 +1038,8 @@ export const resumeAutoMode = (
   return true
 }
 
-/** 切换自主/执行模式（玩家手动）。MAJ-5：执行模式下无条件手动切回自主会
- *  绕过 B8 滞后守卫；除非 canResumeAuto 已放行，否则拒绝切换。 */
+/** 切換自主/執行模式（玩家手動）。MAJ-5：執行模式下無條件手動切回自主會
+ *  繞過 B8 滯後守衛；除非 canResumeAuto 已放行，否則拒絕切換。 */
 export const setAutopilotMode = (config: AutopilotPlanetConfig, mode: AutopilotMode): boolean => {
   if (mode === 'auto' && config.mode === 'execute' && config.downgradeReason && !config.canResumeAuto) return false
   config.mode = mode
@@ -1051,7 +1051,7 @@ export const setAutopilotMode = (config: AutopilotPlanetConfig, mode: AutopilotM
 }
 
 // ---------------------------------------------------------------------------
-// 帝国层级研究 tick（B6）
+// 帝國層級研究 tick（B6）
 // ---------------------------------------------------------------------------
 
 export interface ResearchStep {
@@ -1064,7 +1064,7 @@ export interface ResearchStep {
   blockedByBuilding?: { building: BuildingType; level: number }
 }
 
-/** 选择研究用星球：沿用既有规则——第一颗有研究室的星球 */
+/** 選擇研究用星球：沿用既有規則——第一顆有研究室的星球 */
 export const selectResearchPlanet = (player: Player): Planet | undefined =>
   player.planets.find(p => (p.buildings[BuildingType.ResearchLab] || 0) > 0)
 
@@ -1109,8 +1109,8 @@ export const planResearchSteps = (
 export interface EmpireResearchTickResult extends AutopilotTickResult<AutopilotResearchTarget> {}
 
 /**
- * 帝国研究副官 tick：研究授权在帝国层级（B6），各星球副官永不排研究。
- * 占用研究等待队列，但永远给玩家留一个研究槽。
+ * 帝國研究副官 tick：研究授權在帝國層級（B6），各星球副官永不排研究。
+ * 佔用研究等待佇列，但永遠給玩家留一個研究槽。
  */
 export const tickEmpireResearch = (
   player: Player,
@@ -1119,7 +1119,7 @@ export const tickEmpireResearch = (
 ): EmpireResearchTickResult => {
   const config = player.empireResearchAutopilot
   if (!config || !config.enabled || config.paused) {
-    // Minor-4：停用/暂停时清理滞后恢复标记，避免 UI 显示过期状态
+    // Minor-4：停用/暫停時清理滯後恢復標記，避免 UI 顯示過期狀態
     if (config) config.canResumeAuto = false
     return { ...emptyResult('autopilot.decisionDisabled'), completedTargets: [] }
   }
@@ -1141,14 +1141,14 @@ export const tickEmpireResearch = (
     return { ...emptyResult('autopilot.decisionMonitoring'), completedTargets }
   }
 
-  // v3 计费守卫（§4.1）：无有效合约时帝国研究副官不产生任何新工作。
-  // 监控模式在上方已提前返回（免费监控不受守卫限制）。
+  // v3 計費守衛（§4.1）：無有效合約時帝國研究副官不產生任何新工作。
+  // 監控模式在上方已提前返回（免費監控不受守衛限制）。
   if (!canAutopilotWork(player.autopilotContract)) {
     config.canResumeAuto = false
     return { ...emptyResult('autopilot.decisionDisabled'), completedTargets }
   }
 
-  // MAJ-1：清理过期的副官研究等待项
+  // MAJ-1：清理過期的副官研究等待項
   pruneAutopilotResearchWaiting(player)
 
   const steps = planResearchSteps(player, config, ctx)
@@ -1161,19 +1161,19 @@ export const tickEmpireResearch = (
     player.researchQueue.length + player.waitingResearchQueue.filter(i => i.source === 'autopilot').length
   const maxAutopilotPending = Math.max(0, capacity - 1)
 
-  // 帝国研究预留从玩家...研究没有星球资源概念：预留约束研究排队时的资源占用。
-  // 简化：检查第一颗有研究室星球的资源（既有研究等待项同样在此星球扣款）。
-  // Minor-5：研究 tick 的资源快照至少扣掉研究星球的副官预留，
-  // 避免星球副官和研究副官各自拿一份互不扣减的快照规划。
+  // 帝國研究預留從玩家...研究沒有星球資源概念：預留約束研究排隊時的資源佔用。
+  // 簡化：檢查第一顆有研究室星球的資源（既有研究等待項同樣在此星球扣款）。
+  // Minor-5：研究 tick 的資源快照至少扣掉研究星球的副官預留，
+  // 避免星球副官和研究副官各自拿一份互不扣減的快照規劃。
   const labReserve = labPlanet.autopilot?.reserve ?? createDefaultReserve()
   let planningResources: Resources = subtractCost(
     { ...labPlanet.resources },
     { metal: labReserve.metal, crystal: labReserve.crystal, deuterium: labReserve.deuterium, darkMatter: 0, energy: 0 }
   )
-  // MAJ-8 软预留累加器（死锁修复；研究不产资源，bypass 恒为 undefined，行为与改版前一致）
+  // MAJ-8 軟預留累加器（死鎖修復；研究不產資源，bypass 恆為 undefined，行為與改版前一致）
   const softReserved: Resources = zeroSoftReserve()
 
-  /** 该科技是否已有在途研究（研究队列/等待队列，任何来源） */
+  /** 該科技是否已有在途研究（研究佇列/等待佇列，任何來源） */
   const isResearchBusy = (technology: TechnologyType): boolean =>
     player.researchQueue.some(i => i.type === 'technology' && i.itemType === technology) ||
     player.waitingResearchQueue.some(i => i.type === 'technology' && i.itemType === technology)
@@ -1193,15 +1193,15 @@ export const tickEmpireResearch = (
       })
       continue
     }
-    // 去重：同一科技已在研究队列/等待队列（任何来源）则跳过
+    // 去重：同一科技已在研究佇列/等待佇列（任何來源）則跳過
     if (isResearchBusy(step.technology)) continue
-    // 前置满足检查（含等级门槛）
+    // 前置滿足檢查（含等級門檻）
     if (!checkResearchLevelRequirements(step.technology, labPlanet.buildings, player.technologies, step.nextLevel)) {
       pushBlocker(blockers, { kind: 'technology', itemType: step.technology, level: step.nextLevel, reason: 'autopilot.blockedPrereq' })
       continue
     }
-    // 自主模式工时门槛（B8）：研究同样适用，超限降级为执行模式。
-    // MAJ-4：只对「真要排入」的步骤做降级判定，被挡住/在建的长工时步骤不触发。
+    // 自主模式工時門檻（B8）：研究同樣適用，超限降級為執行模式。
+    // MAJ-4：只對「真要排入」的步驟做降級判定，被擋住/在建的長工時步驟不觸發。
     if (config.mode === 'auto' && step.researchTime > config.workHourThreshold) {
       config.mode = 'execute'
       config.downgradeReason = 'autopilot.downgradeWorkTime'
@@ -1210,10 +1210,10 @@ export const tickEmpireResearch = (
       decision = 'autopilot.decisionDowngraded'
       break
     }
-    // 资源检查（含预留和 MAJ-8 软预留），在研究星球的资源快照上模拟扣款
+    // 資源檢查（含預留和 MAJ-8 軟預留），在研究星球的資源快照上模擬扣款
     if (!hasResourcesAfterSoftReserve(planningResources, config.reserve, softReserved, step.cost)) {
       pushBlocker(blockers, { kind: 'technology', itemType: step.technology, level: step.nextLevel, reason: 'autopilot.blockedNoResource' })
-      // MAJ-8（改版）：高优先级研究被资源挡住时只累加缺口进软预留，低优先级只能用剩下的部分
+      // MAJ-8（改版）：高優先順序研究被資源擋住時只累加缺口進軟預留，低優先順序只能用剩下的部分
       addSoftReserveGap(softReserved, planningResources, config.reserve, step.cost)
       continue
     }
@@ -1233,15 +1233,15 @@ export const tickEmpireResearch = (
       priority: step.priority,
       addedTime: now,
       source: 'autopilot', // B11
-      targetId: step.targetId || undefined // MAJ-1/MAJ-6：目标归属
+      targetId: step.targetId || undefined // MAJ-1/MAJ-6：目標歸屬
     }
     waitingQueueLogic.addToResearchWaitingQueue(player, item)
     planningResources = subtractCost(planningResources, step.cost)
     enqueued++
   }
 
-  // B8 滞后恢复判定
-  // MAJ-4：排除在建/等待中的步骤，玩家手动在建的长工时研究不应挡住恢复
+  // B8 滯後恢復判定
+  // MAJ-4：排除在建/等待中的步驟，玩家手動在建的長工時研究不應擋住恢復
   if (config.mode === 'execute') {
     const remaining = planResearchSteps(player, config, ctx)
       .filter(s => !s.blockedByBuilding && !isResearchBusy(s.technology))
@@ -1262,9 +1262,9 @@ export const tickEmpireResearch = (
 }
 
 // ---------------------------------------------------------------------------
-// 蓝图预设（M1 首版两套；蓝图 = 目标清单的预设组合，方案 A）
-// 开局骨架按 Opus 修正：太阳能 1 → 三矿各 1（三槽并行）→ 重氢优先 2→3～4 →
-// 三矿到 2 后重氢一够立刻工厂 1、2 → 关键路径最长先排。
+// 藍圖預設（M1 首版兩套；藍圖 = 目標清單的預設組合，方案 A）
+// 開局骨架按 Opus 修正：太陽能 1 → 三礦各 1（三槽並行）→ 重氫優先 2→3～4 →
+// 三礦到 2 後重氫一夠立刻工廠 1、2 → 關鍵路徑最長先排。
 // ---------------------------------------------------------------------------
 
 export interface AutopilotBlueprintTarget {
@@ -1318,9 +1318,9 @@ export const getAutopilotBlueprint = (id: string): AutopilotBlueprint | undefine
   AUTOPILOT_BLUEPRINTS.find(b => b.id === id)
 
 /**
- * 应用蓝图：用预设替换当前目标清单（已完成/已开工的工作不受影响，
- * 下次 tick 从实际等级重推）。同时启用副官。
- * filter 可选：Minor-8，月球上过滤 planetOnly 建筑等场景。
+ * 應用藍圖：用預設替換當前目標清單（已完成/已開工的工作不受影響，
+ * 下次 tick 從實際等級重推）。同時啟用副官。
+ * filter 可選：Minor-8，月球上過濾 planetOnly 建築等場景。
  */
 export const applyBlueprintToPlanet = (
   config: AutopilotPlanetConfig,

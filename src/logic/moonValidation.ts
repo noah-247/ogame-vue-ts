@@ -2,7 +2,7 @@ import type { Planet, Resources } from '@/types/game'
 import * as planetLogic from './planetLogic'
 
 /**
- * 检查是否可以生成月球
+ * 檢查是否可以生成月球
  */
 export const canCreateMoon = (
   planets: Planet[],
@@ -13,7 +13,7 @@ export const canCreateMoon = (
   reason?: string
   chance?: number
 } => {
-  // 检查该位置是否已有月球
+  // 檢查該位置是否已有月球
   const existingMoon = planets.find(
     p =>
       p.position.galaxy === position.galaxy &&
@@ -35,7 +35,7 @@ export const canCreateMoon = (
 }
 
 /**
- * 计算月球生成概率并判断是否生成
+ * 計算月球生成機率並判斷是否生成
  */
 export const shouldGenerateMoon = (chance: number): boolean => {
   const random = Math.random() * 100
@@ -43,7 +43,7 @@ export const shouldGenerateMoon = (chance: number): boolean => {
 }
 
 /**
- * 查找母星
+ * 查詢母星
  */
 export const findParentPlanet = (planets: Planet[], position: { galaxy: number; system: number; position: number }): Planet | null => {
   return (

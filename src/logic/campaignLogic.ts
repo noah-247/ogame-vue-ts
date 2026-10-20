@@ -1,6 +1,6 @@
 /**
- * 战役系统逻辑
- * 处理任务进度、解锁、完成等核心逻辑
+ * 戰役系統邏輯
+ * 處理任務進度、解鎖、完成等核心邏輯
  */
 
 import {
@@ -23,15 +23,15 @@ import { generateId } from '@/utils/id'
 import * as resourceLogic from './resourceLogic'
 
 /**
- * 初始化玩家战役进度
+ * 初始化玩家戰役進度
  */
 export const initializeCampaignProgress = (player: Player): PlayerCampaignProgress => {
-  // 如果已有进度，返回现有进度
+  // 如果已有進度，返回現有進度
   if (player.campaignProgress) {
     return player.campaignProgress
   }
 
-  // 创建初始进度，第一个任务默认解锁
+  // 建立初始進度，第一個任務預設解鎖
   const firstQuest = getQuestsByChapter(1)[0]
   const progress: PlayerCampaignProgress = {
     campaignId: MAIN_CAMPAIGN.id,
@@ -43,14 +43,14 @@ export const initializeCampaignProgress = (player: Player): PlayerCampaignProgre
     branchChoices: {}
   }
 
-  // 初始化第一个任务为可接取状态
+  // 初始化第一個任務為可接取狀態
   if (firstQuest) {
     progress.questProgress[firstQuest.id] = {
       questId: firstQuest.id,
       status: QuestStatus.Available,
       objectives: {}
     }
-    // 初始化目标进度
+    // 初始化目標進度
     const questProgress = progress.questProgress[firstQuest.id]
     if (questProgress) {
       firstQuest.objectives.forEach(obj => {
@@ -66,7 +66,7 @@ export const initializeCampaignProgress = (player: Player): PlayerCampaignProgre
 }
 
 /**
- * 获取任务状态
+ * 獲取任務狀態
  */
 export const getQuestStatus = (progress: PlayerCampaignProgress, questId: string): QuestStatus => {
   const questProgress = progress.questProgress[questId]
@@ -74,7 +74,7 @@ export const getQuestStatus = (progress: PlayerCampaignProgress, questId: string
     return questProgress.status
   }
 
-  // 检查是否已解锁
+  // 檢查是否已解鎖
   if (progress.unlockedQuests.includes(questId)) {
     return QuestStatus.Available
   }
@@ -83,7 +83,7 @@ export const getQuestStatus = (progress: PlayerCampaignProgress, questId: string
 }
 
 /**
- * 开始任务
+ * 開始任務
  */
 export const startQuest = (player: Player, questId: string): { success: boolean; error?: string } => {
   const progress = player.campaignProgress
@@ -96,17 +96,17 @@ export const startQuest = (player: Player, questId: string): { success: boolean;
     return { success: false, error: 'campaign.errors.questNotFound' }
   }
 
-  // 检查是否已解锁
+  // 檢查是否已解鎖
   if (!progress.unlockedQuests.includes(questId)) {
     return { success: false, error: 'campaign.errors.questLocked' }
   }
 
-  // 检查是否已完成
+  // 檢查是否已完成
   if (progress.completedQuests.includes(questId)) {
     return { success: false, error: 'campaign.errors.questAlreadyCompleted' }
   }
 
-  // 初始化或更新任务进度
+  // 初始化或更新任務進度
   if (!progress.questProgress[questId]) {
     progress.questProgress[questId] = {
       questId,
@@ -119,7 +119,7 @@ export const startQuest = (player: Player, questId: string): { success: boolean;
   if (questProgress) {
     questProgress.status = QuestStatus.Active
     questProgress.startedAt = Date.now()
-    // 初始化目标进度
+    // 初始化目標進度
     quest.objectives.forEach(obj => {
       if (!questProgress.objectives[obj.id]) {
         questProgress.objectives[obj.id] = {
@@ -136,12 +136,12 @@ export const startQuest = (player: Player, questId: string): { success: boolean;
 }
 
 /**
- * 检查单个目标的进度
+ * 檢查單個目標的進度
  */
 export const checkObjectiveProgress = (player: Player, objective: QuestObjective, npcs: NPC[]): number => {
   switch (objective.type) {
     case ObjectiveType.BuildBuilding: {
-      // 检查玩家所有星球上该建筑的最高等级
+      // 檢查玩家所有星球上該建築的最高等級
       const targetLevel = objective.targetSecondary as number
       const buildingType = objective.target as BuildingType
       const hasBuilding = player.planets.some(planet => {
@@ -159,7 +159,7 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
     }
 
     case ObjectiveType.ProduceShips: {
-      // 统计所有星球上该类型舰船的总数
+      // 統計所有星球上該型別艦船的總數
       const shipType = objective.target as ShipType
       let totalShips = 0
       player.planets.forEach(planet => {
@@ -169,7 +169,7 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
     }
 
     case ObjectiveType.AccumulateResources: {
-      // 统计所有星球的资源总量
+      // 統計所有星球的資源總量
       let totalResources = 0
       player.planets.forEach(planet => {
         totalResources += planet.resources.metal + planet.resources.crystal + planet.resources.deuterium
@@ -178,18 +178,18 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
     }
 
     case ObjectiveType.Colonize: {
-      // 统计殖民地数量（不包括母星）
+      // 統計殖民地數量（不包括母星）
       const colonyCount = player.planets.length - 1
       return Math.min(colonyCount, objective.required)
     }
 
     case ObjectiveType.SpyTarget: {
-      // 统计侦查报告数量
+      // 統計偵查報告數量
       const target = objective.target
       if (target === 'any') {
         return Math.min(player.spyReports.length, objective.required)
       } else if (target === 'hostile') {
-        // 统计敌对NPC的侦查报告
+        // 統計敵對NPC的偵查報告
         const hostileNpcIds = npcs
           .filter(npc => {
             const relation = npc.relations?.[player.id]
@@ -203,12 +203,12 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
     }
 
     case ObjectiveType.SendGift: {
-      // 从成就统计中获取送礼次数
+      // 從成就統計中獲取送禮次數
       return Math.min(player.achievementStats?.giftsSent || 0, objective.required)
     }
 
     case ObjectiveType.Expedition: {
-      // 从成就统计中获取探险次数（使用 expeditionsTotal）
+      // 從成就統計中獲取探險次數（使用 expeditionsTotal）
       return Math.min(player.achievementStats?.expeditionsTotal || 0, objective.required)
     }
 
@@ -229,7 +229,7 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
     }
 
     case ObjectiveType.ReachRelation: {
-      // 检查是否有任何NPC达到指定关系等级
+      // 檢查是否有任何NPC達到指定關係等級
       const targetStatus = objective.target as string
       const hasRelation = npcs.some(npc => {
         const relation = npc.relations?.[player.id]
@@ -239,7 +239,7 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
     }
 
     case ObjectiveType.FormAlliance: {
-      // 检查是否有盟友（使用 Friendly 作为最高关系等级）
+      // 檢查是否有盟友（使用 Friendly 作為最高關係等級）
       const hasAlliance = npcs.some(npc => {
         const relation = npc.relations?.[player.id]
         return relation?.status === RelationStatus.Friendly && (relation.reputation || 0) >= 80
@@ -248,7 +248,7 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
     }
 
     case ObjectiveType.DefeatNPC: {
-      // 检查攻击NPC获胜次数
+      // 檢查攻擊NPC獲勝次數
       return Math.min(player.achievementStats?.attacksWon || 0, objective.required)
     }
 
@@ -262,7 +262,7 @@ export const checkObjectiveProgress = (player: Player, objective: QuestObjective
 }
 
 /**
- * 更新任务进度
+ * 更新任務進度
  */
 export const updateQuestProgress = (
   player: Player,
@@ -288,7 +288,7 @@ export const updateQuestProgress = (
   const quest = getQuestById(questId)
   if (!quest) return result
 
-  // 检查每个目标的进度
+  // 檢查每個目標的進度
   quest.objectives.forEach(objective => {
     const objProgress = questProgress.objectives[objective.id]
     if (!objProgress || objProgress.completed) return
@@ -298,7 +298,7 @@ export const updateQuestProgress = (
       objProgress.current = newProgress
       result.updated = true
 
-      // 检查目标是否完成
+      // 檢查目標是否完成
       if (newProgress >= objective.required && !objProgress.completed) {
         objProgress.completed = true
         result.completedObjectives.push(objective.id)
@@ -306,7 +306,7 @@ export const updateQuestProgress = (
     }
   })
 
-  // 检查任务是否全部完成
+  // 檢查任務是否全部完成
   const allCompleted = quest.objectives.every(obj => questProgress.objectives[obj.id]?.completed)
 
   if (allCompleted && questProgress.status === QuestStatus.Active) {
@@ -319,7 +319,7 @@ export const updateQuestProgress = (
 }
 
 /**
- * 领取任务奖励
+ * 領取任務獎勵
  */
 export const claimQuestRewards = (
   player: Player,
@@ -352,9 +352,9 @@ export const claimQuestRewards = (
     return { success: false, error: 'campaign.errors.questNotFound' }
   }
 
-  // 发放奖励
+  // 發放獎勵
   const rewards = quest.rewards
-  const currentPlanet = player.planets[0] // 默认发放到第一个星球
+  const currentPlanet = player.planets[0] // 預設發放到第一個星球
 
   if (rewards.resources && currentPlanet) {
     resourceLogic.addResources(currentPlanet.resources, rewards.resources)
@@ -365,7 +365,7 @@ export const claimQuestRewards = (
   }
 
   if (rewards.points) {
-    // 奖励积分存入 bonusPoints，不会被 calculatePlayerPoints 覆盖
+    // 獎勵積分存入 bonusPoints，不會被 calculatePlayerPoints 覆蓋
     player.bonusPoints = (player.bonusPoints || 0) + rewards.points
   }
 
@@ -376,22 +376,22 @@ export const claimQuestRewards = (
     })
   }
 
-  // 标记奖励已领取
+  // 標記獎勵已領取
   questProgress.rewardsClaimed = true
 
-  // 将任务添加到已完成列表
+  // 將任務新增到已完成列表
   if (!progress.completedQuests.includes(questId)) {
     progress.completedQuests.push(questId)
   }
 
-  // 解锁后续任务
+  // 解鎖後續任務
   unlockNextQuests(player, questId)
 
   return { success: true, rewards }
 }
 
 /**
- * 解锁后续任务
+ * 解鎖後續任務
  */
 export const unlockNextQuests = (player: Player, _completedQuestId: string): string[] => {
   const progress = player.campaignProgress
@@ -401,10 +401,10 @@ export const unlockNextQuests = (player: Player, _completedQuestId: string): str
   const allQuests = getAllQuests()
 
   allQuests.forEach(quest => {
-    // 跳过已解锁的任务
+    // 跳過已解鎖的任務
     if (progress.unlockedQuests.includes(quest.id)) return
 
-    // 检查前置任务是否完成
+    // 檢查前置任務是否完成
     if (quest.requiredQuestIds && quest.requiredQuestIds.length > 0) {
       const allRequiredCompleted = quest.requiredQuestIds.every(reqId => progress.completedQuests.includes(reqId))
 
@@ -412,7 +412,7 @@ export const unlockNextQuests = (player: Player, _completedQuestId: string): str
         progress.unlockedQuests.push(quest.id)
         unlockedQuests.push(quest.id)
 
-        // 初始化任务进度
+        // 初始化任務進度
         progress.questProgress[quest.id] = {
           questId: quest.id,
           status: QuestStatus.Available,
@@ -428,7 +428,7 @@ export const unlockNextQuests = (player: Player, _completedQuestId: string): str
           })
         }
 
-        // 更新当前章节
+        // 更新當前章節
         if (quest.chapter > progress.currentChapter) {
           progress.currentChapter = quest.chapter
         }
@@ -440,7 +440,7 @@ export const unlockNextQuests = (player: Player, _completedQuestId: string): str
 }
 
 /**
- * 计算战役总进度百分比
+ * 計算戰役總進度百分比
  */
 export const calculateCampaignProgress = (progress: PlayerCampaignProgress): number => {
   const totalQuests = getAllQuests().length
@@ -449,7 +449,7 @@ export const calculateCampaignProgress = (progress: PlayerCampaignProgress): num
 }
 
 /**
- * 计算章节进度百分比
+ * 計算章節進度百分比
  */
 export const calculateChapterProgress = (progress: PlayerCampaignProgress, chapterNumber: number): number => {
   const chapterQuests = getQuestsByChapter(chapterNumber)
@@ -458,7 +458,7 @@ export const calculateChapterProgress = (progress: PlayerCampaignProgress, chapt
 }
 
 /**
- * 计算单个任务的进度百分比
+ * 計算單個任務的進度百分比
  */
 export const calculateQuestProgress = (progress: PlayerCampaignProgress, questId: string): number => {
   const questProgress = progress.questProgress[questId]
@@ -467,7 +467,7 @@ export const calculateQuestProgress = (progress: PlayerCampaignProgress, questId
   const quest = getQuestById(questId)
   if (!quest) return 0
 
-  // 计算所有目标的平均进度
+  // 計算所有目標的平均進度
   const objectives = quest.objectives
   if (objectives.length === 0) return 0
 
@@ -487,7 +487,7 @@ export const calculateQuestProgress = (progress: PlayerCampaignProgress, questId
 }
 
 /**
- * 获取当前可进行的任务列表
+ * 獲取當前可進行的任務列表
  */
 export const getAvailableQuests = (progress: PlayerCampaignProgress): CampaignQuestConfig[] => {
   return getAllQuests().filter(quest => {
@@ -497,7 +497,7 @@ export const getAvailableQuests = (progress: PlayerCampaignProgress): CampaignQu
 }
 
 /**
- * 获取当前激活的任务
+ * 獲取當前啟用的任務
  */
 export const getActiveQuest = (progress: PlayerCampaignProgress): CampaignQuestConfig | undefined => {
   if (!progress.currentQuestId) return undefined
@@ -505,7 +505,7 @@ export const getActiveQuest = (progress: PlayerCampaignProgress): CampaignQuestC
 }
 
 /**
- * 创建任务通知
+ * 建立任務通知
  */
 export const createQuestNotification = (
   questId: string,
@@ -529,7 +529,7 @@ export const createQuestNotification = (
 }
 
 /**
- * 添加任务通知到玩家
+ * 新增任務通知到玩家
  */
 export const addQuestNotification = (player: Player, notification: QuestNotification): void => {
   if (!player.questNotifications) {
@@ -537,14 +537,14 @@ export const addQuestNotification = (player: Player, notification: QuestNotifica
   }
   player.questNotifications.unshift(notification)
 
-  // 限制通知数量
+  // 限制通知數量
   if (player.questNotifications.length > 50) {
     player.questNotifications = player.questNotifications.slice(0, 50)
   }
 }
 
 /**
- * 标记通知为已读
+ * 標記通知為已讀
  */
 export const markQuestNotificationRead = (player: Player, notificationId: string): void => {
   const notification = player.questNotifications?.find(n => n.id === notificationId)
@@ -554,14 +554,14 @@ export const markQuestNotificationRead = (player: Player, notificationId: string
 }
 
 /**
- * 获取未读通知数量
+ * 獲取未讀通知數量
  */
 export const getUnreadQuestNotificationCount = (player: Player): number => {
   return player.questNotifications?.filter(n => !n.read).length || 0
 }
 
 /**
- * 检查并更新所有激活任务的进度
+ * 檢查並更新所有啟用任務的進度
  */
 export const checkAllActiveQuestsProgress = (player: Player, npcs: NPC[]): QuestNotification[] => {
   const notifications: QuestNotification[] = []
@@ -569,13 +569,13 @@ export const checkAllActiveQuestsProgress = (player: Player, npcs: NPC[]): Quest
 
   if (!progress) return notifications
 
-  // 遍历所有激活的任务
+  // 遍歷所有啟用的任務
   Object.entries(progress.questProgress).forEach(([questId, questProgress]) => {
     if (questProgress.status !== QuestStatus.Active) return
 
     const result = updateQuestProgress(player, questId, npcs)
 
-    // 为完成的目标创建通知
+    // 為完成的目標建立通知
     result.completedObjectives.forEach(objId => {
       const quest = getQuestById(questId)
       const objective = quest?.objectives.find(o => o.id === objId)
@@ -588,14 +588,14 @@ export const checkAllActiveQuestsProgress = (player: Player, npcs: NPC[]): Quest
       }
     })
 
-    // 任务完成通知
+    // 任務完成通知
     if (result.questCompleted) {
       const quest = getQuestById(questId)
       notifications.push(createQuestNotification(questId, 'quest_completed', 'campaign.notifications.questCompleted', {}, quest?.rewards))
     }
   })
 
-  // 添加通知到玩家
+  // 新增通知到玩家
   notifications.forEach(notification => {
     addQuestNotification(player, notification)
   })

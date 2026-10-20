@@ -6,7 +6,7 @@ import { generateId } from '@/utils/id'
 import * as oreDepositLogic from './oreDepositLogic'
 
 /**
- * 创建初始星球
+ * 建立初始星球
  */
 export const createInitialPlanet = (playerId: string, planetName: string = 'Home Planet'): Planet => {
   const initialPlanet: Planet = {
@@ -53,29 +53,29 @@ export const createInitialPlanet = (playerId: string, planetName: string = 'Home
       [DefenseType.PlanetaryShield]: 0
     },
     buildQueue: [],
-    waitingBuildQueue: [], // 等待队列
+    waitingBuildQueue: [], // 等待佇列
     lastUpdate: getGameNow(),
     maxSpace: 200,
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: false
   }
 
-  // 初始化建筑等级
+  // 初始化建築等級
   Object.values(BuildingType).forEach(building => {
     initialPlanet.buildings[building] = 0
   })
 
-  // 初始化矿脉储量
+  // 初始化礦脈儲量
   initialPlanet.oreDeposits = oreDepositLogic.generateOreDeposits(initialPlanet.position)
 
-  // 初始化温度
+  // 初始化溫度
   initialPlanet.temperature = generatePlanetTemperature(initialPlanet.position.position)
 
   return initialPlanet
 }
 
 /**
- * 创建NPC星球
+ * 建立NPC星球
  */
 export const createNPCPlanet = (
   npcId: number,
@@ -126,31 +126,31 @@ export const createNPCPlanet = (
       [DefenseType.PlanetaryShield]: 0
     },
     buildQueue: [],
-    waitingBuildQueue: [], // 等待队列
+    waitingBuildQueue: [], // 等待佇列
     lastUpdate: getGameNow(),
     maxSpace: 200,
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: false
   }
 
-  // 初始化所有建筑等级为0
-  // 实际的建筑等级会在 initializeNPCByDistance 中根据距离难度系统设置
-  // 这里只做基础初始化，避免随机设置不合理的等级（如月球专属建筑）
+  // 初始化所有建築等級為0
+  // 實際的建築等級會在 initializeNPCByDistance 中根據距離難度系統設定
+  // 這裡只做基礎初始化，避免隨機設定不合理的等級（如月球專屬建築）
   Object.values(BuildingType).forEach(building => {
     npcPlanet.buildings[building] = 0
   })
 
-  // 初始化矿脉储量
+  // 初始化礦脈儲量
   npcPlanet.oreDeposits = oreDepositLogic.generateOreDeposits(npcPlanet.position)
 
-  // 初始化温度
+  // 初始化溫度
   npcPlanet.temperature = generatePlanetTemperature(npcPlanet.position.position)
 
   return npcPlanet
 }
 
 /**
- * 计算月球生成概率
+ * 計算月球生成機率
  */
 export const calculateMoonChance = (debrisField: Resources): number => {
   const totalDebris = debrisField.metal + debrisField.crystal
@@ -161,12 +161,12 @@ export const calculateMoonChance = (debrisField: Resources): number => {
 }
 
 /**
- * 创建月球
+ * 建立月球
  * @param parentPlanet 母星球
- * @param position 坐标
+ * @param position 座標
  * @param playerId 玩家ID
- * @param moonSuffix 月球名称后缀
- * @param diameter 月球直径(km)，用于计算销毁概率
+ * @param moonSuffix 月球名稱字尾
+ * @param diameter 月球直徑(km)，用於計算銷燬機率
  */
 export const createMoon = (
   parentPlanet: Planet,
@@ -220,16 +220,16 @@ export const createMoon = (
       [DefenseType.PlanetaryShield]: 0
     },
     buildQueue: [],
-    waitingBuildQueue: [], // 等待队列
+    waitingBuildQueue: [], // 等待佇列
     lastUpdate: getGameNow(),
-    maxSpace: MOON_CONFIG.baseFields, // OGame规则：月球初始只有1格空间
+    maxSpace: MOON_CONFIG.baseFields, // OGame規則：月球初始只有1格空間
     maxFleetStorage: FLEET_STORAGE_CONFIG.baseStorage,
     isMoon: true,
     parentPlanetId: parentPlanet.id,
-    diameter: diameter || MOON_CONFIG.minDiameter // 月球直径(km)
+    diameter: diameter || MOON_CONFIG.minDiameter // 月球直徑(km)
   }
 
-  // 初始化建筑等级
+  // 初始化建築等級
   Object.values(BuildingType).forEach(building => {
     moon.buildings[building] = 0
   })
@@ -238,8 +238,8 @@ export const createMoon = (
 }
 
 /**
- * 计算月球空间上限
- * OGame规则：月球初始1格，月球基地每级+30格
+ * 計算月球空間上限
+ * OGame規則：月球初始1格，月球基地每級+30格
  */
 export const calculateMoonMaxSpace = (moon: Planet): number => {
   if (!moon.isMoon) return 0
@@ -248,86 +248,86 @@ export const calculateMoonMaxSpace = (moon: Planet): number => {
 }
 
 /**
- * 计算行星空间上限
+ * 計算行星空間上限
  */
 export const calculatePlanetMaxSpace = (planet: Planet, terraformingTechLevel: number): number => {
   if (planet.isMoon) return 0
 
-  // 基础空间
+  // 基礎空間
   let maxSpace = PLANET_CONFIG.baseSize
 
-  // 地形改造器增加的空间
+  // 地形改造器增加的空間
   const terraformerLevel = planet.buildings[BuildingType.Terraformer] || 0
   maxSpace += terraformerLevel * PLANET_CONFIG.terraformerSpaceBonus
 
-  // 地形改造技术全局增加空间
+  // 地形改造技術全域性增加空間
   maxSpace += terraformingTechLevel * PLANET_CONFIG.terraformingTechSpaceBonus
 
   return maxSpace
 }
 
 /**
- * 根据星球位置生成温度范围
- * OGame 原版规则：位置1-3靠近恒星（高温），位置13-15远离恒星（低温）
- * 温度影响太阳能卫星产能和重氢合成器产量
+ * 根據星球位置生成溫度範圍
+ * OGame 原版規則：位置1-3靠近恆星（高溫），位置13-15遠離恆星（低溫）
+ * 溫度影響太陽能衛星產能和重氫合成器產量
  *
- * 位置1: +220°C ~ +260°C (极热)
+ * 位置1: +220°C ~ +260°C (極熱)
  * 位置2: +180°C ~ +220°C
  * 位置3: +100°C ~ +140°C
  * 位置4: +60°C ~ +100°C
  * 位置5: +30°C ~ +70°C
  * 位置6: +10°C ~ +50°C
  * 位置7: -10°C ~ +30°C
- * 位置8: -30°C ~ +10°C (温和)
+ * 位置8: -30°C ~ +10°C (溫和)
  * 位置9: -50°C ~ -10°C
  * 位置10: -70°C ~ -30°C
  * 位置11: -100°C ~ -60°C
  * 位置12: -130°C ~ -90°C
  * 位置13: -160°C ~ -120°C
  * 位置14: -190°C ~ -150°C
- * 位置15: -220°C ~ -180°C (极冷)
+ * 位置15: -220°C ~ -180°C (極冷)
  */
 export const generatePlanetTemperature = (position: number): { min: number; max: number } => {
-  // 基础温度曲线：位置1最热，位置15最冷
-  // 使用线性插值，从位置1的240°C到位置15的-200°C
-  const baseTemp = 240 - (position - 1) * 31.4 // 每个位置降低约31.4°C
+  // 基礎溫度曲線：位置1最熱，位置15最冷
+  // 使用線性插值，從位置1的240°C到位置15的-200°C
+  const baseTemp = 240 - (position - 1) * 31.4 // 每個位置降低約31.4°C
 
-  // 温度范围通常在40°C左右波动
+  // 溫度範圍通常在40°C左右波動
   const variation = 20
   const randomOffset = Math.floor(Math.random() * variation * 2) - variation // -20 to +20
 
   const maxTemp = Math.round(baseTemp + randomOffset)
-  const minTemp = maxTemp - 40 // 最低温比最高温低40°C
+  const minTemp = maxTemp - 40 // 最低溫比最高溫低40°C
 
   return { min: minTemp, max: maxTemp }
 }
 
 /**
- * 计算太阳能卫星基于温度的能量产出
+ * 計算太陽能衛星基於溫度的能量產出
  * OGame 原版公式：(maxTemp + 160) / 6 (向下取整)
- * 温度越高，太阳能卫星产能越高
+ * 溫度越高，太陽能衛星產能越高
  */
 export const calculateSolarSatelliteOutput = (maxTemperature: number): number => {
-  // 确保最小产出为0，避免极冷星球产生负能量
+  // 確保最小產出為0，避免極冷星球產生負能量
   return Math.max(0, Math.floor((maxTemperature + 160) / 6))
 }
 
 /**
- * 计算重氢合成器基于温度的产量修正系数
- * OGame 原版规则：温度越低，重氢产量越高
- * 公式：1.36 - 0.004 * maxTemp (转换为百分比系数)
- * 在温度-40°C时产量最高（约156%），温度高时产量低
+ * 計算重氫合成器基於溫度的產量修正係數
+ * OGame 原版規則：溫度越低，重氫產量越高
+ * 公式：1.36 - 0.004 * maxTemp (轉換為百分比係數)
+ * 在溫度-40°C時產量最高（約156%），溫度高時產量低
  */
 export const calculateDeuteriumTemperatureBonus = (maxTemperature: number): number => {
-  // 返回乘数，例如：-40°C时返回1.52，+100°C时返回0.96
+  // 返回乘數，例如：-40°C時返回1.52，+100°C時返回0.96
   return 1.36 - 0.004 * maxTemperature
 }
 
 /**
- * 检查是否可以放弃殖民地
+ * 檢查是否可以放棄殖民地
  * @param planets 玩家所有星球
- * @param planetId 要放弃的星球ID
- * @returns 是否可以放弃及原因
+ * @param planetId 要放棄的星球ID
+ * @returns 是否可以放棄及原因
  */
 export const canAbandonColony = (
   planets: Planet[],
@@ -338,24 +338,24 @@ export const canAbandonColony = (
     return { canAbandon: false, reason: 'errors.planetNotFound' }
   }
 
-  // 主星（第一个非月球星球）不能放弃
+  // 主星（第一個非月球星球）不能放棄
   const mainPlanet = planets.find(p => !p.isMoon)
   if (mainPlanet && mainPlanet.id === planetId) {
     return { canAbandon: false, reason: 'errors.cannotAbandonHomePlanet' }
   }
 
-  // 检查是否有正在进行的建造队列
+  // 檢查是否有正在進行的建造佇列
   if (planet.buildQueue.length > 0) {
     return { canAbandon: false, reason: 'errors.hasBuildQueue' }
   }
 
-  // 检查是否有舰队在该星球
+  // 檢查是否有艦隊在該星球
   const hasFleet = Object.values(planet.fleet).some(count => count > 0)
   if (hasFleet) {
     return { canAbandon: false, reason: 'errors.hasFleetOnPlanet' }
   }
 
-  // 检查是否有防御在该星球
+  // 檢查是否有防禦在該星球
   const hasDefense = Object.values(planet.defense).some(count => count > 0)
   if (hasDefense) {
     return { canAbandon: false, reason: 'errors.hasDefenseOnPlanet' }
@@ -365,20 +365,20 @@ export const canAbandonColony = (
 }
 
 /**
- * 放弃殖民地
+ * 放棄殖民地
  * @param planets 玩家所有星球
- * @param planetId 要放弃的星球ID
- * @returns 放弃后的星球列表
+ * @param planetId 要放棄的星球ID
+ * @returns 放棄後的星球列表
  */
 export const abandonColony = (planets: Planet[], planetId: string): Planet[] => {
   const planet = planets.find(p => p.id === planetId)
   if (!planet) return planets
 
-  // 如果放弃的是行星，同时删除其月球
+  // 如果放棄的是行星，同時刪除其月球
   if (!planet.isMoon) {
     return planets.filter(p => p.id !== planetId && p.parentPlanetId !== planetId)
   }
 
-  // 如果放弃的是月球，只删除月球
+  // 如果放棄的是月球，只刪除月球
   return planets.filter(p => p.id !== planetId)
 }

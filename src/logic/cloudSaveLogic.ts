@@ -197,8 +197,8 @@ const decryptCloudState = async (ciphertext: string, clientHash: string, credent
     if (error instanceof CloudSaveError) throw error
     throw new CloudSaveError('decryptFailed')
   }
-  // M1 严格校验：版本与结构，损坏给明确错误（invalidSaveData）而不是静默吞掉
-  // （上面的 isObject 检查已保证 bundle 形状，此处断言安全）
+  // M1 嚴格校驗：版本與結構，損壞給明確錯誤（invalidSaveData）而不是靜默吞掉
+  // （上面的 isObject 檢查已保證 bundle 形狀，此處斷言安全）
   const bundle = state as { game: Record<string, unknown>; universe: Record<string, unknown>; npcs: Record<string, unknown> }
   try {
     validateGameSaveStructure(bundle.game)

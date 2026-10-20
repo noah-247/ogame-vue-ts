@@ -3,11 +3,11 @@ import { ShipType, DefenseType, BuildingType, TechnologyType } from '@/types/gam
 import { SHIPS, DEFENSES } from '@/config/gameConfig'
 import { getGameNow } from './gameTime'
 
-// 用于生成唯一ID的计数器
+// 用於生成唯一ID的計數器
 let shipQueueIdCounter = 0
 
 /**
- * 计算舰船建造成本
+ * 計算艦船建造成本
  */
 export const calculateShipCost = (shipType: ShipType, quantity: number): Resources => {
   const config = SHIPS[shipType]
@@ -21,7 +21,7 @@ export const calculateShipCost = (shipType: ShipType, quantity: number): Resourc
 }
 
 /**
- * 计算防御设施建造成本
+ * 計算防禦設施建造成本
  */
 export const calculateDefenseCost = (defenseType: DefenseType, quantity: number): Resources => {
   const config = DEFENSES[defenseType]
@@ -35,12 +35,12 @@ export const calculateDefenseCost = (defenseType: DefenseType, quantity: number)
 }
 
 /**
- * 计算舰船建造时间
- * @param shipType 舰船类型
- * @param quantity 数量
- * @param buildingSpeedBonus 指挥官等提供的速度加成百分比
- * @param roboticsFactoryLevel 机器人工厂等级
- * @param naniteFactoryLevel 纳米工厂等级
+ * 計算艦船建造時間
+ * @param shipType 艦船型別
+ * @param quantity 數量
+ * @param buildingSpeedBonus 指揮官等提供的速度加成百分比
+ * @param roboticsFactoryLevel 機器人工廠等級
+ * @param naniteFactoryLevel 奈米工廠等級
  */
 export const calculateShipBuildTime = (
   shipType: ShipType,
@@ -52,22 +52,22 @@ export const calculateShipBuildTime = (
   const config = SHIPS[shipType]
   const baseTime = config.buildTime * quantity
 
-  // 机器人工厂和纳米工厂的加速：建造时间 / (1 + 机器人工厂等级 + 纳米工厂等级 × 2)
+  // 機器人工廠和奈米工廠的加速：建造時間 / (1 + 機器人工廠等級 + 奈米工廠等級 × 2)
   const factorySpeedDivisor = 1 + roboticsFactoryLevel + naniteFactoryLevel * 2
 
-  // 指挥官等的百分比加成
+  // 指揮官等的百分比加成
   const speedMultiplier = 1 - buildingSpeedBonus / 100
 
   return Math.floor((baseTime / factorySpeedDivisor) * speedMultiplier)
 }
 
 /**
- * 计算防御设施建造时间
- * @param defenseType 防御类型
- * @param quantity 数量
- * @param buildingSpeedBonus 指挥官等提供的速度加成百分比
- * @param roboticsFactoryLevel 机器人工厂等级
- * @param naniteFactoryLevel 纳米工厂等级
+ * 計算防禦設施建造時間
+ * @param defenseType 防禦型別
+ * @param quantity 數量
+ * @param buildingSpeedBonus 指揮官等提供的速度加成百分比
+ * @param roboticsFactoryLevel 機器人工廠等級
+ * @param naniteFactoryLevel 奈米工廠等級
  */
 export const calculateDefenseBuildTime = (
   defenseType: DefenseType,
@@ -79,17 +79,17 @@ export const calculateDefenseBuildTime = (
   const config = DEFENSES[defenseType]
   const baseTime = config.buildTime * quantity
 
-  // 机器人工厂和纳米工厂的加速：建造时间 / (1 + 机器人工厂等级 + 纳米工厂等级 × 2)
+  // 機器人工廠和奈米工廠的加速：建造時間 / (1 + 機器人工廠等級 + 奈米工廠等級 × 2)
   const factorySpeedDivisor = 1 + roboticsFactoryLevel + naniteFactoryLevel * 2
 
-  // 指挥官等的百分比加成
+  // 指揮官等的百分比加成
   const speedMultiplier = 1 - buildingSpeedBonus / 100
 
   return Math.floor((baseTime / factorySpeedDivisor) * speedMultiplier)
 }
 
 /**
- * 检查舰船建造条件
+ * 檢查艦船建造條件
  */
 export const checkShipRequirements = (
   shipType: ShipType,
@@ -114,7 +114,7 @@ export const checkShipRequirements = (
 }
 
 /**
- * 检查防御设施建造条件
+ * 檢查防禦設施建造條件
  */
 export const checkDefenseRequirements = (
   defenseType: DefenseType,
@@ -139,7 +139,7 @@ export const checkDefenseRequirements = (
 }
 
 /**
- * 检查防御罩数量限制
+ * 檢查防禦罩數量限制
  */
 export const checkShieldDomeLimit = (
   defenseType: DefenseType,
@@ -158,7 +158,7 @@ export const checkShieldDomeLimit = (
 }
 
 /**
- * 创建舰船建造队列项
+ * 建立艦船建造佇列項
  */
 export const createShipQueueItem = (shipType: ShipType, quantity: number, buildTime: number): BuildQueueItem => {
   const now = getGameNow()
@@ -174,7 +174,7 @@ export const createShipQueueItem = (shipType: ShipType, quantity: number, buildT
 }
 
 /**
- * 创建防御设施建造队列项
+ * 建立防禦設施建造佇列項
  */
 export const createDefenseQueueItem = (defenseType: DefenseType, quantity: number, buildTime: number): BuildQueueItem => {
   const now = getGameNow()
@@ -190,7 +190,7 @@ export const createDefenseQueueItem = (defenseType: DefenseType, quantity: numbe
 }
 
 /**
- * 检查舰队是否足够
+ * 檢查艦隊是否足夠
  */
 export const checkFleetAvailable = (currentFleet: Partial<Fleet>, requiredFleet: Partial<Fleet>): boolean => {
   for (const [shipType, count] of Object.entries(requiredFleet)) {
@@ -202,29 +202,29 @@ export const checkFleetAvailable = (currentFleet: Partial<Fleet>, requiredFleet:
 }
 
 /**
- * 计算舰队燃料消耗（包含货物重量影响）
- * @param fleet 舰队组成
- * @param fuelConsumptionReduction 燃料消耗减少百分比
- * @param cargo 携带的货物（可选）
- * @returns 总燃料消耗（重氢）
+ * 計算艦隊燃料消耗（包含貨物重量影響）
+ * @param fleet 艦隊組成
+ * @param fuelConsumptionReduction 燃料消耗減少百分比
+ * @param cargo 攜帶的貨物（可選）
+ * @returns 總燃料消耗（重氫）
  */
 export const calculateFleetFuelConsumption = (fleet: Partial<Fleet>, fuelConsumptionReduction: number = 0, cargo?: Resources): number => {
-  // 计算舰船基础燃料消耗
+  // 計算艦船基礎燃料消耗
   let baseFuelNeeded = 0
   for (const [shipType, count] of Object.entries(fleet)) {
     const config = SHIPS[shipType as ShipType]
     baseFuelNeeded += config.fuelConsumption * count
   }
 
-  // 计算货物额外燃料消耗
-  // 每1000单位资源增加1点燃料消耗
+  // 計算貨物額外燃料消耗
+  // 每1000單位資源增加1點燃料消耗
   let cargoFuelNeeded = 0
   if (cargo) {
     const totalCargo = cargo.metal + cargo.crystal + cargo.deuterium + cargo.darkMatter
     cargoFuelNeeded = Math.floor(totalCargo / 1000)
   }
 
-  // 应用燃料消耗减少加成（仅应用于基础燃料，不影响货物燃料）
+  // 應用燃料消耗減少加成（僅應用於基礎燃料，不影響貨物燃料）
   const reductionMultiplier = 1 - fuelConsumptionReduction / 100
   const reducedBaseFuel = Math.floor(baseFuelNeeded * reductionMultiplier)
 
@@ -232,7 +232,7 @@ export const calculateFleetFuelConsumption = (fleet: Partial<Fleet>, fuelConsump
 }
 
 /**
- * 计算舰队最慢速度
+ * 計算艦隊最慢速度
  */
 export const calculateFleetMinSpeed = (fleet: Partial<Fleet>, fleetSpeedBonus: number = 0): number => {
   let minSpeed = Infinity
@@ -247,7 +247,7 @@ export const calculateFleetMinSpeed = (fleet: Partial<Fleet>, fleetSpeedBonus: n
 }
 
 /**
- * 扣除舰队
+ * 扣除艦隊
  */
 export const deductFleet = (currentFleet: Fleet, fleet: Partial<Fleet>): void => {
   for (const [shipType, count] of Object.entries(fleet)) {
@@ -256,7 +256,7 @@ export const deductFleet = (currentFleet: Fleet, fleet: Partial<Fleet>): void =>
 }
 
 /**
- * 添加舰队
+ * 新增艦隊
  */
 export const addFleet = (currentFleet: Fleet, fleet: Partial<Fleet>): void => {
   for (const [shipType, count] of Object.entries(fleet)) {
@@ -267,8 +267,8 @@ export const addFleet = (currentFleet: Fleet, fleet: Partial<Fleet>): void => {
 }
 
 /**
- * 计算舰船拆除返还资源
- * 返还50%的建造成本
+ * 計算艦船拆除返還資源
+ * 返還50%的建造成本
  */
 export const calculateShipScrapRefund = (shipType: ShipType, quantity: number): Resources => {
   const cost = calculateShipCost(shipType, quantity)
@@ -282,8 +282,8 @@ export const calculateShipScrapRefund = (shipType: ShipType, quantity: number): 
 }
 
 /**
- * 计算舰船拆除时间
- * 拆除时间为建造时间的50%
+ * 計算艦船拆除時間
+ * 拆除時間為建造時間的50%
  */
 export const calculateShipScrapTime = (
   shipType: ShipType,
@@ -297,7 +297,7 @@ export const calculateShipScrapTime = (
 }
 
 /**
- * 创建舰船拆除队列项
+ * 建立艦船拆除佇列項
  */
 export const createShipScrapQueueItem = (shipType: ShipType, quantity: number, scrapTime: number): BuildQueueItem => {
   const now = getGameNow()

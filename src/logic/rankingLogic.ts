@@ -1,14 +1,14 @@
 /**
- * 排行榜逻辑模块
- * 计算玩家和NPC的各类积分，并生成排行榜
+ * 排行榜邏輯模組
+ * 計算玩家和NPC的各類積分，並生成排行榜
  */
 import type { Player, NPC, Planet, RankingEntry, RankingCategory } from '@/types/game'
 import { BuildingType, TechnologyType, ShipType, DefenseType } from '@/types/game'
 import { BUILDINGS, TECHNOLOGIES, SHIPS, DEFENSES } from '@/config/gameConfig'
 
 /**
- * 计算建筑积分
- * 基于累计投入的资源计算（与侧边栏保持一致）
+ * 計算建築積分
+ * 基於累計投入的資源計算（與側邊欄保持一致）
  */
 export const calculateBuildingScore = (planets: Planet[]): number => {
   let totalCost = 0
@@ -21,7 +21,7 @@ export const calculateBuildingScore = (planets: Planet[]): number => {
       const config = BUILDINGS[buildingType]
       if (!config) continue
 
-      // 计算从1级到当前等级的累计成本（每级单独取整，与 publicLogic 一致）
+      // 計算從1級到當前等級的累計成本（每級單獨取整，與 publicLogic 一致）
       for (let lvl = 1; lvl <= level; lvl++) {
         const multiplier = Math.pow(config.costMultiplier, lvl - 1)
         const metal = Math.floor(config.baseCost.metal * multiplier)
@@ -36,8 +36,8 @@ export const calculateBuildingScore = (planets: Planet[]): number => {
 }
 
 /**
- * 计算研究积分
- * 基于累计投入的资源计算（与侧边栏保持一致，不计入暗物质）
+ * 計算研究積分
+ * 基於累計投入的資源計算（與側邊欄保持一致，不計入暗物質）
  */
 export const calculateResearchScore = (technologies: Record<TechnologyType, number>): number => {
   let totalCost = 0
@@ -49,13 +49,13 @@ export const calculateResearchScore = (technologies: Record<TechnologyType, numb
     const config = TECHNOLOGIES[techType]
     if (!config) continue
 
-    // 计算从1级到当前等级的累计成本（每级单独取整，与 publicLogic 一致）
+    // 計算從1級到當前等級的累計成本（每級單獨取整，與 publicLogic 一致）
     for (let lvl = 1; lvl <= level; lvl++) {
       const multiplier = Math.pow(config.costMultiplier, lvl - 1)
       const metal = Math.floor(config.baseCost.metal * multiplier)
       const crystal = Math.floor(config.baseCost.crystal * multiplier)
       const deuterium = Math.floor(config.baseCost.deuterium * multiplier)
-      // 不计入暗物质，与侧边栏保持一致
+      // 不計入暗物質，與側邊欄保持一致
       totalCost += metal + crystal + deuterium
     }
   }
@@ -64,13 +64,13 @@ export const calculateResearchScore = (technologies: Record<TechnologyType, numb
 }
 
 /**
- * 计算舰队积分
- * 基于当前拥有的舰船计算（与侧边栏保持一致，不含飞行中舰队，不计入暗物质）
+ * 計算艦隊積分
+ * 基於當前擁有的艦船計算（與側邊欄保持一致，不含飛行中艦隊，不計入暗物質）
  */
 export const calculateFleetScore = (planets: Planet[]): number => {
   let totalCost = 0
 
-  // 只计算停靠在星球上的舰队（与侧边栏保持一致）
+  // 只計算停靠在星球上的艦隊（與側邊欄保持一致）
   for (const planet of planets) {
     for (const shipType of Object.values(ShipType)) {
       const count = planet.fleet[shipType] || 0
@@ -79,7 +79,7 @@ export const calculateFleetScore = (planets: Planet[]): number => {
       const config = SHIPS[shipType]
       if (!config) continue
 
-      // 不计入暗物质，与侧边栏保持一致
+      // 不計入暗物質，與側邊欄保持一致
       const cost = (config.cost.metal + config.cost.crystal + config.cost.deuterium) * count
       totalCost += cost
     }
@@ -89,8 +89,8 @@ export const calculateFleetScore = (planets: Planet[]): number => {
 }
 
 /**
- * 计算防御积分
- * 基于当前拥有的防御设施计算（与侧边栏保持一致，不计入暗物质）
+ * 計算防禦積分
+ * 基於當前擁有的防禦設施計算（與側邊欄保持一致，不計入暗物質）
  */
 export const calculateDefenseScore = (planets: Planet[]): number => {
   let totalCost = 0
@@ -103,7 +103,7 @@ export const calculateDefenseScore = (planets: Planet[]): number => {
       const config = DEFENSES[defenseType]
       if (!config) continue
 
-      // 不计入暗物质，与侧边栏保持一致
+      // 不計入暗物質，與側邊欄保持一致
       const cost = (config.cost.metal + config.cost.crystal + config.cost.deuterium) * count
       totalCost += cost
     }
@@ -113,7 +113,7 @@ export const calculateDefenseScore = (planets: Planet[]): number => {
 }
 
 /**
- * 计算玩家的所有积分
+ * 計算玩家的所有積分
  */
 export const calculatePlayerScores = (player: Player): RankingEntry['scores'] => {
   const building = calculateBuildingScore(player.planets)
@@ -126,7 +126,7 @@ export const calculatePlayerScores = (player: Player): RankingEntry['scores'] =>
 }
 
 /**
- * 计算NPC的所有积分
+ * 計算NPC的所有積分
  */
 export const calculateNPCScores = (npc: NPC): RankingEntry['scores'] => {
   const building = calculateBuildingScore(npc.planets)
@@ -139,7 +139,7 @@ export const calculateNPCScores = (npc: NPC): RankingEntry['scores'] => {
 }
 
 /**
- * 生成排行榜条目
+ * 生成排行榜條目
  */
 export const createRankingEntry = (
   id: string,
@@ -152,38 +152,38 @@ export const createRankingEntry = (
 }
 
 /**
- * 获取完整的排行榜
- * @param player 玩家数据
+ * 獲取完整的排行榜
+ * @param player 玩家資料
  * @param npcs NPC列表
- * @param category 排行榜类别
- * @returns 按指定类别积分排序的排行榜
+ * @param category 排行榜類別
+ * @returns 按指定類別積分排序的排行榜
  */
 export const getRanking = (player: Player, npcs: NPC[], category: RankingCategory): RankingEntry[] => {
   const entries: RankingEntry[] = []
 
-  // 添加玩家
+  // 新增玩家
   const playerScores = calculatePlayerScores(player)
   entries.push(createRankingEntry(player.id, player.name || '玩家', true, playerScores, player.planets.length))
 
-  // 添加所有NPC
+  // 新增所有NPC
   for (const npc of npcs) {
-    if (npc.planets.length === 0) continue // 跳过没有星球的NPC
+    if (npc.planets.length === 0) continue // 跳過沒有星球的NPC
     const npcScores = calculateNPCScores(npc)
     entries.push(createRankingEntry(npc.id, npc.name, false, npcScores, npc.planets.length))
   }
 
-  // 按指定类别的积分降序排序
+  // 按指定類別的積分降序排序
   entries.sort((a, b) => b.scores[category] - a.scores[category])
 
   return entries
 }
 
 /**
- * 获取玩家在指定类别的排名
- * @param player 玩家数据
+ * 獲取玩家在指定類別的排名
+ * @param player 玩家資料
  * @param npcs NPC列表
- * @param category 排行榜类别
- * @returns 玩家排名（从1开始）
+ * @param category 排行榜類別
+ * @returns 玩家排名（從1開始）
  */
 export const getPlayerRank = (player: Player, npcs: NPC[], category: RankingCategory): number => {
   const ranking = getRanking(player, npcs, category)
@@ -192,7 +192,7 @@ export const getPlayerRank = (player: Player, npcs: NPC[], category: RankingCate
 }
 
 /**
- * 获取排行榜统计信息
+ * 獲取排行榜統計資訊
  */
 export const getRankingStats = (
   player: Player,

@@ -5,8 +5,8 @@ import { MOON_CONFIG } from '@/config/gameConfig'
 import { generateId } from '@/utils/id'
 
 /**
- * 执行战斗模拟
- * 使用 Web Worker 在后台线程中执行计算密集型的战斗模拟
+ * 執行戰鬥模擬
+ * 使用 Web Worker 在後臺執行緒中執行計算密集型的戰鬥模擬
  */
 export const simulateBattle = async (
   attackerFleet: Partial<Fleet>,
@@ -17,9 +17,9 @@ export const simulateBattle = async (
   _defenderOfficers: Record<OfficerType, Officer>,
   attackerTechnologies: Record<TechnologyType, number>,
   defenderTechnologies: Record<TechnologyType, number>,
-  battleToFinish: boolean = false // 战斗到底模式
+  battleToFinish: boolean = false // 戰鬥到底模式
 ): Promise<BattleResult> => {
-  // 从科技系统读取实际科技等级
+  // 從科技系統讀取實際科技等級
   const attackerWeaponTech = attackerTechnologies['weaponsTechnology'] || 0
   const attackerShieldTech = attackerTechnologies['shieldingTechnology'] || 0
   const attackerArmorTech = attackerTechnologies['armourTechnology'] || 0
@@ -28,7 +28,7 @@ export const simulateBattle = async (
   const defenderShieldTech = defenderTechnologies['shieldingTechnology'] || 0
   const defenderArmorTech = defenderTechnologies['armourTechnology'] || 0
 
-  // 使用 Worker 执行战斗模拟
+  // 使用 Worker 執行戰鬥模擬
   const simulationResult = await workerManager.simulateBattle({
     attacker: {
       ships: attackerFleet,
@@ -43,10 +43,10 @@ export const simulateBattle = async (
       shieldTech: defenderShieldTech,
       armorTech: defenderArmorTech
     },
-    maxRounds: battleToFinish ? 100 : 6 // 战斗到底模式最多100回合，经典模式6回合
+    maxRounds: battleToFinish ? 100 : 6 // 戰鬥到底模式最多100回合，經典模式6回合
   })
 
-  // 计算掠夺（仅攻击方胜利时）
+  // 計算掠奪（僅攻擊方勝利時）
   const plunder =
     simulationResult.winner === 'attacker'
       ? await workerManager.calculatePlunder({
@@ -55,17 +55,17 @@ export const simulateBattle = async (
         })
       : { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 }
 
-  // 计算残骸场
+  // 計算殘骸場
   const debrisField = await workerManager.calculateDebris({
     attackerLosses: simulationResult.attackerLosses,
     defenderLosses: simulationResult.defenderLosses
   })
 
-  // 计算月球生成概率（根据残骸场总量）
+  // 計算月球生成機率（根據殘骸場總量）
   const totalDebris = debrisField.metal + debrisField.crystal
-  const moonChance = Math.min(MOON_CONFIG.baseChance + Math.floor(totalDebris / MOON_CONFIG.chancePerDebris), MOON_CONFIG.maxChance) / 100 // 转换为0-1的概率
+  const moonChance = Math.min(MOON_CONFIG.baseChance + Math.floor(totalDebris / MOON_CONFIG.chancePerDebris), MOON_CONFIG.maxChance) / 100 // 轉換為0-1的機率
 
-  // 生成战斗报告
+  // 生成戰鬥報告
   const battleResult: BattleResult = {
     id: generateId('battle'),
     timestamp: Date.now(),
@@ -81,7 +81,7 @@ export const simulateBattle = async (
     winner: simulationResult.winner,
     plunder,
     debrisField,
-    // 新增详细信息
+    // 新增詳細資訊
     rounds: simulationResult.rounds,
     attackerRemaining: simulationResult.attackerRemaining,
     defenderRemaining: simulationResult.defenderRemaining,
@@ -93,7 +93,7 @@ export const simulateBattle = async (
 }
 
 /**
- * 计算防御设施修复（防御有70%概率修复）
+ * 計算防禦設施修復（防禦有70%機率修復）
  */
 export const repairDefense = (
   defenseBeforeBattle: Partial<Record<DefenseType, number>>,
@@ -107,7 +107,7 @@ export const repairDefense = (
     const lost = before - after
 
     if (lost > 0) {
-      // 70%修复概率
+      // 70%修復機率
       const repairedCount = Math.floor(lost * 0.7)
       repaired[defenseType as DefenseType] = after + repairedCount
     }

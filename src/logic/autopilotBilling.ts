@@ -3,27 +3,27 @@ import { BuildingType } from '@/types/game'
 import { calculateEnergyConsumption, calculateEnergyProduction } from './resourceLogic'
 
 /**
- * 自动成长副官付费核心逻辑（v3：三资源收費、无试用、聘请即扣）
+ * 自動成長副官付費核心邏輯（v3：三資源收費、無試用、聘請即扣）
  *
- * 纯逻辑模块：无 UI、无 store 依赖，方便单元测试。
- * tick 接线、存档迁移、UI 由后续 phase 完成。
+ * 純邏輯模組：無 UI、無 store 依賴，方便單元測試。
+ * tick 接線、存檔遷移、UI 由後續 phase 完成。
  *
- * 金额一律用整数（微单位）避免浮点误差：1 单位资源 = 1_000_000 微单位。
- * 费率语义：calculateRates 回传的是「每小时」整数单位费率；
- * settleMinute 每满 60 计费秒结算「一分钟」的量（= 每小时费率 / 60）。
+ * 金額一律用整數（微單位）避免浮點誤差：1 單位資源 = 1_000_000 微單位。
+ * 費率語義：calculateRates 回傳的是「每小時」整數單位費率；
+ * settleMinute 每滿 60 計費秒結算「一分鐘」的量（= 每小時費率 / 60）。
  */
 
 export const MICRO_PER_UNIT = 1_000_000
 
-/** 费率 = 标准时产合计 × 3% */
+/** 費率 = 標準時產合計 × 3% */
 export const BILLING_RATE_RATIO = 0.03
 
-/** 下限（只套用一次，帝国统一合约） */
+/** 下限（只套用一次，帝國統一合約） */
 export const MIN_METAL_RATE = 50
 export const MIN_CRYSTAL_RATE = 30
 export const MIN_DEUTERIUM_RATE = 15
 
-/** 费率向上取整粒度 */
+/** 費率向上取整粒度 */
 export const RATE_ROUND_STEP = 10
 
 export interface ResourceTriple {
@@ -36,7 +36,7 @@ export interface BillingPlanetInput {
   metalMineLevel: number
   crystalMineLevel: number
   deuteriumMineLevel: number
-  /** 能源效率；<= 0 的星球不纳入费率计算 */
+  /** 能源效率；<= 0 的星球不納入費率計算 */
   energyEfficiency: number
 }
 
@@ -48,8 +48,8 @@ export interface SettleResult {
 }
 
 /**
- * 标准时产：金属 1500×L×1.5^L、晶体 1000×L×1.5^L、重氢 500×L×1.5^L。
- * 同一个 mineLevel 对三种资源各算一次；调用方按星球的三种矿等级分别取对应字段。
+ * 標準時產：金屬 1500×L×1.5^L、晶體 1000×L×1.5^L、重氫 500×L×1.5^L。
+ * 同一個 mineLevel 對三種資源各算一次；呼叫方按星球的三種礦等級分別取對應欄位。
  */
 export function standardHourlyOutput(mineLevel: number): ResourceTriple {
   const base = mineLevel * Math.pow(1.5, mineLevel)
@@ -61,28 +61,28 @@ export function standardHourlyOutput(mineLevel: number): ResourceTriple {
 }
 
 /**
- * 单种资源的费率：合计标准时产为 0 → 0（零产能不收费）；
- * 否则 max(下限, 合计×3%) 再向上取整至 10。
- * 导出以便直接测试下限逻辑（经由矿等级无法构造出低于下限的非零合计）。
+ * 單種資源的費率：合計標準時產為 0 → 0（零產能不收費）；
+ * 否則 max(下限, 合計×3%) 再向上取整至 10。
+ * 匯出以便直接測試下限邏輯（經由礦等級無法構造出低於下限的非零合計）。
  */
 export function rateForResource(hourlySum: number, minFloor: number): number {
   if (!(hourlySum > 0)) return 0
-  // 先转微单位整数再算 3%，避免二进制浮点误差影响 ceil 边界
+  // 先轉微單位整數再算 3%，避免二進位制浮點誤差影響 ceil 邊界
   const rawMicro = Math.round(hourlySum * MICRO_PER_UNIT * BILLING_RATE_RATIO)
   const ceiled = Math.ceil(rawMicro / (RATE_ROUND_STEP * MICRO_PER_UNIT)) * RATE_ROUND_STEP
   return Math.max(minFloor, ceiled)
 }
 
 /**
- * 帝国统一费率：对每种资源，把「能源效率 > 0 的星球」的标准时产加总后套 rateForResource。
- * 全停电（或无星球）→ 三种全为 0。
+ * 帝國統一費率：對每種資源，把「能源效率 > 0 的星球」的標準時產加總後套 rateForResource。
+ * 全停電（或無星球）→ 三種全為 0。
  */
 export function calculateRates(planets: BillingPlanetInput[]): ResourceTriple {
   let metalSum = 0
   let crystalSum = 0
   let deuteriumSum = 0
   for (const p of planets) {
-    if (!(p.energyEfficiency > 0)) continue // 停电星球排除
+    if (!(p.energyEfficiency > 0)) continue // 停電星球排除
     metalSum += standardHourlyOutput(p.metalMineLevel).metal
     crystalSum += standardHourlyOutput(p.crystalMineLevel).crystal
     deuteriumSum += standardHourlyOutput(p.deuteriumMineLevel).deuterium
@@ -95,17 +95,17 @@ export function calculateRates(planets: BillingPlanetInput[]): ResourceTriple {
 }
 
 /**
- * 副官是否处于「值班计费」状态：只有 plan=standard 且 status=active 才算工作。
- * 免费监控（free）不计费；paused_manual / paused_funds / terminated / inactive 均不工作。
+ * 副官是否處於「值班計費」狀態：只有 plan=standard 且 status=active 才算工作。
+ * 免費監控（free）不計費；paused_manual / paused_funds / terminated / inactive 均不工作。
  */
 export function canAutopilotWork(contract: AutopilotContract | undefined): boolean {
   return contract !== undefined && contract.plan === 'standard' && contract.status === 'active'
 }
 
 /**
- * 累加计费秒：增量 = tick 虚拟秒 × gameSpeed。
- * 不监听速度切换事件——调用方每次 tick 按当前 gameSpeed 传入即可，无竞态。
- * @returns 本次新增的计费秒（同时累加进 contract.dutySecondsAcc）
+ * 累加計費秒：增量 = tick 虛擬秒 × gameSpeed。
+ * 不監聽速度切換事件——呼叫方每次 tick 按當前 gameSpeed 傳入即可，無競態。
+ * @returns 本次新增的計費秒（同時累加進 contract.dutySecondsAcc）
  */
 export function accrueBillingSeconds(
   contract: AutopilotContract,
@@ -118,10 +118,10 @@ export function accrueBillingSeconds(
 }
 
 /**
- * 建立一份默认（未激活）的合约，方便调用方初始化。
- * - plan 默认为 'standard'；v2→v3 迁移时传 'free'（迁移合约不自动开始计费）。
- * - status 恒为 'inactive'、autoRenew 恒为 false：不追溯、不自动重启。
- * - needsBillingConfirm / needsBillingNotice 默认为 false，由迁移按旧存档使用情况设置。
+ * 建立一份預設（未啟用）的合約，方便呼叫方初始化。
+ * - plan 預設為 'standard'；v2→v3 遷移時傳 'free'（遷移合約不自動開始計費）。
+ * - status 恆為 'inactive'、autoRenew 恆為 false：不追溯、不自動重啟。
+ * - needsBillingConfirm / needsBillingNotice 預設為 false，由遷移按舊存檔使用情況設定。
  */
 export function createDefaultContract(
   payerPlanetId = '',
@@ -146,23 +146,23 @@ export function createDefaultContract(
   }
 }
 
-/** 旧存档是否用过副官：任一星球 autopilot.enabled，或帝国研究副官 enabled */
+/** 舊存檔是否用過副官：任一星球 autopilot.enabled，或帝國研究副官 enabled */
 export function hasLegacyAutopilotUsage(player: Player): boolean {
   if (player.planets.some(p => p.autopilot?.enabled === true)) return true
   return player.empireResearchAutopilot?.enabled === true
 }
 
-/** 旧存档里开过副官的星球 id（迁移时作为 servicePlanetIds） */
+/** 舊存檔裡開過副官的星球 id（遷移時作為 servicePlanetIds） */
 export function autopilotEnabledPlanetIds(player: Player): string[] {
   return player.planets.filter(p => p.autopilot?.enabled === true).map(p => p.id)
 }
 
-/** 确认门：旧存档有用副官且 needsBillingConfirm 尚未清除 */
+/** 確認門：舊存檔有用副官且 needsBillingConfirm 尚未清除 */
 export function shouldShowBillingConfirm(player: Player): boolean {
   return player.autopilotContract?.needsBillingConfirm === true
 }
 
-/** 一次性新制说明：确认门用户不重复弹（确认门文案已含新制说明） */
+/** 一次性新制說明：確認門使用者不重複彈（確認門文案已含新制說明） */
 export function shouldShowBillingNotice(player: Player): boolean {
   const c = player.autopilotContract
   return c !== undefined && c.needsBillingNotice === true && c.needsBillingConfirm !== true
@@ -171,10 +171,10 @@ export function shouldShowBillingNotice(player: Player): boolean {
 export type BillingConfirmChoice = 'continue' | 'pause'
 
 /**
- * 确认门选择（就地修改 player.autopilotContract，调用方负责持久化）：
- * - continue：plan → 'standard'、status → 'active'，下个 tick 开始按费率计费
- * - pause：status → 'paused_manual'，不扣款（canAutopilotWork 为 false）
- * 两种选择都会清除确认旗标，保证重读不重弹。
+ * 確認門選擇（就地修改 player.autopilotContract，呼叫方負責持久化）：
+ * - continue：plan → 'standard'、status → 'active'，下個 tick 開始按費率計費
+ * - pause：status → 'paused_manual'，不扣款（canAutopilotWork 為 false）
+ * 兩種選擇都會清除確認旗標，保證重讀不重彈。
  */
 export function applyBillingConfirmation(player: Player, choice: BillingConfirmChoice): void {
   const c = player.autopilotContract
@@ -189,7 +189,7 @@ export function applyBillingConfirmation(player: Player, choice: BillingConfirmC
   c.needsBillingNotice = false
 }
 
-/** 一次性新制说明关闭：清除旗标，重读不重弹 */
+/** 一次性新制說明關閉：清除旗標，重讀不重彈 */
 export function dismissBillingNotice(player: Player): void {
   const c = player.autopilotContract
   if (!c) return
@@ -197,15 +197,15 @@ export function dismissBillingNotice(player: Player): void {
 }
 
 /**
- * 合约卡「可支撑小时」显示：每种资源的支撑小时 = floor(可用量 / 每小时费率)；
- * 费率为 0（零产能不收费）→ 该资源无限，不参与瓶颈判定。
+ * 合約卡「可支撐小時」顯示：每種資源的支撐小時 = floor(可用量 / 每小時費率)；
+ * 費率為 0（零產能不收費）→ 該資源無限，不參與瓶頸判定。
  */
 export interface HoursSupport {
-  /** 每种资源各自可支撑的小时数（费率 0 → Infinity） */
+  /** 每種資源各自可支撐的小時數（費率 0 → Infinity） */
   perResource: ResourceTriple
-  /** 瓶颈资源：最先耗尽的那个（并列时 metal > crystal > deuterium；三费率全 0 → 'metal'） */
+  /** 瓶頸資源：最先耗盡的那個（並列時 metal > crystal > deuterium；三費率全 0 → 'metal'） */
   bottleneck: 'metal' | 'crystal' | 'deuterium'
-  /** 以瓶颈为准的可支撑小时数（三费率全 0 → Infinity） */
+  /** 以瓶頸為準的可支撐小時數（三費率全 0 → Infinity） */
   limitingHours: number
 }
 export function computeHoursSupported(rates: ResourceTriple, available: ResourceTriple): HoursSupport {
@@ -222,9 +222,9 @@ export function computeHoursSupported(rates: ResourceTriple, available: Resource
 }
 
 /**
- * 「恢复值班」前的余款检查（UI 级守卫）：要求付款星球三资源可用量 ≥ 一小时费率。
- * 回传低于门槛的资源（metal → crystal → deuterium 顺序）；空数组表示足够。
- * 费率 0 的资源跳过（零产能不收费）。不从其他星球扫——提示用户手动补资源。
+ * 「恢復值班」前的餘款檢查（UI 級守衛）：要求付款星球三資源可用量 ≥ 一小時費率。
+ * 回傳低於門檻的資源（metal → crystal → deuterium 順序）；空陣列表示足夠。
+ * 費率 0 的資源跳過（零產能不收費）。不從其他星球掃——提示使用者手動補資源。
  */
 export function findInsufficientForResume(
   rates: ResourceTriple,
@@ -239,8 +239,8 @@ export function findInsufficientForResume(
 }
 
 /**
- * 星球 → 费率输入。能源效率沿用 updatePlanetResources 的判定语义：
- * 能源产出 >= 消耗 → 1（正常生产）；否则 0（停电，费率计算时排除）。
+ * 星球 → 費率輸入。能源效率沿用 updatePlanetResources 的判定語義：
+ * 能源產出 >= 消耗 → 1（正常生產）；否則 0（停電，費率計算時排除）。
  */
 export function toBillingPlanetInput(planet: Planet, energyProductionBonus = 0): BillingPlanetInput {
   const production = calculateEnergyProduction(planet, { energyProductionBonus })
@@ -254,30 +254,30 @@ export function toBillingPlanetInput(planet: Planet, energyProductionBonus = 0):
 }
 
 export interface BillingTickOptions {
-  /** 本 tick 虚拟秒（调用方按本次与上次 tick 的 now 差算出，快转/离线场景下调用方负责不传） */
+  /** 本 tick 虛擬秒（呼叫方按本次與上次 tick 的 now 差算出，快轉/離線場景下呼叫方負責不傳） */
   virtualSeconds: number
-  /** 当前 gameSpeed（调用方每次 tick 按当下值传入，不监听切换事件） */
+  /** 當前 gameSpeed（呼叫方每次 tick 按當下值傳入，不監聽切換事件） */
   gameSpeed: number
-  /** 是否快转 tick：true 则跳过计费（比照离线） */
+  /** 是否快轉 tick：true 則跳過計費（比照離線） */
   isFastForward: boolean
-  /** 服务星球的费率输入（由 toBillingPlanetInput 构造） */
+  /** 服務星球的費率輸入（由 toBillingPlanetInput 構造） */
   servicePlanetInputs: BillingPlanetInput[]
-  /** 付款星球的资源对象（settleMinute 成功时就地扣款） */
+  /** 付款星球的資源物件（settleMinute 成功時就地扣款） */
   payerResources: ResourceTriple
 }
 
 export interface BillingTickResult {
-  /** 本 tick 结算的整分钟数 */
+  /** 本 tick 結算的整分鐘數 */
   settledMinutes: number
-  /** 是否因余额不足把合约转入 paused_funds */
+  /** 是否因餘額不足把合約轉入 paused_funds */
   pausedForFunds: boolean
-  /** 是否因 autoRenew 自动从 paused_funds 恢复为 active（当 tick 一次性事件） */
+  /** 是否因 autoRenew 自動從 paused_funds 恢復為 active（當 tick 一次性事件） */
   autoResumed: boolean
 }
 
 /**
- * 合约卡「恢复值班」核心（B-1）：余额检查通过 → plan 设为 'standard'（恢复即接受付费制）
- * ＋ status 设为 'active'；余额不足 → 返回缺资源清单，合约保持不动（UI 负责提示）。
+ * 合約卡「恢復值班」核心（B-1）：餘額檢查透過 → plan 設為 'standard'（恢復即接受付費制）
+ * ＋ status 設為 'active'；餘額不足 → 返回缺資源清單，合約保持不動（UI 負責提示）。
  */
 export function resumeBillingContract(
   contract: AutopilotContract,
@@ -293,12 +293,12 @@ export function resumeBillingContract(
 }
 
 /**
- * 副官 tick 计费编排（v3 §3）：在线普通 tick 累加计费秒（增量 = 虚拟秒 × gameSpeed），
- * 每满 60 计费秒按当期费率结算一分钟；快转 tick 跳过（比照离线不收费）。
- * 任一资源余额不足 → 合约 status 转 paused_funds（小数累计冻结，未付的分钟不追讨），
- * 后续副官工作由执行守卫自然停止（已开工项不受影响）。
- * B-2 自动续费：合约因余额不足暂停且 autoRenew 为 true，若付款星球已补足
- * （达到恢复值班的一小时费率门槛）→ 自动恢复 active，同 tick 继续计费。
+ * 副官 tick 計費編排（v3 §3）：線上普通 tick 累加計費秒（增量 = 虛擬秒 × gameSpeed），
+ * 每滿 60 計費秒按當期費率結算一分鐘；快轉 tick 跳過（比照離線不收費）。
+ * 任一資源餘額不足 → 合約 status 轉 paused_funds（小數累計凍結，未付的分鐘不追討），
+ * 後續副官工作由執行守衛自然停止（已開工項不受影響）。
+ * B-2 自動續費：合約因餘額不足暫停且 autoRenew 為 true，若付款星球已補足
+ * （達到恢復值班的一小時費率門檻）→ 自動恢復 active，同 tick 繼續計費。
  */
 export function processBillingTick(
   contract: AutopilotContract | undefined,
@@ -336,13 +336,13 @@ export function processBillingTick(
 }
 
 /**
- * 每满 60 计费秒结算一分钟。
+ * 每滿 60 計費秒結算一分鐘。
  *
- * 每种资源应扣（微单位）= 每小时费率×1e6/60 + 该资源 accruedMicro 余数；
- * 满 1 单位扣整数，余数保留回 accruedMicro*（全整数运算，无浮点误差）。
- * 成功时：从 payerResources 扣除整数单位，累加 totalConsumed*。
- * 任一资源 payer 余额不足 → insufficient 回传该资源（按 metal→crystal→deuterium 顺序取首个），
- * 不扣任何资源、不动余数（小数累计冻结），由调用方据此转 paused_funds。
+ * 每種資源應扣（微單位）= 每小時費率×1e6/60 + 該資源 accruedMicro 餘數；
+ * 滿 1 單位扣整數，餘數保留回 accruedMicro*（全整數運算，無浮點誤差）。
+ * 成功時：從 payerResources 扣除整數單位，累加 totalConsumed*。
+ * 任一資源 payer 餘額不足 → insufficient 回傳該資源（按 metal→crystal→deuterium 順序取首個），
+ * 不扣任何資源、不動餘數（小數累計凍結），由呼叫方據此轉 paused_funds。
  */
 export function settleMinute(
   contract: AutopilotContract,
@@ -355,7 +355,7 @@ export function settleMinute(
 
   for (const k of keys) {
     const accruedKey = k === 'metal' ? 'accruedMicroMetal' : k === 'crystal' ? 'accruedMicroCrystal' : 'accruedMicroDeuterium'
-    // 总应扣（微单位×60 的整数分子，避免除法浮点误差）
+    // 總應扣（微單位×60 的整數分子，避免除法浮點誤差）
     const totalMicroX60 = contract[accruedKey] * 60 + rates[k] * MICRO_PER_UNIT
     const deduct = Math.floor(totalMicroX60 / (60 * MICRO_PER_UNIT))
     const accrued = Math.floor((totalMicroX60 % (60 * MICRO_PER_UNIT)) / 60)

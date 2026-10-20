@@ -4,7 +4,7 @@ import { OfficerType } from '@/types/game'
 import { OFFICERS } from '@/config/gameConfig'
 
 /**
- * 获取军官成本
+ * 獲取軍官成本
  */
 export const getOfficerCost = (officerType: OfficerType): Resources => {
   const config = OFFICERS[officerType]
@@ -12,14 +12,14 @@ export const getOfficerCost = (officerType: OfficerType): Resources => {
 }
 
 /**
- * 检查军官是否激活
+ * 檢查軍官是否啟用
  */
 export const isOfficerActive = (officer: Officer, now: number): boolean => {
   return officer.active && (!officer.expiresAt || officer.expiresAt > now)
 }
 
 /**
- * 创建激活的军官
+ * 建立啟用的軍官
  */
 export const createActiveOfficer = (officerType: OfficerType, duration: number): Officer => {
   const now = getGameNow()
@@ -27,12 +27,12 @@ export const createActiveOfficer = (officerType: OfficerType, duration: number):
     type: officerType,
     active: true,
     hiredAt: now,
-    expiresAt: now + duration * 24 * 60 * 60 * 1000 // duration天后过期
+    expiresAt: now + duration * 24 * 60 * 60 * 1000 // duration天后過期
   }
 }
 
 /**
- * 创建未激活的军官
+ * 建立未啟用的軍官
  */
 export const createInactiveOfficer = (officerType: OfficerType): Officer => {
   return {
@@ -42,7 +42,7 @@ export const createInactiveOfficer = (officerType: OfficerType): Officer => {
 }
 
 /**
- * 续约军官
+ * 續約軍官
  */
 export const renewOfficerExpiration = (officer: Officer, duration: number, now: number): Officer => {
   const expiresAt = officer.expiresAt && officer.expiresAt > now ? officer.expiresAt : now
@@ -54,7 +54,7 @@ export const renewOfficerExpiration = (officer: Officer, duration: number, now: 
 }
 
 /**
- * 计算所有激活军官的加成
+ * 計算所有啟用軍官的加成
  */
 export const calculateActiveBonuses = (officers: Record<OfficerType, Officer>, now: number) => {
   const bonuses = {
@@ -86,9 +86,9 @@ export const calculateActiveBonuses = (officers: Record<OfficerType, Officer>, n
 }
 
 /**
- * MAJ-7：当前提供能源产出加成的军官中最早的到期时间（毫秒）。
- * 没有「会到期」的能源军官时返回 undefined，视为加成稳定。
- * （到期后加成只是部分下降也按整体归零处理：保守方向，只会更谨慎，不会更危险。）
+ * MAJ-7：當前提供能源產出加成的軍官中最早的到期時間（毫秒）。
+ * 沒有「會到期」的能源軍官時返回 undefined，視為加成穩定。
+ * （到期後加成只是部分下降也按整體歸零處理：保守方向，只會更謹慎，不會更危險。）
  */
 export const getEnergyBonusExpiresAt = (
   officers: Record<OfficerType, Officer>,
@@ -116,7 +116,7 @@ export const getStorageBonusExpiresAt = (
 }
 
 /**
- * 检查并停用过期的军官
+ * 檢查並停用過期的軍官
  */
 export const checkAndDeactivateExpiredOfficers = (officers: Record<OfficerType, Officer>, now: number): void => {
   Object.values(officers).forEach(officer => {

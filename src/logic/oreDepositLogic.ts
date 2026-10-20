@@ -1,42 +1,42 @@
 /**
- * 矿脉储量逻辑
- * 处理星球矿脉储量的生成、消耗和效率计算
+ * 礦脈儲量邏輯
+ * 處理星球礦脈儲量的生成、消耗和效率計算
  */
 
 import type { Planet, OreDeposits } from '@/types/game'
 import { ORE_DEPOSIT_CONFIG } from '@/config/gameConfig'
 
 /**
- * 矿脉上限加成配置
+ * 礦脈上限加成配置
  */
 export const ORE_CAPACITY_BONUS = {
-  // 深层钻探设施：每级增加20%矿脉上限
+  // 深層鑽探設施：每級增加20%礦脈上限
   DEEP_DRILLING_BONUS_PER_LEVEL: 0.2,
-  // 采矿技术：每级增加15%矿脉上限（全局）
+  // 採礦技術：每級增加15%礦脈上限（全域性）
   MINING_TECH_BONUS_PER_LEVEL: 0.15
 }
 
 /**
- * 计算深层钻探设施的矿脉上限加成
- * @param deepDrillingLevel 深层钻探设施等级
- * @returns 加成倍数（1 + 等级 * 0.2）
+ * 計算深層鑽探設施的礦脈上限加成
+ * @param deepDrillingLevel 深層鑽探設施等級
+ * @returns 加成倍數（1 + 等級 * 0.2）
  */
 export const calculateDeepDrillingBonus = (deepDrillingLevel: number): number => {
   return 1 + deepDrillingLevel * ORE_CAPACITY_BONUS.DEEP_DRILLING_BONUS_PER_LEVEL
 }
 
 /**
- * 计算采矿技术的矿脉上限加成
- * @param miningTechLevel 采矿技术等级
- * @returns 加成倍数（1 + 等级 * 0.15）
+ * 計算採礦技術的礦脈上限加成
+ * @param miningTechLevel 採礦技術等級
+ * @returns 加成倍數（1 + 等級 * 0.15）
  */
 export const calculateMiningTechBonus = (miningTechLevel: number): number => {
   return 1 + miningTechLevel * ORE_CAPACITY_BONUS.MINING_TECH_BONUS_PER_LEVEL
 }
 
 /**
- * 根据星球位置动态计算基础储量上限（不含建筑/科技加成）
- * 这样修改配置后，所有星球的上限都会自动更新
+ * 根據星球位置動態計算基礎儲量上限（不含建築/科技加成）
+ * 這樣修改配置後，所有星球的上限都會自動更新
  */
 export const calculateInitialDeposits = (
   position:
@@ -49,7 +49,7 @@ export const calculateInitialDeposits = (
 ): { metal: number; crystal: number; deuterium: number } => {
   const { BASE_DEPOSITS, POSITION_MULTIPLIERS, GALAXY_MULTIPLIER } = ORE_DEPOSIT_CONFIG
 
-  // 防御性检查：如果position无效，返回默认值（位置8，银河系1）
+  // 防禦性檢查：如果position無效，返回預設值（位置8，銀河系1）
   if (!position || typeof position.position !== 'number' || typeof position.galaxy !== 'number') {
     console.warn('[OreDeposits] Invalid position, using defaults:', position)
     return {
@@ -62,10 +62,10 @@ export const calculateInitialDeposits = (
   // 位置索引 (0-14)
   const posIndex = Math.max(0, Math.min(14, position.position - 1))
 
-  // 银河系加成 (银河系1为基础，每增加1个银河系增加5%)
+  // 銀河系加成 (銀河系1為基礎，每增加1個銀河系增加5%)
   const galaxyBonus = 1 + (position.galaxy - 1) * GALAXY_MULTIPLIER
 
-  // 计算每种资源的储量上限（不含随机浮动，确保一致性）
+  // 計算每種資源的儲量上限（不含隨機浮動，確保一致性）
   const metal = Math.floor(BASE_DEPOSITS.metal * (POSITION_MULTIPLIERS.metal[posIndex] ?? 1) * galaxyBonus)
   const crystal = Math.floor(BASE_DEPOSITS.crystal * (POSITION_MULTIPLIERS.crystal[posIndex] ?? 1) * galaxyBonus)
   const deuterium = Math.floor(BASE_DEPOSITS.deuterium * (POSITION_MULTIPLIERS.deuterium[posIndex] ?? 1) * galaxyBonus)
@@ -74,11 +74,11 @@ export const calculateInitialDeposits = (
 }
 
 /**
- * 计算带有建筑和科技加成的矿脉储量上限
+ * 計算帶有建築和科技加成的礦脈儲量上限
  * @param position 星球位置
- * @param deepDrillingLevel 深层钻探设施等级（星球级）
- * @param miningTechLevel 采矿技术等级（全局）
- * @returns 包含加成的储量上限
+ * @param deepDrillingLevel 深層鑽探設施等級（星球級）
+ * @param miningTechLevel 採礦技術等級（全域性）
+ * @returns 包含加成的儲量上限
  */
 export const calculateEnhancedDeposits = (
   position: { galaxy: number; system: number; position: number } | undefined,
@@ -87,7 +87,7 @@ export const calculateEnhancedDeposits = (
 ): { metal: number; crystal: number; deuterium: number; bonusMultiplier: number } => {
   const baseDeposits = calculateInitialDeposits(position)
 
-  // 计算总加成倍数
+  // 計算總加成倍數
   const deepDrillingBonus = calculateDeepDrillingBonus(deepDrillingLevel)
   const miningTechBonus = calculateMiningTechBonus(miningTechLevel)
   const totalBonus = deepDrillingBonus * miningTechBonus
@@ -101,7 +101,7 @@ export const calculateEnhancedDeposits = (
 }
 
 /**
- * 根据星球位置生成初始矿脉储量
+ * 根據星球位置生成初始礦脈儲量
  */
 export const generateOreDeposits = (position: { galaxy: number; system: number; position: number }): OreDeposits => {
   const initialDeposits = calculateInitialDeposits(position)
@@ -115,13 +115,13 @@ export const generateOreDeposits = (position: { galaxy: number; system: number; 
 }
 
 /**
- * 计算矿脉储量对产量的效率系数
- * 当储量低于衰减阈值时，产量会线性下降
- * 但即使耗尽也保留最低产量（MIN_PRODUCTION_EFFICIENCY）
- * @returns MIN_PRODUCTION_EFFICIENCY-1 之间的效率系数
+ * 計算礦脈儲量對產量的效率係數
+ * 當儲量低於衰減閾值時，產量會線性下降
+ * 但即使耗盡也保留最低產量（MIN_PRODUCTION_EFFICIENCY）
+ * @returns MIN_PRODUCTION_EFFICIENCY-1 之間的效率係數
  */
 export const calculateDepositEfficiency = (deposits: OreDeposits | undefined, resourceType: 'metal' | 'crystal' | 'deuterium'): number => {
-  if (!deposits) return 1 // 没有储量数据时返回满效率（向后兼容）
+  if (!deposits) return 1 // 沒有儲量資料時返回滿效率（向後相容）
 
   const { DECAY_START_THRESHOLD, MIN_PRODUCTION_EFFICIENCY } = ORE_DEPOSIT_CONFIG
 
@@ -129,31 +129,31 @@ export const calculateDepositEfficiency = (deposits: OreDeposits | undefined, re
   const initialDeposits = calculateInitialDeposits(deposits.position)
   const initialDeposit = initialDeposits[resourceType]
 
-  // 如果初始储量为0，返回最低效率（避免除以0）
+  // 如果初始儲量為0，返回最低效率（避免除以0）
   if (initialDeposit <= 0) return MIN_PRODUCTION_EFFICIENCY
 
-  // 计算剩余百分比
+  // 計算剩餘百分比
   const remainingPercentage = currentDeposit / initialDeposit
 
-  // 如果高于衰减阈值，返回满效率
+  // 如果高於衰減閾值，返回滿效率
   if (remainingPercentage >= DECAY_START_THRESHOLD) return 1
 
-  // 如果已耗尽，返回最低效率（保底产量）
+  // 如果已耗盡，返回最低效率（保底產量）
   if (currentDeposit <= 0) return MIN_PRODUCTION_EFFICIENCY
 
-  // 在衰减阈值以下，线性衰减
-  // 从 DECAY_START_THRESHOLD 到 0，效率从 1 降到 MIN_PRODUCTION_EFFICIENCY
+  // 在衰減閾值以下，線性衰減
+  // 從 DECAY_START_THRESHOLD 到 0，效率從 1 降到 MIN_PRODUCTION_EFFICIENCY
   const decayRange = 1 - MIN_PRODUCTION_EFFICIENCY
   const decayProgress = remainingPercentage / DECAY_START_THRESHOLD
   return MIN_PRODUCTION_EFFICIENCY + decayRange * decayProgress
 }
 
 /**
- * 消耗矿脉储量
- * @param deposits 矿脉储量对象
- * @param resourceType 资源类型
+ * 消耗礦脈儲量
+ * @param deposits 礦脈儲量物件
+ * @param resourceType 資源型別
  * @param amount 要消耗的量
- * @returns 实际消耗的量（不会超过剩余储量）
+ * @returns 實際消耗的量（不會超過剩餘儲量）
  */
 export const consumeDeposit = (deposits: OreDeposits, resourceType: 'metal' | 'crystal' | 'deuterium', amount: number): number => {
   const currentDeposit = deposits[resourceType]
@@ -165,11 +165,11 @@ export const consumeDeposit = (deposits: OreDeposits, resourceType: 'metal' | 'c
 }
 
 /**
- * 获取矿脉剩余百分比
+ * 獲取礦脈剩餘百分比
  */
 export const getDepositPercentage = (deposits: OreDeposits | undefined, resourceType: 'metal' | 'crystal' | 'deuterium'): number => {
   if (!deposits) return 100
-  // 如果没有position信息，返回100%（向后兼容旧数据）
+  // 如果沒有position資訊，返回100%（向後相容舊資料）
   if (!deposits.position) return 100
 
   const currentDeposit = deposits[resourceType]
@@ -182,7 +182,7 @@ export const getDepositPercentage = (deposits: OreDeposits | undefined, resource
 }
 
 /**
- * 检查矿脉是否处于警告状态（低于警告阈值）
+ * 檢查礦脈是否處於警告狀態（低於警告閾值）
  */
 export const isDepositWarning = (deposits: OreDeposits | undefined, resourceType: 'metal' | 'crystal' | 'deuterium'): boolean => {
   if (!deposits) return false
@@ -192,7 +192,7 @@ export const isDepositWarning = (deposits: OreDeposits | undefined, resourceType
 }
 
 /**
- * 检查矿脉是否已耗尽
+ * 檢查礦脈是否已耗盡
  */
 export const isDepositDepleted = (deposits: OreDeposits | undefined, resourceType: 'metal' | 'crystal' | 'deuterium'): boolean => {
   if (!deposits) return false
@@ -200,28 +200,28 @@ export const isDepositDepleted = (deposits: OreDeposits | undefined, resourceTyp
 }
 
 /**
- * 为现有星球迁移/初始化矿脉储量
- * 如果星球没有矿脉数据，则生成新的储量
- * 如果有矿脉数据但缺少position，则补充position信息
+ * 為現有星球遷移/初始化礦脈儲量
+ * 如果星球沒有礦脈資料，則生成新的儲量
+ * 如果有礦脈資料但缺少position，則補充position資訊
  */
 export const migrateOreDeposits = (planet: Planet): void => {
-  // 月球不需要矿脉（没有采矿建筑）
+  // 月球不需要礦脈（沒有采礦建築）
   if (planet.isMoon) return
 
   if (!planet.oreDeposits) {
     planet.oreDeposits = generateOreDeposits(planet.position)
   } else if (!planet.oreDeposits.position) {
-    // 旧数据迁移：补充position信息
+    // 舊資料遷移：補充position資訊
     planet.oreDeposits.position = { ...planet.position }
   }
 }
 
 /**
- * 计算预计耗尽时间（小时）
- * @param deposits 矿脉储量
- * @param resourceType 资源类型
- * @param productionPerHour 每小时产量
- * @returns 预计耗尽时间（小时），如果产量为0则返回Infinity
+ * 計算預計耗盡時間（小時）
+ * @param deposits 礦脈儲量
+ * @param resourceType 資源型別
+ * @param productionPerHour 每小時產量
+ * @returns 預計耗盡時間（小時），如果產量為0則返回Infinity
  */
 export const calculateDepletionTime = (
   deposits: OreDeposits | undefined,
@@ -237,7 +237,7 @@ export const calculateDepletionTime = (
 }
 
 /**
- * 格式化耗尽时间为可读字符串
+ * 格式化耗盡時間為可讀字串
  */
 export const formatDepletionTime = (hours: number): string => {
   if (!isFinite(hours) || hours < 0) return '∞'
@@ -264,24 +264,24 @@ export const formatDepletionTime = (hours: number): string => {
 }
 
 /**
- * 计算地质研究站带来的恢复速率加成
- * @param geoStationLevel 地质研究站等级
- * @returns 恢复速率倍数（1 + 等级 * 0.1）
+ * 計算地質研究站帶來的恢復速率加成
+ * @param geoStationLevel 地質研究站等級
+ * @returns 恢復速率倍數（1 + 等級 * 0.1）
  */
 export const calculateGeoStationBonus = (geoStationLevel: number): number => {
-  // 每级地质研究站增加50%恢复速度
-  // 0级 = 1倍, 1级 = 1.5倍, 2级 = 2倍, ..., 10级 = 6倍
+  // 每級地質研究站增加50%恢復速度
+  // 0級 = 1倍, 1級 = 1.5倍, 2級 = 2倍, ..., 10級 = 6倍
   return 1 + geoStationLevel * 0.1
 }
 
 /**
- * 恢复矿脉储量
- * 矿脉会随时间缓慢恢复，模拟地质活动
- * @param deposits 矿脉储量对象
- * @param hoursElapsed 经过的小时数
- * @param geoStationLevel 地质研究站等级（可选，影响恢复速度）
- * @param deepDrillingLevel 深层钻探设施等级（可选，影响恢复上限）
- * @param miningTechLevel 采矿技术等级（可选，影响恢复上限）
+ * 恢復礦脈儲量
+ * 礦脈會隨時間緩慢恢復，模擬地質活動
+ * @param deposits 礦脈儲量物件
+ * @param hoursElapsed 經過的小時數
+ * @param geoStationLevel 地質研究站等級（可選，影響恢復速度）
+ * @param deepDrillingLevel 深層鑽探設施等級（可選，影響恢復上限）
+ * @param miningTechLevel 採礦技術等級（可選，影響恢復上限）
  */
 export const regenerateDeposits = (
   deposits: OreDeposits,
@@ -294,33 +294,33 @@ export const regenerateDeposits = (
 
   if (!REGENERATION.ENABLED || hoursElapsed <= 0) return
 
-  // 计算地质研究站加成
+  // 計算地質研究站加成
   const geoBonus = calculateGeoStationBonus(geoStationLevel)
 
-  // 计算带有建筑和科技加成的储量上限
+  // 計算帶有建築和科技加成的儲量上限
   const enhancedDeposits = calculateEnhancedDeposits(deposits.position, deepDrillingLevel, miningTechLevel)
 
-  // 计算恢复量（基于增强后储量的百分比，乘以地质研究站加成）
+  // 計算恢復量（基於增強後儲量的百分比，乘以地質研究站加成）
   const regenRate = REGENERATION.RATE_PER_HOUR * hoursElapsed * geoBonus
   const maxPercentage = REGENERATION.MAX_PERCENTAGE
 
-  // 恢复每种资源
+  // 恢復每種資源
   const metalRegen = enhancedDeposits.metal * regenRate
   const crystalRegen = enhancedDeposits.crystal * regenRate
   const deuteriumRegen = enhancedDeposits.deuterium * regenRate
 
-  // 添加恢复量，但不超过增强后储量的最大百分比
+  // 新增恢復量，但不超過增強後儲量的最大百分比
   deposits.metal = Math.min(enhancedDeposits.metal * maxPercentage, deposits.metal + metalRegen)
   deposits.crystal = Math.min(enhancedDeposits.crystal * maxPercentage, deposits.crystal + crystalRegen)
   deposits.deuterium = Math.min(enhancedDeposits.deuterium * maxPercentage, deposits.deuterium + deuteriumRegen)
 }
 
 /**
- * 获取矿脉恢复状态信息
- * @param deposits 矿脉储量
- * @param geoStationLevel 地质研究站等级（可选，影响恢复时间计算）
- * @param deepDrillingLevel 深层钻探设施等级（可选，影响恢复上限）
- * @param miningTechLevel 采矿技术等级（可选，影响恢复上限）
+ * 獲取礦脈恢復狀態資訊
+ * @param deposits 礦脈儲量
+ * @param geoStationLevel 地質研究站等級（可選，影響恢復時間計算）
+ * @param deepDrillingLevel 深層鑽探設施等級（可選，影響恢復上限）
+ * @param miningTechLevel 採礦技術等級（可選，影響恢復上限）
  */
 export const getRegenerationInfo = (
   deposits: OreDeposits | undefined,
@@ -334,7 +334,7 @@ export const getRegenerationInfo = (
   hoursToFullMetal: number
   hoursToFullCrystal: number
   hoursToFullDeuterium: number
-  geoStationBonus: number // 地质研究站加成倍数
+  geoStationBonus: number // 地質研究站加成倍數
 } => {
   const geoBonus = calculateGeoStationBonus(geoStationLevel)
 
@@ -350,12 +350,12 @@ export const getRegenerationInfo = (
     }
   }
 
-  // 计算带有建筑和科技加成的储量上限
+  // 計算帶有建築和科技加成的儲量上限
   const enhancedDeposits = calculateEnhancedDeposits(deposits.position, deepDrillingLevel, miningTechLevel)
 
   const { REGENERATION } = ORE_DEPOSIT_CONFIG
   const maxPercentage = REGENERATION.MAX_PERCENTAGE
-  // 实际恢复速率 = 基础速率 * 地质研究站加成
+  // 實際恢復速率 = 基礎速率 * 地質研究站加成
   const ratePerHour = REGENERATION.RATE_PER_HOUR * geoBonus
 
   const metalMax = enhancedDeposits.metal * maxPercentage
@@ -366,7 +366,7 @@ export const getRegenerationInfo = (
   const crystalRecovering = deposits.crystal < crystalMax
   const deuteriumRecovering = deposits.deuterium < deuteriumMax
 
-  // 计算恢复到满需要的小时数（考虑地质研究站加成）
+  // 計算恢復到滿需要的小時數（考慮地質研究站加成）
   const hoursToFullMetal = metalRecovering ? (metalMax - deposits.metal) / (enhancedDeposits.metal * ratePerHour) : 0
   const hoursToFullCrystal = crystalRecovering ? (crystalMax - deposits.crystal) / (enhancedDeposits.crystal * ratePerHour) : 0
   const hoursToFullDeuterium = deuteriumRecovering ? (deuteriumMax - deposits.deuterium) / (enhancedDeposits.deuterium * ratePerHour) : 0

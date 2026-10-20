@@ -1,7 +1,7 @@
 /**
- * 外交系统逻辑
+ * 外交系統邏輯
  *
- * 管理玩家与NPC之间的双向好感度、关系状态和外交事件
+ * 管理玩家與NPC之間的雙向好感度、關係狀態和外交事件
  */
 
 import { DIPLOMATIC_CONFIG } from '@/config/gameConfig'
@@ -27,11 +27,11 @@ import { RelationStatus as RS, DiplomaticEventType as DET } from '@/types/game'
 import { getGameNow } from './gameTime'
 
 /**
- * 获取翻译文本的辅助函数
- * @param key 翻译键
- * @param locale 语言代码
- * @param params 参数
- * @returns 翻译后的文本
+ * 獲取翻譯文字的輔助函式
+ * @param key 翻譯鍵
+ * @param locale 語言程式碼
+ * @param params 引數
+ * @returns 翻譯後的文字
  */
 const t = (key: string, locale: Locale, params?: Record<string, string | number>): string => {
   const keys = key.split('.')
@@ -41,13 +41,13 @@ const t = (key: string, locale: Locale, params?: Record<string, string | number>
     if (value && typeof value === 'object' && k in value) {
       value = value[k]
     } else {
-      return key // 如果找不到翻译，返回原始 key
+      return key // 如果找不到翻譯，返回原始 key
     }
   }
 
   let result = typeof value === 'string' ? value : key
 
-  // 替换参数占位符
+  // 替換引數佔位符
   if (params) {
     Object.entries(params).forEach(([paramKey, paramValue]) => {
       result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue))
@@ -58,9 +58,9 @@ const t = (key: string, locale: Locale, params?: Record<string, string | number>
 }
 
 /**
- * 根据好感度值计算关系状态
+ * 根據好感度值計算關係狀態
  * @param reputation 好感度值 (-100 到 +100)
- * @returns 关系状态
+ * @returns 關係狀態
  */
 export const calculateRelationStatus = (reputation: number): RelationStatus => {
   if (reputation <= DIPLOMATIC_CONFIG.HOSTILE_THRESHOLD) {
@@ -72,10 +72,10 @@ export const calculateRelationStatus = (reputation: number): RelationStatus => {
 }
 
 /**
- * 初始化外交关系
- * @param fromId 关系发起方ID
- * @param toId 关系接收方ID
- * @returns 新的外交关系对象
+ * 初始化外交關係
+ * @param fromId 關係發起方ID
+ * @param toId 關係接收方ID
+ * @returns 新的外交關係物件
  */
 export const initializeDiplomaticRelation = (fromId: string, toId: string): DiplomaticRelation => {
   return {
@@ -90,11 +90,11 @@ export const initializeDiplomaticRelation = (fromId: string, toId: string): Dipl
 
 /**
  * 更新好感度值
- * @param relation 外交关系对象
- * @param change 好感度变化值
- * @param reason 变化原因
- * @param details 详细信息
- * @returns 更新后的外交关系对象
+ * @param relation 外交關係物件
+ * @param change 好感度變化值
+ * @param reason 變化原因
+ * @param details 詳細資訊
+ * @returns 更新後的外交關係物件
  */
 export const updateReputation = (
   relation: DiplomaticRelation,
@@ -104,13 +104,13 @@ export const updateReputation = (
 ): DiplomaticRelation => {
   const oldReputation = relation.reputation
 
-  // 计算新的好感度（限制在范围内）
+  // 計算新的好感度（限制在範圍內）
   const newReputation = Math.max(DIPLOMATIC_CONFIG.MIN_REPUTATION, Math.min(DIPLOMATIC_CONFIG.MAX_REPUTATION, oldReputation + change))
 
-  // 更新状态
+  // 更新狀態
   const newStatus = calculateRelationStatus(newReputation)
 
-  // 记录历史
+  // 記錄歷史
   if (!relation.history) {
     relation.history = []
   }
@@ -121,7 +121,7 @@ export const updateReputation = (
     details
   })
 
-  // 只保留最近50条历史记录
+  // 只保留最近50條歷史記錄
   if (relation.history.length > 50) {
     relation.history = relation.history.slice(-50)
   }
@@ -135,38 +135,38 @@ export const updateReputation = (
 }
 
 /**
- * 计算赠送资源的好感度增加值
- * @param resources 赠送的资源
+ * 計算贈送資源的好感度增加值
+ * @param resources 贈送的資源
  * @returns 好感度增加值
  */
 export const calculateGiftReputationGain = (resources: Resources): number => {
   const { REPUTATION_CHANGES } = DIPLOMATIC_CONFIG
 
-  // 计算资源总价值（晶体和氘气价值更高）
+  // 計算資源總價值（晶體和氘氣價值更高）
   const totalValue = resources.metal + resources.crystal * 1.5 + resources.deuterium * 3
 
-  // 检查是否达到最小价值门槛
+  // 檢查是否達到最小价值門檻
   if (totalValue < REPUTATION_CHANGES.GIFT_MIN_VALUE) {
-    return 0 // 低于门槛不获得好感度
+    return 0 // 低於門檻不獲得好感度
   }
 
-  // 基础好感度 + 基于价值的额外好感度
+  // 基礎好感度 + 基於價值的額外好感度
   const baseGain = REPUTATION_CHANGES.GIFT_BASE
   const valueGain = Math.floor(totalValue / 1000) * REPUTATION_CHANGES.GIFT_PER_1K_RESOURCES
 
-  // 确保达到门槛的礼物至少获得1点好感度
+  // 確保達到門檻的禮物至少獲得1點好感度
   const totalGain = Math.max(baseGain + valueGain, 1)
 
-  // 限制在最大值范围内
+  // 限制在最大值範圍內
   return Math.min(totalGain, REPUTATION_CHANGES.GIFT_MAX_SINGLE)
 }
 
 /**
- * 获取或创建外交关系
- * @param relations 关系记录
- * @param fromId 关系发起方ID
- * @param toId 关系接收方ID
- * @returns 外交关系对象
+ * 獲取或建立外交關係
+ * @param relations 關係記錄
+ * @param fromId 關係發起方ID
+ * @param toId 關係接收方ID
+ * @returns 外交關係物件
  */
 export const getOrCreateRelation = (relations: Record<string, DiplomaticRelation>, fromId: string, toId: string): DiplomaticRelation => {
   if (!relations[toId]) {
@@ -176,31 +176,31 @@ export const getOrCreateRelation = (relations: Record<string, DiplomaticRelation
 }
 
 /**
- * 计算NPC拒绝礼物的概率
+ * 計算NPC拒絕禮物的機率
  * @param npc NPC
  * @param player 玩家
- * @returns 拒绝概率（0-1）
+ * @returns 拒絕機率（0-1）
  */
 export const calculateNPCRejectionProbability = (npc: NPC, player: Player): number => {
   const { GIFT_ACCEPTANCE_CONFIG } = DIPLOMATIC_CONFIG
 
-  // 获取NPC对玩家的好感度
+  // 獲取NPC對玩家的好感度
   const relation = npc.relations?.[player.id]
   const reputation = relation?.reputation || 0
 
-  // 基础概率 + 好感度修正
-  // 好感度越低，拒绝概率越高
+  // 基礎機率 + 好感度修正
+  // 好感度越低，拒絕機率越高
   let rejectionProb = GIFT_ACCEPTANCE_CONFIG.NPC_REJECTION_BASE_PROBABILITY
 
-  // 好感度修正：每低于0一点，增加1%拒绝概率
+  // 好感度修正：每低於0一點，增加1%拒絕機率
   if (reputation < 0) {
     rejectionProb += Math.abs(reputation) * GIFT_ACCEPTANCE_CONFIG.NPC_REJECTION_REPUTATION_MODIFIER
   } else if (reputation > 0) {
-    // 好感度为正时，降低拒绝概率
+    // 好感度為正時，降低拒絕機率
     rejectionProb -= reputation * GIFT_ACCEPTANCE_CONFIG.NPC_REJECTION_REPUTATION_MODIFIER
   }
 
-  // 限制在最小和最大范围内
+  // 限制在最小和最大範圍內
   return Math.max(
     GIFT_ACCEPTANCE_CONFIG.MIN_REJECTION_PROBABILITY,
     Math.min(GIFT_ACCEPTANCE_CONFIG.MAX_REJECTION_PROBABILITY, rejectionProb)
@@ -208,11 +208,11 @@ export const calculateNPCRejectionProbability = (npc: NPC, player: Player): numb
 }
 
 /**
- * 处理赠送资源到达（需要NPC接受判定）
- * @param mission 舰队任务
+ * 處理贈送資源到達（需要NPC接受判定）
+ * @param mission 艦隊任務
  * @param player 玩家
- * @param targetNpc 目标NPC
- * @param locale 语言代码
+ * @param targetNpc 目標NPC
+ * @param locale 語言程式碼
  * @returns { accepted: boolean, reputationGain?: number }
  */
 export const handleGiftArrival = (
@@ -221,21 +221,21 @@ export const handleGiftArrival = (
   targetNpc: NPC,
   locale: Locale
 ): { accepted: boolean; reputationGain?: number } => {
-  // 计算NPC拒绝概率
+  // 計算NPC拒絕機率
   const rejectionProb = calculateNPCRejectionProbability(targetNpc, player)
   const isRejected = Math.random() < rejectionProb
 
   if (isRejected) {
-    // NPC拒绝礼物
+    // NPC拒絕禮物
     handleGiftRejection(player, targetNpc, mission.cargo, locale)
     return { accepted: false }
   }
 
-  // NPC接受礼物
-  // 计算好感度增加值
+  // NPC接受禮物
+  // 計算好感度增加值
   const reputationGain = calculateGiftReputationGain(mission.cargo)
 
-  // 更新NPC对玩家的关系（统一使用 npc.relations）
+  // 更新NPC對玩家的關係（統一使用 npc.relations）
   if (!targetNpc.relations) {
     targetNpc.relations = {}
   }
@@ -252,7 +252,7 @@ export const handleGiftArrival = (
     })
   )
 
-  // 生成外交报告
+  // 生成外交報告
   generateDiplomaticReport(
     player,
     targetNpc,
@@ -265,16 +265,16 @@ export const handleGiftArrival = (
 }
 
 /**
- * 处理礼物被拒绝
+ * 處理禮物被拒絕
  * @param player 玩家
  * @param npc NPC
- * @param rejectedResources 被拒绝的资源
- * @param locale 语言代码
+ * @param rejectedResources 被拒絕的資源
+ * @param locale 語言程式碼
  */
 const handleGiftRejection = (player: Player, npc: NPC, rejectedResources: Resources, locale: Locale): void => {
   const { GIFT_ACCEPTANCE_CONFIG } = DIPLOMATIC_CONFIG
 
-  // 创建拒绝通知
+  // 建立拒絕通知
   if (!player.giftRejectedNotifications) {
     player.giftRejectedNotifications = []
   }
@@ -295,12 +295,12 @@ const handleGiftRejection = (player: Player, npc: NPC, rejectedResources: Resour
 
   player.giftRejectedNotifications.push(notification)
 
-  // 限制通知数量
+  // 限制通知數量
   if (player.giftRejectedNotifications.length > 50) {
     player.giftRejectedNotifications = player.giftRejectedNotifications.slice(-50)
   }
 
-  // 拒绝礼物会降低好感度
+  // 拒絕禮物會降低好感度
   if (!npc.relations) {
     npc.relations = {}
   }
@@ -313,7 +313,7 @@ const handleGiftRejection = (player: Player, npc: NPC, rejectedResources: Resour
     t('diplomacy.reports.rejectedPlayerGift', locale)
   )
 
-  // 生成外交报告
+  // 生成外交報告
   generateDiplomaticReport(
     player,
     npc,
@@ -327,12 +327,12 @@ const handleGiftRejection = (player: Player, npc: NPC, rejectedResources: Resour
 }
 
 /**
- * 处理攻击事件的好感度变化
- * @param attacker 攻击者（玩家）
- * @param defender 防御者（NPC）
- * @param battleResult 战斗结果
+ * 處理攻擊事件的好感度變化
+ * @param attacker 攻擊者（玩家）
+ * @param defender 防禦者（NPC）
+ * @param battleResult 戰鬥結果
  * @param allNpcs 所有NPC列表
- * @param locale 语言代码
+ * @param locale 語言程式碼
  */
 export const handleAttackReputation = (
   attacker: Player,
@@ -343,14 +343,14 @@ export const handleAttackReputation = (
 ): void => {
   const { REPUTATION_CHANGES } = DIPLOMATIC_CONFIG
 
-  // 计算好感度降低值
+  // 計算好感度降低值
   let reputationLoss = REPUTATION_CHANGES.ATTACK
 
   if (battleResult.winner === 'attacker') {
     reputationLoss = REPUTATION_CHANGES.ATTACK_WIN
   }
 
-  // 更新NPC对玩家的关系（统一使用 npc.relations）
+  // 更新NPC對玩家的關係（統一使用 npc.relations）
   if (!defender.relations) {
     defender.relations = {}
   }
@@ -363,12 +363,12 @@ export const handleAttackReputation = (
     t('diplomacy.reports.wasAttackedByPlayer', locale)
   )
 
-  // 检查盟友关系网络
+  // 檢查盟友關係網路
   if (defender.allies && defender.allies.length > 0) {
     handleAllyAttackedReputation(attacker, defender, allNpcs, locale)
   }
 
-  // 生成外交报告
+  // 生成外交報告
   generateDiplomaticReport(
     attacker,
     defender,
@@ -379,11 +379,11 @@ export const handleAttackReputation = (
 }
 
 /**
- * 处理盟友被攻击的好感度变化
- * @param attacker 攻击者（玩家）
- * @param attackedNpc 被攻击的NPC
+ * 處理盟友被攻擊的好感度變化
+ * @param attacker 攻擊者（玩家）
+ * @param attackedNpc 被攻擊的NPC
  * @param allNpcs 所有NPC列表
- * @param locale 语言代码
+ * @param locale 語言程式碼
  */
 export const handleAllyAttackedReputation = (attacker: Player, attackedNpc: NPC, allNpcs: NPC[], locale: Locale): void => {
   const { REPUTATION_CHANGES } = DIPLOMATIC_CONFIG
@@ -392,7 +392,7 @@ export const handleAllyAttackedReputation = (attacker: Player, attackedNpc: NPC,
   const allies = allNpcs.filter(npc => attackedNpc.allies?.includes(npc.id))
 
   allies.forEach(ally => {
-    // 更新盟友对玩家的关系
+    // 更新盟友對玩家的關係
     if (!ally.relations) {
       ally.relations = {}
     }
@@ -405,7 +405,7 @@ export const handleAllyAttackedReputation = (attacker: Player, attackedNpc: NPC,
       t('diplomacy.reports.playerAttackedAlly', locale, { allyName: attackedNpc.name })
     )
 
-    // 生成外交报告
+    // 生成外交報告
     generateDiplomaticReport(
       attacker,
       ally,
@@ -417,18 +417,18 @@ export const handleAllyAttackedReputation = (attacker: Player, attackedNpc: NPC,
 }
 
 /**
- * 处理侦查事件的好感度变化
- * @param spy 侦查者（玩家）
- * @param target 侦查目标（NPC）
- * @param wasDetected 是否被发现
- * @param locale 语言代码
+ * 處理偵查事件的好感度變化
+ * @param spy 偵查者（玩家）
+ * @param target 偵查目標（NPC）
+ * @param wasDetected 是否被發現
+ * @param locale 語言程式碼
  */
 export const handleSpyReputation = (spy: Player, target: NPC, wasDetected: boolean, locale: Locale): void => {
   const { REPUTATION_CHANGES } = DIPLOMATIC_CONFIG
 
   const reputationLoss = wasDetected ? REPUTATION_CHANGES.SPY_DETECTED : REPUTATION_CHANGES.SPY_UNDETECTED
 
-  // NPC对玩家的关系始终受影响
+  // NPC對玩家的關係始終受影響
   if (!target.relations) {
     target.relations = {}
   }
@@ -441,24 +441,24 @@ export const handleSpyReputation = (spy: Player, target: NPC, wasDetected: boole
     t('diplomacy.reports.wasSpiedByPlayer', locale, { detected: wasDetected ? 'true' : 'false' })
   )
 
-  // 如果被发现，生成外交报告
+  // 如果被發現，生成外交報告
   if (wasDetected) {
     generateDiplomaticReport(spy, target, DET.Spy, reputationLoss, t('diplomacy.reports.spyDetected', locale, { npcName: target.name }))
   }
 }
 
 /**
- * 处理回收残骸事件的好感度变化
- * 如果残骸在NPC星球位置，视为抢夺
+ * 處理回收殘骸事件的好感度變化
+ * 如果殘骸在NPC星球位置，視為搶奪
  * @param player 玩家
- * @param debrisPosition 残骸位置
+ * @param debrisPosition 殘骸位置
  * @param allNpcs 所有NPC列表
- * @param locale 语言代码
+ * @param locale 語言程式碼
  */
 export const handleDebrisRecycleReputation = (player: Player, debrisPosition: Position, allNpcs: NPC[], locale: Locale): void => {
   const { REPUTATION_CHANGES } = DIPLOMATIC_CONFIG
 
-  // 找到该位置的NPC星球所有者
+  // 找到該位置的NPC星球所有者
   const npcOwner = allNpcs.find(npc =>
     npc.planets.some(
       p =>
@@ -469,8 +469,8 @@ export const handleDebrisRecycleReputation = (player: Player, debrisPosition: Po
   )
 
   if (npcOwner) {
-    // 这是在NPC星球位置回收残骸，视为抢夺
-    // 更新NPC对玩家的关系（统一使用 npc.relations）
+    // 這是在NPC星球位置回收殘骸，視為搶奪
+    // 更新NPC對玩家的關係（統一使用 npc.relations）
     if (!npcOwner.relations) {
       npcOwner.relations = {}
     }
@@ -483,7 +483,7 @@ export const handleDebrisRecycleReputation = (player: Player, debrisPosition: Po
       t('diplomacy.reports.stoleDebrisFromTerritory', locale, { npcName: npcOwner.name })
     )
 
-    // 生成外交报告
+    // 生成外交報告
     generateDiplomaticReport(
       player,
       npcOwner,
@@ -495,13 +495,13 @@ export const handleDebrisRecycleReputation = (player: Player, debrisPosition: Po
 }
 
 /**
- * 处理星球摧毁事件的好感度变化
- * 摧毁星球是最严重的行为，直接导致敌对关系
- * @param attacker 攻击者（玩家）
- * @param destroyedPlanet 被摧毁的星球
+ * 處理星球摧毀事件的好感度變化
+ * 摧毀星球是最嚴重的行為，直接導致敵對關係
+ * @param attacker 攻擊者（玩家）
+ * @param destroyedPlanet 被摧毀的星球
  * @param planetOwner 星球所有者（NPC）
  * @param allNpcs 所有NPC列表
- * @param locale 语言代码
+ * @param locale 語言程式碼
  */
 export const handlePlanetDestructionReputation = (
   attacker: Player,
@@ -513,7 +513,7 @@ export const handlePlanetDestructionReputation = (
   const { HOSTILE_THRESHOLD } = DIPLOMATIC_CONFIG
   const now = Date.now()
 
-  // 更新星球所有者对玩家的关系 - 直接设为敌对（统一使用 npc.relations）
+  // 更新星球所有者對玩家的關係 - 直接設為敵對（統一使用 npc.relations）
   if (!planetOwner.relations) {
     planetOwner.relations = {}
   }
@@ -525,7 +525,7 @@ export const handlePlanetDestructionReputation = (
 
   planetOwner.relations[attacker.id] = {
     ...ownerRelation,
-    reputation: HOSTILE_THRESHOLD, // 直接设为敌对阈值
+    reputation: HOSTILE_THRESHOLD, // 直接設為敵對閾值
     status: RS.Hostile,
     lastUpdated: now,
     history: [
@@ -539,7 +539,7 @@ export const handlePlanetDestructionReputation = (
     ]
   }
 
-  // 生成外交报告
+  // 生成外交報告
   generateDiplomaticReport(
     attacker,
     planetOwner,
@@ -554,19 +554,19 @@ export const handlePlanetDestructionReputation = (
     { npcName: planetOwner.name, planetName: destroyedPlanet.name, reputation: HOSTILE_THRESHOLD }
   )
 
-  // 检查盟友关系网络 - 摧毁星球对盟友的影响更严重
+  // 檢查盟友關係網路 - 摧毀星球對盟友的影響更嚴重
   if (planetOwner.allies && planetOwner.allies.length > 0) {
     handleAllyPlanetDestroyedReputation(attacker, planetOwner, destroyedPlanet, allNpcs, locale)
   }
 }
 
 /**
- * 处理盟友星球被摧毁的好感度变化
- * @param attacker 攻击者（玩家）
- * @param attackedNpc 星球被摧毁的NPC
- * @param destroyedPlanet 被摧毁的星球
+ * 處理盟友星球被摧毀的好感度變化
+ * @param attacker 攻擊者（玩家）
+ * @param attackedNpc 星球被摧毀的NPC
+ * @param destroyedPlanet 被摧毀的星球
  * @param allNpcs 所有NPC列表
- * @param locale 语言代码
+ * @param locale 語言程式碼
  */
 export const handleAllyPlanetDestroyedReputation = (
   attacker: Player,
@@ -581,13 +581,13 @@ export const handleAllyPlanetDestroyedReputation = (
   const allies = allNpcs.filter(npc => attackedNpc.allies?.includes(npc.id))
 
   allies.forEach(ally => {
-    // 更新盟友对玩家的关系 - 摧毁盟友星球的惩罚是攻击的两倍
+    // 更新盟友對玩家的關係 - 摧毀盟友星球的懲罰是攻擊的兩倍
     if (!ally.relations) {
       ally.relations = {}
     }
 
     const allyRelation = getOrCreateRelation(ally.relations, ally.id, attacker.id)
-    const reputationLoss = REPUTATION_CHANGES.ALLY_ATTACKED * 2 // 双倍惩罚
+    const reputationLoss = REPUTATION_CHANGES.ALLY_ATTACKED * 2 // 雙倍懲罰
     ally.relations[attacker.id] = updateReputation(
       allyRelation,
       reputationLoss,
@@ -595,7 +595,7 @@ export const handleAllyPlanetDestroyedReputation = (
       t('diplomacy.reports.playerDestroyedAllyPlanet', locale, { allyName: attackedNpc.name, planetName: destroyedPlanet.name })
     )
 
-    // 生成外交报告
+    // 生成外交報告
     generateDiplomaticReport(
       attacker,
       ally,
@@ -617,14 +617,14 @@ export const handleAllyPlanetDestroyedReputation = (
 }
 
 /**
- * 生成外交报告
+ * 生成外交報告
  * @param player 玩家
  * @param npc NPC
- * @param eventType 事件类型
- * @param reputationChange 好感度变化值
- * @param message 消息内容（已弃用，用于向后兼容）
- * @param messageKey 翻译键（可选）
- * @param messageParams 翻译参数（可选）
+ * @param eventType 事件型別
+ * @param reputationChange 好感度變化值
+ * @param message 訊息內容（已棄用，用於向後相容）
+ * @param messageKey 翻譯鍵（可選）
+ * @param messageParams 翻譯引數（可選）
  */
 const generateDiplomaticReport = (
   player: Player,
@@ -639,7 +639,7 @@ const generateDiplomaticReport = (
     player.diplomaticReports = []
   }
 
-  // 使用 npc.relations 作为唯一数据源
+  // 使用 npc.relations 作為唯一資料來源
   const relation = npc.relations?.[player.id] || initializeDiplomaticRelation(npc.id, player.id)
   const oldStatus = relation.status
   const newReputation = Math.max(
@@ -666,22 +666,22 @@ const generateDiplomaticReport = (
 
   player.diplomaticReports.push(report)
 
-  // 只保留最近100条报告
+  // 只保留最近100條報告
   if (player.diplomaticReports.length > 100) {
     player.diplomaticReports = player.diplomaticReports.slice(-100)
   }
 }
 
 /**
- * 处理NPC赠送资源给玩家（创建礼物通知，等待玩家接受/拒绝）
- * @param npc 赠送方NPC
+ * 處理NPC贈送資源給玩家（建立禮物通知，等待玩家接受/拒絕）
+ * @param npc 贈送方NPC
  * @param player 接收方玩家
- * @param giftResources 赠送的资源
+ * @param giftResources 贈送的資源
  */
 export const handleNPCGiftToPlayer = (npc: NPC, player: Player, giftResources: Resources): void => {
   const { GIFT_ACCEPTANCE_CONFIG } = DIPLOMATIC_CONFIG
 
-  // 创建礼物通知
+  // 建立禮物通知
   if (!player.giftNotifications) {
     player.giftNotifications = []
   }
@@ -704,32 +704,32 @@ export const handleNPCGiftToPlayer = (npc: NPC, player: Player, giftResources: R
 
   player.giftNotifications.push(notification)
 
-  // 限制通知数量
+  // 限制通知數量
   if (player.giftNotifications.length > 50) {
     player.giftNotifications = player.giftNotifications.slice(-50)
   }
 }
 
 /**
- * 玩家接受NPC的礼物
+ * 玩家接受NPC的禮物
  * @param player 玩家
  * @param npc NPC
- * @param giftNotification 礼物通知
- * @param locale 语言代码
+ * @param giftNotification 禮物通知
+ * @param locale 語言程式碼
  */
 export const acceptNPCGift = (player: Player, npc: NPC, giftNotification: GiftNotification, locale: Locale): void => {
-  // 将资源添加到玩家主星球（使用安全添加函数防止溢出）
+  // 將資源新增到玩家主星球（使用安全新增函式防止溢位）
   if (player.planets && player.planets.length > 0) {
     const mainPlanet = player.planets[0]
     if (mainPlanet) {
-      // 计算军官加成
+      // 計算軍官加成
       const bonuses = officerLogic.calculateActiveBonuses(player.officers, getGameNow())
-      // 使用安全添加函数，超出容量的资源会丢失
+      // 使用安全新增函式，超出容量的資源會丟失
       resourceLogic.addResourcesSafely(mainPlanet, giftNotification.resources, bonuses.storageCapacityBonus)
     }
   }
 
-  // 更新NPC对玩家的关系
+  // 更新NPC對玩家的關係
   if (!npc.relations) {
     npc.relations = {}
   }
@@ -742,7 +742,7 @@ export const acceptNPCGift = (player: Player, npc: NPC, giftNotification: GiftNo
     t('diplomacy.reports.giftedResourcesToPlayer', locale)
   )
 
-  // 生成外交报告
+  // 生成外交報告
   generateDiplomaticReport(
     player,
     npc,
@@ -756,23 +756,23 @@ export const acceptNPCGift = (player: Player, npc: NPC, giftNotification: GiftNo
     })
   )
 
-  // 移除礼物通知
+  // 移除禮物通知
   if (player.giftNotifications) {
     player.giftNotifications = player.giftNotifications.filter(n => n.id !== giftNotification.id)
   }
 }
 
 /**
- * 玩家拒绝NPC的礼物
+ * 玩家拒絕NPC的禮物
  * @param player 玩家
  * @param npc NPC
- * @param giftNotification 礼物通知
- * @param locale 语言代码
+ * @param giftNotification 禮物通知
+ * @param locale 語言程式碼
  */
 export const rejectNPCGift = (player: Player, npc: NPC, giftNotification: GiftNotification, locale: Locale): void => {
   const { GIFT_ACCEPTANCE_CONFIG } = DIPLOMATIC_CONFIG
 
-  // 拒绝礼物会降低好感度
+  // 拒絕禮物會降低好感度
   if (!npc.relations) {
     npc.relations = {}
   }
@@ -785,7 +785,7 @@ export const rejectNPCGift = (player: Player, npc: NPC, giftNotification: GiftNo
     t('diplomacy.reports.playerRejectedGift', locale)
   )
 
-  // 生成外交报告
+  // 生成外交報告
   generateDiplomaticReport(
     player,
     npc,
@@ -797,23 +797,23 @@ export const rejectNPCGift = (player: Player, npc: NPC, giftNotification: GiftNo
     })
   )
 
-  // 移除礼物通知
+  // 移除禮物通知
   if (player.giftNotifications) {
     player.giftNotifications = player.giftNotifications.filter(n => n.id !== giftNotification.id)
   }
 }
 
 /**
- * 处理NPC被彻底消灭（所有星球被摧毁）
- * @param eliminatedNpc 被消灭的NPC
+ * 處理NPC被徹底消滅（所有星球被摧毀）
+ * @param eliminatedNpc 被消滅的NPC
  * @param player 玩家
  * @param allNpcs 所有NPC列表
- * @param locale 语言代码
+ * @param locale 語言程式碼
  */
 export const handleNPCElimination = (eliminatedNpc: NPC, player: Player, allNpcs: NPC[], locale: Locale): void => {
   const { HOSTILE_THRESHOLD } = DIPLOMATIC_CONFIG
 
-  // 1. 将NPC对玩家的关系设为最低（敌对状态）
+  // 1. 將NPC對玩家的關係設為最低（敵對狀態）
   if (!eliminatedNpc.relations) {
     eliminatedNpc.relations = {}
   }
@@ -823,7 +823,7 @@ export const handleNPCElimination = (eliminatedNpc: NPC, player: Player, allNpcs
 
   eliminatedNpc.relations[player.id] = {
     ...relation,
-    reputation: HOSTILE_THRESHOLD, // 设为敌对阈值
+    reputation: HOSTILE_THRESHOLD, // 設為敵對閾值
     status: RS.Hostile,
     lastUpdated: now,
     history: [
@@ -837,7 +837,7 @@ export const handleNPCElimination = (eliminatedNpc: NPC, player: Player, allNpcs
     ]
   }
 
-  // 2. 生成外交报告
+  // 2. 生成外交報告
   generateDiplomaticReport(
     player,
     eliminatedNpc,
@@ -848,7 +848,7 @@ export const handleNPCElimination = (eliminatedNpc: NPC, player: Player, allNpcs
     { npcName: eliminatedNpc.name }
   )
 
-  // 3. 从所有其他NPC的盟友列表中移除被消灭的NPC
+  // 3. 從所有其他NPC的盟友列表中移除被消滅的NPC
   allNpcs.forEach(npc => {
     if (npc.id !== eliminatedNpc.id && npc.allies && npc.allies.includes(eliminatedNpc.id)) {
       npc.allies = npc.allies.filter(allyId => allyId !== eliminatedNpc.id)
@@ -857,19 +857,19 @@ export const handleNPCElimination = (eliminatedNpc: NPC, player: Player, allNpcs
 }
 
 /**
- * 检查并处理被消灭的NPC（所有星球都被摧毁的NPC）
+ * 檢查並處理被消滅的NPC（所有星球都被摧毀的NPC）
  * @param allNpcs 所有NPC列表
  * @param player 玩家
- * @param locale 语言代码
- * @returns 被消灭的NPC ID列表
+ * @param locale 語言程式碼
+ * @returns 被消滅的NPC ID列表
  */
 export const checkAndHandleEliminatedNPCs = (allNpcs: NPC[], player: Player, locale: Locale): string[] => {
   const eliminatedNpcIds: string[] = []
 
   allNpcs.forEach(npc => {
-    // 检查NPC是否还有星球
+    // 檢查NPC是否還有星球
     if (!npc.planets || npc.planets.length === 0) {
-      // NPC被彻底消灭
+      // NPC被徹底消滅
       handleNPCElimination(npc, player, allNpcs, locale)
       eliminatedNpcIds.push(npc.id)
     }
@@ -879,11 +879,11 @@ export const checkAndHandleEliminatedNPCs = (allNpcs: NPC[], player: Player, loc
 }
 
 /**
- * 通知玩家盟友正在协防
- * @param npc 派遣协防舰队的NPC
+ * 通知玩家盟友正在協防
+ * @param npc 派遣協防艦隊的NPC
  * @param player 玩家
- * @param targetPlanet 被协防的星球
- * @param mission 协防任务
+ * @param targetPlanet 被協防的星球
+ * @param mission 協防任務
  */
 export const notifyPlayerOfAllyDefense = (
   npc: NPC,
@@ -891,10 +891,10 @@ export const notifyPlayerOfAllyDefense = (
   targetPlanet: Planet,
   mission: FleetMission
 ): void => {
-  // 计算舰队规模
+  // 計算艦隊規模
   const fleetSize = Object.values(mission.fleet).reduce((sum, count) => sum + (count || 0), 0)
 
-  // 创建外交报告
+  // 建立外交報告
   const report: DiplomaticReport = {
     id: `ally_defense_${Date.now()}_${npc.id}`,
     npcId: npc.id,
@@ -911,13 +911,13 @@ export const notifyPlayerOfAllyDefense = (
     read: false
   }
 
-  // 添加到玩家的外交报告列表
+  // 新增到玩家的外交報告列表
   if (!player.diplomaticReports) {
     player.diplomaticReports = []
   }
   player.diplomaticReports.unshift(report)
 
-  // 限制报告数量
+  // 限制報告數量
   if (player.diplomaticReports.length > 100) {
     player.diplomaticReports = player.diplomaticReports.slice(0, 100)
   }

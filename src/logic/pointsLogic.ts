@@ -5,34 +5,34 @@ import * as buildingLogic from './buildingLogic'
 import * as researchLogic from './researchLogic'
 
 /**
- * 计算资源总和（仅计算金属+晶体+重氢）
- * 根据游戏规则：不包括暗物质和能量
+ * 計算資源總和（僅計算金屬+晶體+重氫）
+ * 根據遊戲規則：不包括暗物質和能量
  */
 export const calculateResourceCost = (resources: Resources): number => {
   return resources.metal + resources.crystal + resources.deuterium
 }
 
 /**
- * 将资源总和转换为积分
- * 规则：每1000资源 = 1分
+ * 將資源總和轉換為積分
+ * 規則：每1000資源 = 1分
  */
 export const calculatePointsFromResources = (resourceCost: number): number => {
   return Math.floor(resourceCost / 1000)
 }
 
 /**
- * 为玩家添加积分
+ * 為玩家新增積分
  */
 export const addPoints = (player: Player, points: number): void => {
   player.points += points
 }
 
 /**
- * 计算建筑升级到指定等级所获得的积分
- * @param buildingType 建筑类型
- * @param fromLevel 起始等级（不包括）
- * @param toLevel 目标等级（包括）
- * @returns 积分数
+ * 計算建築升級到指定等級所獲得的積分
+ * @param buildingType 建築型別
+ * @param fromLevel 起始等級（不包括）
+ * @param toLevel 目標等級（包括）
+ * @returns 積分數
  */
 export const calculateBuildingPoints = (buildingType: BuildingType, fromLevel: number, toLevel: number): number => {
   let totalPoints = 0
@@ -45,11 +45,11 @@ export const calculateBuildingPoints = (buildingType: BuildingType, fromLevel: n
 }
 
 /**
- * 计算科技研究到指定等级所获得的积分
- * @param technologyType 科技类型
- * @param fromLevel 起始等级（不包括）
- * @param toLevel 目标等级（包括）
- * @returns 积分数
+ * 計算科技研究到指定等級所獲得的積分
+ * @param technologyType 科技型別
+ * @param fromLevel 起始等級（不包括）
+ * @param toLevel 目標等級（包括）
+ * @returns 積分數
  */
 export const calculateTechnologyPoints = (technologyType: TechnologyType, fromLevel: number, toLevel: number): number => {
   let totalPoints = 0
@@ -62,10 +62,10 @@ export const calculateTechnologyPoints = (technologyType: TechnologyType, fromLe
 }
 
 /**
- * 计算舰船建造所获得的积分
- * @param shipType 舰船类型
- * @param quantity 数量
- * @returns 积分数
+ * 計算艦船建造所獲得的積分
+ * @param shipType 艦船型別
+ * @param quantity 數量
+ * @returns 積分數
  */
 export const calculateShipPoints = (shipType: ShipType, quantity: number): number => {
   const config = SHIPS[shipType]
@@ -75,10 +75,10 @@ export const calculateShipPoints = (shipType: ShipType, quantity: number): numbe
 }
 
 /**
- * 计算防御建造所获得的积分
- * @param defenseType 防御类型
- * @param quantity 数量
- * @returns 积分数
+ * 計算防禦建造所獲得的積分
+ * @param defenseType 防禦型別
+ * @param quantity 數量
+ * @returns 積分數
  */
 export const calculateDefensePoints = (defenseType: DefenseType, quantity: number): number => {
   const config = DEFENSES[defenseType]
@@ -88,13 +88,13 @@ export const calculateDefensePoints = (defenseType: DefenseType, quantity: numbe
 }
 
 /**
- * 计算玩家当前的总积分（用于数据迁移或重新计算）
- * 会计算所有建筑、科技、舰船、防御的累积积分
+ * 計算玩家當前的總積分（用於資料遷移或重新計算）
+ * 會計算所有建築、科技、艦船、防禦的累積積分
  */
 export const calculateTotalPlayerPoints = (player: Player): number => {
   let totalPoints = 0
 
-  // 计算所有星球的建筑积分
+  // 計算所有星球的建築積分
   for (const planet of player.planets) {
     for (const [buildingType, level] of Object.entries(planet.buildings)) {
       if (level > 0) {
@@ -102,14 +102,14 @@ export const calculateTotalPlayerPoints = (player: Player): number => {
       }
     }
 
-    // 计算所有星球的舰船积分
+    // 計算所有星球的艦船積分
     for (const [shipType, quantity] of Object.entries(planet.fleet)) {
       if (quantity > 0) {
         totalPoints += calculateShipPoints(shipType as ShipType, quantity)
       }
     }
 
-    // 计算所有星球的防御积分
+    // 計算所有星球的防禦積分
     for (const [defenseType, quantity] of Object.entries(planet.defense)) {
       if (quantity > 0) {
         totalPoints += calculateDefensePoints(defenseType as DefenseType, quantity)
@@ -117,14 +117,14 @@ export const calculateTotalPlayerPoints = (player: Player): number => {
     }
   }
 
-  // 计算所有科技的积分
+  // 計算所有科技的積分
   for (const [technologyType, level] of Object.entries(player.technologies)) {
     if (level > 0) {
       totalPoints += calculateTechnologyPoints(technologyType as TechnologyType, 0, level)
     }
   }
 
-  // 计算正在飞行的舰队积分（舰队已经建造，所以也计入积分）
+  // 計算正在飛行的艦隊積分（艦隊已經建造，所以也計入積分）
   for (const mission of player.fleetMissions) {
     for (const [shipType, quantity] of Object.entries(mission.fleet)) {
       if (quantity && quantity > 0) {

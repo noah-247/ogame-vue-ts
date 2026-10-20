@@ -6,10 +6,10 @@ import * as oreDepositLogic from './oreDepositLogic'
 import * as planetLogic from './planetLogic'
 
 /**
- * 计算资源研究科技加成
- * @param mineralResearchLevel 矿物研究等级（每级+2%金属产量）
- * @param crystalResearchLevel 晶体研究等级（每级+2%晶体产量）
- * @param fuelResearchLevel 燃料研究等级（每级+2%重氢产量）
+ * 計算資源研究科技加成
+ * @param mineralResearchLevel 礦物研究等級（每級+2%金屬產量）
+ * @param crystalResearchLevel 晶體研究等級（每級+2%晶體產量）
+ * @param fuelResearchLevel 燃料研究等級（每級+2%重氫產量）
  */
 export const calculateResearchProductionBonus = (
   mineralResearchLevel: number = 0,
@@ -17,14 +17,14 @@ export const calculateResearchProductionBonus = (
   fuelResearchLevel: number = 0
 ): { metalBonus: number; crystalBonus: number; deuteriumBonus: number } => {
   return {
-    metalBonus: mineralResearchLevel * 2, // 每级2%
+    metalBonus: mineralResearchLevel * 2, // 每級2%
     crystalBonus: crystalResearchLevel * 2,
     deuteriumBonus: fuelResearchLevel * 2
   }
 }
 
 /**
- * 计算电量产出
+ * 計算電量產出
  */
 export const calculateEnergyProduction = (
   planet: Planet,
@@ -37,15 +37,15 @@ export const calculateEnergyProduction = (
   const solarSatelliteCount = planet.fleet.solarSatellite || 0
   const energyBonus = 1 + (bonuses.energyProductionBonus || 0) / 100
 
-  // 太阳能电站每级产出：50 * 1.1^等级
+  // 太陽能電站每級產出：50 * 1.1^等級
   const solarPlantProduction = solarPlantLevel * 50 * Math.pow(1.1, solarPlantLevel)
 
-  // 核聚变反应堆每级产出：150 * 1.15^等级（消耗重氢）
+  // 核聚變反應堆每級產出：150 * 1.15^等級（消耗重氫）
   const fusionReactorProduction = fusionReactorLevel * 150 * Math.pow(1.15, fusionReactorLevel)
 
-  // 太阳能卫星产出：基于星球温度计算
+  // 太陽能衛星產出：基於星球溫度計算
   // OGame 原版公式：(maxTemp + 160) / 6
-  // 温度越高，太阳能卫星产能越高
+  // 溫度越高，太陽能衛星產能越高
   const maxTemp = planet.temperature?.max ?? 0
   const solarSatelliteOutputPerUnit = planetLogic.calculateSolarSatelliteOutput(maxTemp)
   const solarSatelliteProduction = solarSatelliteCount * solarSatelliteOutputPerUnit
@@ -54,15 +54,15 @@ export const calculateEnergyProduction = (
 }
 
 /**
- * 计算电量消耗
+ * 計算電量消耗
  */
 export const calculateEnergyConsumption = (planet: Planet): number => {
-  // 资源建筑消耗
+  // 資源建築消耗
   const metalMineLevel = planet.buildings[BuildingType.MetalMine] || 0
   const crystalMineLevel = planet.buildings[BuildingType.CrystalMine] || 0
   const deuteriumSynthesizerLevel = planet.buildings[BuildingType.DeuteriumSynthesizer] || 0
 
-  // 设施建筑消耗
+  // 設施建築消耗
   const roboticsFactoryLevel = planet.buildings[BuildingType.RoboticsFactory] || 0
   const naniteFactoryLevel = planet.buildings[BuildingType.NaniteFactory] || 0
   const shipyardLevel = planet.buildings[BuildingType.Shipyard] || 0
@@ -71,16 +71,16 @@ export const calculateEnergyConsumption = (planet: Planet): number => {
   const terraformerLevel = planet.buildings[BuildingType.Terraformer] || 0
   const darkMatterCollectorLevel = planet.buildings[BuildingType.DarkMatterCollector] || 0
 
-  // 月球建筑消耗
+  // 月球建築消耗
   const sensorPhalanxLevel = planet.buildings[BuildingType.SensorPhalanx] || 0
   const jumpGateLevel = planet.buildings[BuildingType.JumpGate] || 0
 
-  // 矿场每级消耗：10 * 1.1^等级
+  // 礦場每級消耗：10 * 1.1^等級
   const metalConsumption = metalMineLevel * 10 * Math.pow(1.1, metalMineLevel)
   const crystalConsumption = crystalMineLevel * 10 * Math.pow(1.1, crystalMineLevel)
   const deuteriumConsumption = deuteriumSynthesizerLevel * 15 * Math.pow(1.1, deuteriumSynthesizerLevel)
 
-  // 设施建筑消耗
+  // 設施建築消耗
   const roboticsConsumption = roboticsFactoryLevel * 5 * Math.pow(1.1, roboticsFactoryLevel)
   const naniteConsumption = naniteFactoryLevel * 20 * Math.pow(1.15, naniteFactoryLevel)
   const shipyardConsumption = shipyardLevel * 8 * Math.pow(1.1, shipyardLevel)
@@ -89,7 +89,7 @@ export const calculateEnergyConsumption = (planet: Planet): number => {
   const terraformerConsumption = terraformerLevel * 25 * Math.pow(1.15, terraformerLevel)
   const darkMatterCollectorConsumption = darkMatterCollectorLevel * 10 * Math.pow(1.1, darkMatterCollectorLevel)
 
-  // 月球建筑消耗
+  // 月球建築消耗
   const sensorPhalanxConsumption = sensorPhalanxLevel * 15 * Math.pow(1.12, sensorPhalanxLevel)
   const jumpGateConsumption = jumpGateLevel * 50 * Math.pow(1.2, jumpGateLevel)
 
@@ -110,10 +110,10 @@ export const calculateEnergyConsumption = (planet: Planet): number => {
 }
 
 /**
- * 计算资源产量（每小时）
+ * 計算資源產量（每小時）
  * @param planet 星球
- * @param bonuses 军官等加成
- * @param techBonuses 科技加成（可选，矿物研究/晶体研究/燃料研究）
+ * @param bonuses 軍官等加成
+ * @param techBonuses 科技加成（可選，礦物研究/晶體研究/燃料研究）
  */
 export const calculateResourceProduction = (
   planet: Planet,
@@ -136,7 +136,7 @@ export const calculateResourceProduction = (
   const resourceBonus = 1 + (bonuses.resourceProductionBonus || 0) / 100
   const darkMatterBonus = 1 + (bonuses.darkMatterProductionBonus || 0) / 100
 
-  // 计算科技加成
+  // 計算科技加成
   const researchBonus = calculateResearchProductionBonus(
     techBonuses?.mineralResearchLevel || 0,
     techBonuses?.crystalResearchLevel || 0,
@@ -146,24 +146,24 @@ export const calculateResourceProduction = (
   const crystalTechBonus = 1 + researchBonus.crystalBonus / 100
   const deuteriumTechBonus = 1 + researchBonus.deuteriumBonus / 100
 
-  // 计算能量产出（每小时）
+  // 計算能量產出（每小時）
   const energyProduction = calculateEnergyProduction(planet, { energyProductionBonus: bonuses.energyProductionBonus })
 
-  // 计算能量消耗（每小时）
+  // 計算能量消耗（每小時）
   const energyConsumption = calculateEnergyConsumption(planet)
 
-  // 检查能量平衡是否充足
-  // 如果能量产出 >= 能量消耗，矿场正常生产
-  // 这样即使浏览器关闭后再打开，只要能量平衡是正的，就能正常生产
+  // 檢查能量平衡是否充足
+  // 如果能量產出 >= 能量消耗，礦場正常生產
+  // 這樣即使瀏覽器關閉後再開啟，只要能量平衡是正的，就能正常生產
   const hasPositiveEnergyBalance = energyProduction >= energyConsumption
   const productionEfficiency = hasPositiveEnergyBalance ? 1 : 0
 
-  // 计算矿脉储量效率（当储量接近耗尽时产量下降）
+  // 計算礦脈儲量效率（當儲量接近耗盡時產量下降）
   const metalDepositEfficiency = oreDepositLogic.calculateDepositEfficiency(planet.oreDeposits, 'metal')
   const crystalDepositEfficiency = oreDepositLogic.calculateDepositEfficiency(planet.oreDeposits, 'crystal')
   const deuteriumDepositEfficiency = oreDepositLogic.calculateDepositEfficiency(planet.oreDeposits, 'deuterium')
 
-  // 重氢温度加成：温度越低，产量越高
+  // 重氫溫度加成：溫度越低，產量越高
   const deuteriumTempBonus = planetLogic.calculateDeuteriumTemperatureBonus(planet.temperature?.max ?? 0)
 
   return {
@@ -198,7 +198,7 @@ export const calculateResourceProduction = (
 }
 
 /**
- * 计算资源容量
+ * 計算資源容量
  */
 export const calculateResourceCapacity = (planet: Planet, storageCapacityBonus: number): Resources => {
   const metalStorageLevel = planet.buildings[BuildingType.MetalStorage] || 0
@@ -209,21 +209,21 @@ export const calculateResourceCapacity = (planet: Planet, storageCapacityBonus: 
 
   const bonus = 1 + (storageCapacityBonus || 0) / 100
 
-  // OGame规则：基础容量10000，资源可以超过容量（只影响生产，不会丢失）
-  // 月球没有矿场，所以超过容量没有影响，玩家可以从行星运输资源到月球
+  // OGame規則：基礎容量10000，資源可以超過容量（隻影響生產，不會丟失）
+  // 月球沒有礦場，所以超過容量沒有影響，玩家可以從行星運輸資源到月球
   const baseCapacity = 10000
-  const darkMatterBaseCapacity = 1000 // 暗物质基础容量较小
+  const darkMatterBaseCapacity = 1000 // 暗物質基礎容量較小
   return {
     metal: baseCapacity * Math.pow(2, metalStorageLevel) * bonus,
     crystal: baseCapacity * Math.pow(2, crystalStorageLevel) * bonus,
     deuterium: baseCapacity * Math.pow(2, deuteriumTankLevel) * bonus,
     darkMatter: darkMatterBaseCapacity * Math.pow(2, darkMatterTankLevel) * bonus,
-    energy: 1000 + solarPlantLevel * 500 // 能量容量基于太阳能电站等级
+    energy: 1000 + solarPlantLevel * 500 // 能量容量基於太陽能電站等級
   }
 }
 
 /**
- * 更新星球资源
+ * 更新星球資源
  */
 export const updatePlanetResources = (
   planet: Planet,
@@ -242,21 +242,21 @@ export const updatePlanetResources = (
     fuelResearchLevel?: number
   }
 ): void => {
-  const timeDiff = (now - planet.lastUpdate) / 1000 // 转换为秒
+  const timeDiff = (now - planet.lastUpdate) / 1000 // 轉換為秒
 
-  // 时间回拨保护：如果时间差为负或为零，跳过资源更新但重置时间戳
+  // 時間回撥保護：如果時間差為負或為零，跳過資源更新但重置時間戳
   if (timeDiff <= 0) {
     planet.lastUpdate = now
     return
   }
 
-  // 应用游戏速度到时间差（游戏速度影响资源产出速率）
+  // 應用遊戲速度到時間差（遊戲速度影響資源產出速率）
   const effectiveTimeDiff = timeDiff * gameSpeed
 
-  // 计算能量消耗（每小时）
+  // 計算能量消耗（每小時）
   const energyConsumption = calculateEnergyConsumption(planet)
 
-  // 先增加能量产出
+  // 先增加能量產出
   const energyProduction = calculateEnergyProduction(planet, { energyProductionBonus: bonuses.energyProductionBonus })
   planet.resources.energy += (energyProduction * effectiveTimeDiff) / 3600
 
@@ -267,10 +267,10 @@ export const updatePlanetResources = (
   // 扣除能量消耗
   planet.resources.energy -= (energyConsumption * effectiveTimeDiff) / 3600
 
-  // 能量不能为负数，最低为0
+  // 能量不能為負數，最低為0
   planet.resources.energy = Math.max(0, planet.resources.energy)
 
-  // 计算资源产量（会检查能量是否充足，以及矿脉储量效率）
+  // 計算資源產量（會檢查能量是否充足，以及礦脈儲量效率）
   const production = calculateResourceProduction(
     planet,
     {
@@ -281,32 +281,32 @@ export const updatePlanetResources = (
     techBonuses
   )
 
-  // 计算实际产出量（用于消耗矿脉储量）
+  // 計算實際產出量（用於消耗礦脈儲量）
   const metalProduced = (production.metal * effectiveTimeDiff) / 3600
   const crystalProduced = (production.crystal * effectiveTimeDiff) / 3600
   const deuteriumProduced = (production.deuterium * effectiveTimeDiff) / 3600
 
-  // 消耗矿脉储量（如果有）
+  // 消耗礦脈儲量（如果有）
   if (planet.oreDeposits && !planet.isMoon) {
     oreDepositLogic.consumeDeposit(planet.oreDeposits, 'metal', metalProduced)
     oreDepositLogic.consumeDeposit(planet.oreDeposits, 'crystal', crystalProduced)
     oreDepositLogic.consumeDeposit(planet.oreDeposits, 'deuterium', deuteriumProduced)
 
-    // 矿脉缓慢恢复（每次更新时恢复一小部分）
-    // 地质研究站等级影响恢复速度，深层钻探设施和采矿技术影响恢复上限
+    // 礦脈緩慢恢復（每次更新時恢復一小部分）
+    // 地質研究站等級影響恢復速度，深層鑽探設施和採礦技術影響恢復上限
     const hoursElapsed = effectiveTimeDiff / 3600
     const geoStationLevel = planet.buildings[BuildingType.GeoResearchStation] || 0
     const deepDrillingLevel = planet.buildings[BuildingType.DeepDrillingFacility] || 0
     oreDepositLogic.regenerateDeposits(planet.oreDeposits, hoursElapsed, geoStationLevel, deepDrillingLevel, miningTechLevel)
   }
 
-  // 更新资源（转换为每秒产量，应用游戏速度）
+  // 更新資源（轉換為每秒產量，應用遊戲速度）
   planet.resources.metal += metalProduced
   planet.resources.crystal += crystalProduced
   planet.resources.deuterium += deuteriumProduced
   planet.resources.darkMatter += (production.darkMatter * effectiveTimeDiff) / 3600
 
-  // 限制资源上限
+  // 限制資源上限
   planet.resources.metal = Math.min(planet.resources.metal, capacity.metal)
   planet.resources.crystal = Math.min(planet.resources.crystal, capacity.crystal)
   planet.resources.deuterium = Math.min(planet.resources.deuterium, capacity.deuterium)
@@ -316,7 +316,7 @@ export const updatePlanetResources = (
 }
 
 /**
- * 检查资源是否足够
+ * 檢查資源是否足夠
  */
 export const checkResourcesAvailable = (currentResources: Resources, cost: Resources): boolean => {
   return (
@@ -328,7 +328,7 @@ export const checkResourcesAvailable = (currentResources: Resources, cost: Resou
 }
 
 /**
- * 扣除资源
+ * 扣除資源
  */
 export const deductResources = (currentResources: Resources, cost: Partial<Resources>): void => {
   currentResources.metal -= cost.metal || 0
@@ -338,7 +338,7 @@ export const deductResources = (currentResources: Resources, cost: Partial<Resou
 }
 
 /**
- * 添加资源
+ * 新增資源
  */
 export const addResources = (currentResources: Resources, amount: Partial<Resources>): void => {
   currentResources.metal += amount.metal || 0
@@ -348,11 +348,11 @@ export const addResources = (currentResources: Resources, amount: Partial<Resour
 }
 
 /**
- * 安全地添加资源（会检查仓储容量上限）
- * @param planet 星球对象
- * @param amount 要添加的资源
- * @param storageCapacityBonus 仓储容量加成
- * @returns 实际添加的资源数量和溢出的资源数量
+ * 安全地新增資源（會檢查倉儲容量上限）
+ * @param planet 星球物件
+ * @param amount 要新增的資源
+ * @param storageCapacityBonus 倉儲容量加成
+ * @returns 實際新增的資源數量和溢位的資源數量
  */
 export const addResourcesSafely = (
   planet: Planet,
@@ -364,7 +364,7 @@ export const addResourcesSafely = (
   const added: Resources = { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 }
   const overflow: Resources = { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 }
 
-  // 处理每种资源
+  // 處理每種資源
   const resources: Array<keyof Resources> = ['metal', 'crystal', 'deuterium', 'darkMatter']
 
   for (const resourceType of resources) {
@@ -372,7 +372,7 @@ export const addResourcesSafely = (
     const amountToAdd = amount[resourceType]
     const maxCapacity = capacity[resourceType]
 
-    // 计算可以添加的量（不超过容量上限）
+    // 計算可以新增的量（不超過容量上限）
     const spaceAvailable = Math.max(0, maxCapacity - currentAmount)
     const actuallyAdded = Math.min(amountToAdd, spaceAvailable)
     const overflowed = amountToAdd - actuallyAdded
@@ -386,7 +386,7 @@ export const addResourcesSafely = (
 }
 
 /**
- * 资源产量详细信息（用于UI展示）
+ * 資源產量詳細資訊（用於UI展示）
  */
 export interface ProductionBreakdown {
   metal: ProductionDetail
@@ -397,36 +397,36 @@ export interface ProductionBreakdown {
 }
 
 export interface ProductionDetail {
-  baseProduction: number // 建筑基础产量
-  buildingLevel: number // 建筑等级
-  buildingName: string // 建筑名称（用于显示）
+  baseProduction: number // 建築基礎產量
+  buildingLevel: number // 建築等級
+  buildingName: string // 建築名稱（用於顯示）
   bonuses: ProductionBonus[] // 加成列表
-  finalProduction: number // 最终产量
-  sources?: ProductionSource[] // 多个产量来源（用于能量）
+  finalProduction: number // 最終產量
+  sources?: ProductionSource[] // 多個產量來源（用於能量）
 }
 
 export interface ProductionSource {
-  name: string // 来源名称
-  level: number // 等级或数量
-  production: number // 产量
+  name: string // 來源名稱
+  level: number // 等級或數量
+  production: number // 產量
 }
 
 export interface ProductionBonus {
-  name: string // 加成名称
+  name: string // 加成名稱
   percentage: number // 加成百分比
-  value: number // 实际增加的产量
-  source: 'technology' | 'officer' | 'other' // 加成来源类型
+  value: number // 實際增加的產量
+  source: 'technology' | 'officer' | 'other' // 加成來源型別
 }
 
 /**
- * 能量消耗详细信息
+ * 能量消耗詳細資訊
  */
 export interface ConsumptionBreakdown {
-  // 资源建筑
+  // 資源建築
   metalMine: ConsumptionDetail
   crystalMine: ConsumptionDetail
   deuteriumSynthesizer: ConsumptionDetail
-  // 设施建筑
+  // 設施建築
   roboticsFactory: ConsumptionDetail
   naniteFactory: ConsumptionDetail
   shipyard: ConsumptionDetail
@@ -434,7 +434,7 @@ export interface ConsumptionBreakdown {
   missileSilo: ConsumptionDetail
   terraformer: ConsumptionDetail
   darkMatterCollector: ConsumptionDetail
-  // 月球建筑
+  // 月球建築
   sensorPhalanx: ConsumptionDetail
   jumpGate: ConsumptionDetail
   total: number
@@ -447,12 +447,12 @@ export interface ConsumptionDetail {
 }
 
 /**
- * 计算资源产量详细breakdown
+ * 計算資源產量詳細breakdown
  * @param planet 星球
- * @param officers 军官
- * @param currentTime 当前时间
- * @param resourceSpeed 游戏速度
- * @param techBonuses 科技加成（可选，矿物研究/晶体研究/燃料研究）
+ * @param officers 軍官
+ * @param currentTime 當前時間
+ * @param resourceSpeed 遊戲速度
+ * @param techBonuses 科技加成（可選，礦物研究/晶體研究/燃料研究）
  */
 export const calculateProductionBreakdown = (
   planet: Planet,
@@ -471,13 +471,13 @@ export const calculateProductionBreakdown = (
   const darkMatterCollectorLevel = planet.buildings[BuildingType.DarkMatterCollector] || 0
   const solarPlantLevel = planet.buildings[BuildingType.SolarPlant] || 0
 
-  // 计算能量平衡（基于产出vs消耗，而不是当前能量值）
+  // 計算能量平衡（基於產出vs消耗，而不是當前能量值）
   const energyProduction = calculateEnergyProduction(planet, { energyProductionBonus: 0 })
   const energyConsumption = calculateEnergyConsumption(planet)
   const hasPositiveEnergyBalance = energyProduction >= energyConsumption
   const productionEfficiency = hasPositiveEnergyBalance ? 1 : 0
 
-  // 收集每个军官的加成信息
+  // 收集每個軍官的加成資訊
   const activeOfficerBonuses: Array<{
     type: OfficerType
     name: string
@@ -499,23 +499,23 @@ export const calculateProductionBreakdown = (
     }
   })
 
-  // 计算总加成
+  // 計算總加成
   const totalResourceBonus = activeOfficerBonuses.reduce((sum, officer) => sum + officer.resourceBonus, 0)
   const totalDarkMatterBonus = activeOfficerBonuses.reduce((sum, officer) => sum + officer.darkMatterBonus, 0)
   const totalEnergyBonus = activeOfficerBonuses.reduce((sum, officer) => sum + officer.energyBonus, 0)
 
-  // 计算科技加成
+  // 計算科技加成
   const researchBonus = calculateResearchProductionBonus(
     techBonuses?.mineralResearchLevel || 0,
     techBonuses?.crystalResearchLevel || 0,
     techBonuses?.fuelResearchLevel || 0
   )
 
-  // 金属矿产量
+  // 金屬礦產量
   const metalBase = metalMineLevel * 1500 * Math.pow(1.5, metalMineLevel)
   const metalBonuses: ProductionBonus[] = []
 
-  // 为每个激活的军官添加加成项
+  // 為每個啟用的軍官新增加成項
   activeOfficerBonuses.forEach(officer => {
     if (officer.resourceBonus > 0) {
       const bonusValue = metalBase * (officer.resourceBonus / 100)
@@ -528,7 +528,7 @@ export const calculateProductionBreakdown = (
     }
   })
 
-  // 添加矿物研究科技加成
+  // 新增礦物研究科技加成
   if (researchBonus.metalBonus > 0) {
     const techBonusValue = metalBase * (1 + totalResourceBonus / 100) * (researchBonus.metalBonus / 100)
     metalBonuses.push({
@@ -550,7 +550,7 @@ export const calculateProductionBreakdown = (
 
   const metalFinal = metalBase * (1 + totalResourceBonus / 100) * (1 + researchBonus.metalBonus / 100) * productionEfficiency
 
-  // 晶体矿产量
+  // 晶體礦產量
   const crystalBase = crystalMineLevel * 1000 * Math.pow(1.5, crystalMineLevel)
   const crystalBonuses: ProductionBonus[] = []
 
@@ -566,7 +566,7 @@ export const calculateProductionBreakdown = (
     }
   })
 
-  // 添加晶体研究科技加成
+  // 新增晶體研究科技加成
   if (researchBonus.crystalBonus > 0) {
     const techBonusValue = crystalBase * (1 + totalResourceBonus / 100) * (researchBonus.crystalBonus / 100)
     crystalBonuses.push({
@@ -588,20 +588,20 @@ export const calculateProductionBreakdown = (
 
   const crystalFinal = crystalBase * (1 + totalResourceBonus / 100) * (1 + researchBonus.crystalBonus / 100) * productionEfficiency
 
-  // 重氢合成器产量（受温度影响）
-  // OGame 原版规则：温度越低，重氢产量越高
+  // 重氫合成器產量（受溫度影響）
+  // OGame 原版規則：溫度越低，重氫產量越高
   const deuteriumTempBonus = planetLogic.calculateDeuteriumTemperatureBonus(planet.temperature?.max ?? 0)
   const deuteriumBase = deuteriumSynthesizerLevel * 500 * Math.pow(1.5, deuteriumSynthesizerLevel) * deuteriumTempBonus
   const deuteriumBonuses: ProductionBonus[] = []
 
-  // 温度加成显示
+  // 溫度加成顯示
   if (planet.temperature) {
     const tempBonusPercent = Math.round((deuteriumTempBonus - 1) * 100)
     if (tempBonusPercent !== 0) {
       deuteriumBonuses.push({
         name: 'resources.temperatureBonus',
         percentage: tempBonusPercent,
-        value: 0, // 已计入基础产量
+        value: 0, // 已計入基礎產量
         source: 'other'
       })
     }
@@ -619,7 +619,7 @@ export const calculateProductionBreakdown = (
     }
   })
 
-  // 添加燃料研究科技加成
+  // 新增燃料研究科技加成
   if (researchBonus.deuteriumBonus > 0) {
     const techBonusValue = deuteriumBase * (1 + totalResourceBonus / 100) * (researchBonus.deuteriumBonus / 100)
     deuteriumBonuses.push({
@@ -641,7 +641,7 @@ export const calculateProductionBreakdown = (
 
   const deuteriumFinal = deuteriumBase * (1 + totalResourceBonus / 100) * (1 + researchBonus.deuteriumBonus / 100) * productionEfficiency
 
-  // 暗物质收集器产量
+  // 暗物質收集器產量
   const darkMatterBase = darkMatterCollectorLevel * 25 * Math.pow(1.5, darkMatterCollectorLevel)
   const darkMatterBonuses: ProductionBonus[] = []
 
@@ -659,14 +659,14 @@ export const calculateProductionBreakdown = (
 
   const darkMatterFinal = darkMatterBase * (1 + totalDarkMatterBonus / 100)
 
-  // 能量产量（包含多个来源）
+  // 能量產量（包含多個來源）
   const fusionReactorLevel = planet.buildings[BuildingType.FusionReactor] || 0
   const solarSatelliteCount = planet.fleet.solarSatellite || 0
 
   const solarPlantProduction = solarPlantLevel * 50 * Math.pow(1.1, solarPlantLevel)
   const fusionReactorProduction = fusionReactorLevel * 150 * Math.pow(1.15, fusionReactorLevel)
 
-  // 太阳能卫星产出：基于星球温度计算
+  // 太陽能衛星產出：基於星球溫度計算
   const maxTemp = planet.temperature?.max ?? 0
   const solarSatelliteOutputPerUnit = planetLogic.calculateSolarSatelliteOutput(maxTemp)
   const solarSatelliteProduction = solarSatelliteCount * solarSatelliteOutputPerUnit
@@ -766,15 +766,15 @@ export const calculateProductionBreakdown = (
 }
 
 /**
- * 计算能量消耗详细breakdown
+ * 計算能量消耗詳細breakdown
  */
 export const calculateConsumptionBreakdown = (planet: Planet, resourceSpeed: number = 1): ConsumptionBreakdown => {
-  // 资源建筑
+  // 資源建築
   const metalMineLevel = planet.buildings[BuildingType.MetalMine] || 0
   const crystalMineLevel = planet.buildings[BuildingType.CrystalMine] || 0
   const deuteriumSynthesizerLevel = planet.buildings[BuildingType.DeuteriumSynthesizer] || 0
 
-  // 设施建筑
+  // 設施建築
   const roboticsFactoryLevel = planet.buildings[BuildingType.RoboticsFactory] || 0
   const naniteFactoryLevel = planet.buildings[BuildingType.NaniteFactory] || 0
   const shipyardLevel = planet.buildings[BuildingType.Shipyard] || 0
@@ -783,16 +783,16 @@ export const calculateConsumptionBreakdown = (planet: Planet, resourceSpeed: num
   const terraformerLevel = planet.buildings[BuildingType.Terraformer] || 0
   const darkMatterCollectorLevel = planet.buildings[BuildingType.DarkMatterCollector] || 0
 
-  // 月球建筑
+  // 月球建築
   const sensorPhalanxLevel = planet.buildings[BuildingType.SensorPhalanx] || 0
   const jumpGateLevel = planet.buildings[BuildingType.JumpGate] || 0
 
-  // 资源建筑消耗
+  // 資源建築消耗
   const metalConsumption = metalMineLevel * 10 * Math.pow(1.1, metalMineLevel)
   const crystalConsumption = crystalMineLevel * 10 * Math.pow(1.1, crystalMineLevel)
   const deuteriumConsumption = deuteriumSynthesizerLevel * 15 * Math.pow(1.1, deuteriumSynthesizerLevel)
 
-  // 设施建筑消耗
+  // 設施建築消耗
   const roboticsConsumption = roboticsFactoryLevel * 5 * Math.pow(1.1, roboticsFactoryLevel)
   const naniteConsumption = naniteFactoryLevel * 20 * Math.pow(1.15, naniteFactoryLevel)
   const shipyardConsumption = shipyardLevel * 8 * Math.pow(1.1, shipyardLevel)
@@ -801,7 +801,7 @@ export const calculateConsumptionBreakdown = (planet: Planet, resourceSpeed: num
   const terraformerConsumption = terraformerLevel * 25 * Math.pow(1.15, terraformerLevel)
   const darkMatterCollectorConsumption = darkMatterCollectorLevel * 10 * Math.pow(1.1, darkMatterCollectorLevel)
 
-  // 月球建筑消耗
+  // 月球建築消耗
   const sensorPhalanxConsumption = sensorPhalanxLevel * 15 * Math.pow(1.12, sensorPhalanxLevel)
   const jumpGateConsumption = jumpGateLevel * 50 * Math.pow(1.2, jumpGateLevel)
 
@@ -822,7 +822,7 @@ export const calculateConsumptionBreakdown = (planet: Planet, resourceSpeed: num
     jumpGateConsumption
 
   return {
-    // 资源建筑
+    // 資源建築
     metalMine: {
       buildingLevel: metalMineLevel,
       buildingName: 'buildings.metalMine',
@@ -838,7 +838,7 @@ export const calculateConsumptionBreakdown = (planet: Planet, resourceSpeed: num
       buildingName: 'buildings.deuteriumSynthesizer',
       consumption: deuteriumConsumption * speed
     },
-    // 设施建筑
+    // 設施建築
     roboticsFactory: {
       buildingLevel: roboticsFactoryLevel,
       buildingName: 'buildings.roboticsFactory',
@@ -874,7 +874,7 @@ export const calculateConsumptionBreakdown = (planet: Planet, resourceSpeed: num
       buildingName: 'buildings.darkMatterCollector',
       consumption: darkMatterCollectorConsumption * speed
     },
-    // 月球建筑
+    // 月球建築
     sensorPhalanx: {
       buildingLevel: sensorPhalanxLevel,
       buildingName: 'buildings.sensorPhalanx',

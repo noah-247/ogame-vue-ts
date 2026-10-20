@@ -3,7 +3,7 @@ import type { Planet } from '@/types/game'
 /** 任一星球的運輸資源相對上次計算變化超過 5% 就重算；分母至少為 1，且 0 → 正數一律重算。 */
 export const TRANSPORT_RECALC_RESOURCE_CHANGE_RATIO = 0.05
 
-/** 最多快取 5 秒；配置、艦隊等資源以外的變更也會在此期限內刷新。 */
+/** 最多快取 5 秒；配置、艦隊等資源以外的變更也會在此期限內重新整理。 */
 export const TRANSPORT_RECALC_MAX_STALE_MS = 5000
 
 export interface TransportInputSnapshot {
