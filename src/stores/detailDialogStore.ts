@@ -7,7 +7,7 @@ export interface DetailDialogState {
   isOpen: boolean
   type: DetailDialogType | null
   itemType: BuildingType | TechnologyType | ShipType | DefenseType | null
-  currentLevel?: number // 用于建筑和科技
+  currentLevel?: number // 用於建築和科技
 }
 
 export const useDetailDialogStore = defineStore('detailDialog', {

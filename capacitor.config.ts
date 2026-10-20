@@ -11,7 +11,7 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     hardwareAcceleration: true
   },
-  // 禁用键盘自动调整视口
+  // 禁用鍵盤自動調整視口
   plugins: { Keyboard: { resize: 'none' } }
 }
 

@@ -26,30 +26,30 @@ const router = createRouter({
   ]
 })
 
-// 路由守卫：检查隐私协议同意状态
+// 路由守衛：檢查隱私協議同意狀態
 router.beforeEach((to, _from, next) => {
   const gameStore = useGameStore()
 
-  // 已同意隐私协议
+  // 已同意隱私協議
   if (gameStore.player.privacyAgreed) {
-    // 已同意但访问首页，重定向到总览页
+    // 已同意但訪問首頁，重定向到總覽頁
     if (to.path === '/') {
       next('/overview')
       return
     }
-    // 正常访问其他页面
+    // 正常訪問其他頁面
     next()
     return
   }
 
-  // 未同意隐私协议
-  // 允许访问首页（用于显示隐私协议同意弹窗）
+  // 未同意隱私協議
+  // 允許訪問首頁（用於顯示隱私協議同意彈窗）
   if (to.path === '/') {
     next()
     return
   }
 
-  // 未同意隐私协议且访问其他页面，重定向到首页
+  // 未同意隱私協議且訪問其他頁面，重定向到首頁
   next('/')
 })
 

@@ -1,5 +1,5 @@
 <template>
-  <!-- 無權限時顯示404 -->
+  <!-- 無許可權時顯示404 -->
   <div v-if="!gameStore.player.isGMEnabled" class="container mx-auto p-4 sm:p-6 flex items-center justify-center min-h-[60vh]">
     <Empty class="border-0">
       <EmptyMedia>
@@ -18,7 +18,7 @@
     </Empty>
   </div>
 
-  <!-- 有權限時顯示GM頁面 -->
+  <!-- 有許可權時顯示GM頁面 -->
   <div v-else class="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl sm:text-3xl font-bold">{{ t('gmView.title') }}</h1>

@@ -29,7 +29,7 @@ let gameStore: { isPaused: boolean }
 let reloads: number
 const state = { player: { id: 'test', planets: [] }, currentPlanetId: '', gameSpeed: 1 }
 const universe = { galaxies: [{ id: 1, systems: [1, 2, 3] }] }
-const npcs = { npcs: [{ id: 'npc-1', name: '测试 NPC', planets: [] }] }
+const npcs = { npcs: [{ id: 'npc-1', name: '測試 NPC', planets: [] }] }
 const bundle = { game: state, universe, npcs }
 const credentials = () => ({ username: 'tester', password, workerUrl: DEFAULT_CLOUD_SAVE_URL })
 const authKey = () => CryptoJS.PBKDF2(password, 'auth:tester', { keySize: 256 / 32, iterations: 10000, hasher: CryptoJS.algo.SHA256 }).toString()

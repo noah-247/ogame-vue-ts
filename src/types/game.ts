@@ -923,7 +923,7 @@ export interface Player {
   fleetPresets?: FleetPreset[] // 艦隊預設列表（最多3個）
   // 自動成長副官付費合約（預設 = 未簽約，舊存檔沒有該欄位）
   autopilotContract?: AutopilotContract
-  // 成就係統
+  // 成就系統
   achievementStats?: AchievementStats // 成就統計資料
   achievements?: Record<string, AchievementProgress> // 成就進度
   // 戰役系統
@@ -1035,7 +1035,7 @@ export interface TutorialProgress {
   skippedAt?: number // 跳過的時間戳
 }
 
-// ==================== 成就係統型別 ====================
+// ==================== 成就系統型別 ====================
 
 // 成就類別列舉
 export const AchievementCategory = {

@@ -15,7 +15,7 @@ export default {
     close: '關閉',
     gotIt: '知道了',
     success: '成功',
-    resourceType: '資源類型',
+    resourceType: '資源型別',
     playerName: '指揮官',
     featureLocked: '功能已鎖定',
     unlockRequired: '需要解鎖前置建築',
@@ -236,7 +236,7 @@ export default {
   },
   shipDescriptions: {
     lightFighter: '基礎戰鬥單位',
-    heavyFighter: '重裝戰鬥機',
+    heavyFighter: '重型戰鬥機',
     cruiser: '中型戰艦，攻守平衡',
     battleship: '主力重型戰艦，擁有強大的火力和防護',
     battlecruiser: '快速強大的戰鬥艦船，擅長攻擊戰列艦',
@@ -530,13 +530,13 @@ export default {
     available: '可用',
     all: '全部',
     targetCoordinates: '目標座標',
-    targetType: '目標類型',
+    targetType: '目標型別',
     planet: '行星',
     moon: '月球',
     galaxy: '銀河系',
     system: '星系',
     position: '位置',
-    missionType: '任務類型',
+    missionType: '任務型別',
     missionInfo: '任務資訊',
     fuelConsumption: '燃料消耗',
     flightTime: '飛行時間',
@@ -616,7 +616,7 @@ export default {
     deletePreset: '刪除預設',
     editingPresetHint: '正在編輯預設，修改艦隊配置後點選「儲存」更新預設內容',
     presetLimitReached: '預設數量已滿',
-    presetLimitReachedMessage: '最多只能儲存 {max} 個預設',
+    presetLimitReachedMessage: '最多可儲存 {max} 個預設',
     presetError: '儲存失敗',
     presetNoShips: '請先選擇至少一艘艦船',
     presetDefaultName: '預設 {number}',
@@ -728,7 +728,7 @@ export default {
     giftPlanetTitle: '贈送禮物',
     giftPlanetMessage: '確定要向星球 [{coordinates}] 贈送資源嗎？\n\n請前往艦隊頁面選擇運輸船並裝載資源。',
     npcPlanetName: '{name}的星球',
-    // 傳感器陣列掃描
+    // 感測器陣列掃描
     phalanxScan: '感測器掃描',
     phalanxScanTitle: '感測器陣列掃描',
     phalanxScanDescription: '掃描星球 [{coordinates}] 的艦隊活動',
@@ -866,7 +866,7 @@ export default {
     arrivalTime: '到達時間',
     npcActivityTip: 'NPC可能會收集戰鬥產生的殘骸。若想競爭資源，可嘗試先到達該位置',
     clearMessages: '清空訊息',
-    clearMessageTypes: '選擇要清空的訊息類型',
+    clearMessageTypes: '選擇要清空的訊息型別',
     clearBattleReports: '戰鬥報告',
     clearSpyReports: '間諜報告',
     clearSpiedNotifications: '被偵查通知',
@@ -961,18 +961,18 @@ export default {
   },
   autopilot: {
     modeMonitor: "監控模式",
-    monitorModeDesc: "多數下一等級目標已超過工時門檻，副官直接擔任管家：只做預警，不自動排建。已開工項目與玩家手動佇列不受影響；執行目標須由你明確確認。",
+    monitorModeDesc: "多數下一等級目標已超過工時門檻，副官直接擔任管家：只做預警，不自動排建。已開工專案與玩家手動佇列不受影響；執行目標須由你明確確認。",
     startApprovedConstruction: "確認執行已批准的建造目標",
     decisionMonitoring: "正在監控資源與艦隊，不自動排建",
     decisionModeChanged: "玩家已確認切換模式",
     incomingAlerts: "檢視來襲預警",
-    expeditionReturn: "遠征即將回航",
-    expeditionDetail: "{planet} · 遠征將在 {minutes} 分鐘後返航，記得收菜！",
-    expeditionMinutes: "遠征回航提醒（分鐘，0 關閉）",
+    expeditionReturn: "遠徵即將回航",
+    expeditionDetail: "{planet} · 遠徵將在 {minutes} 分鐘後返航，記得收菜！",
+    expeditionMinutes: "遠徵回航提醒（分鐘，0 關閉）",
     transports: "跨星球運輸建議",
     conservativeEstimate: "保守估算：建議量打八折，在途資源未精確扣除；派遣前會重新驗證。",
     noTransports: "暫無運輸建議",
-    transportReason: "疏解即將溢出的資源，補足建造或研究目標缺料。",
+    transportReason: "疏解即將溢位的資源，補足建造或研究目標缺料。",
     confirmTransport: "確認並派遣",
     transportExpired: "建議已過期，請檢視重新計算的建議。",
     transportNoCargo: "可用運輸船運力不足。",
@@ -997,7 +997,7 @@ export default {
     mode: '模式',
     modeAuto: '自主',
     modeExecute: '執行',
-    modeAutoDesc: '自主挑選下一步：只安排單級工時不超過上限的項目',
+    modeAutoDesc: '自主挑選下一步：只安排單級工時不超過上限的專案',
     modeExecuteDesc: '執行已批准的目標清單：工時再長也接續執行，離線回來繼續',
     statusLine: '自主 / 執行 / 已降級',
     downgraded: '已降級',
@@ -1101,7 +1101,7 @@ export default {
       confirmTitle: '確認聘請副官？',
       confirmRates: '即時價格（每小時）：金屬 {metal} · 晶體 {crystal} · 重氫 {deuterium}',
       confirmNoTrial: '無試用期：聘請後立即開始計費，下個 tick 起按分鐘結算。',
-      confirmFundsRule: '付款星球任一資源餘額不足 → 合約自動暫停；已開工項目不受影響。',
+      confirmFundsRule: '付款星球任一資源餘額不足 → 合約自動暫停；已開工專案不受影響。',
       confirmNoSweep: '補資源不會自動重啟，也不從其他星球扣款；恢復需手動點選「恢復值班」。',
       confirmHire: '確認聘請',
       billingGateConfirmTitle: '副官改為資源聘用制',
@@ -1164,7 +1164,7 @@ export default {
       decryptFailed: '解密失敗：密碼錯誤或雲端存檔已損壞，本機存檔未變更',
       invalidSaveData: '雲端存檔結構損壞：版本不受支援或缺少必要資料，本地存檔未更改',
       requestFailed: '雲端存檔請求失敗，請檢查網路與 Worker 位址',
-      storageFailed: '無法寫入瀏覽器儲存空間，請檢查可用空間及儲存權限'
+      storageFailed: '無法寫入瀏覽器儲存空間，請檢查可用空間及儲存許可權'
     },
     dataManagement: '資料管理',
     dataManagementDesc: '匯出、匯入或清除遊戲資料',
@@ -1175,7 +1175,7 @@ export default {
     exportSuccess: '匯出成功',
     exportSuccessWithPath: '匯出成功，檔案已儲存到：{path}',
     exportCopiedToClipboard: '匯出成功，資料已複製到剪貼簿',
-    storagePermissionDenied: '儲存權限被拒絕，無法匯出檔案',
+    storagePermissionDenied: '儲存許可權被拒絕，無法匯出檔案',
     exportFailed: '匯出失敗，請重試',
     importData: '匯入資料',
     importDataDesc: '從JSON檔案恢復遊戲進度',
@@ -1233,15 +1233,15 @@ export default {
     backgroundAnimationDesc: '開啟後顯示星空/粒子背景動畫（可能影響效能）',
     notifications: '通知設定',
     notificationsDesc: '管理遊戲內的通知提醒',
-    notificationTypes: '通知類型',
+    notificationTypes: '通知型別',
     browserNotifications: '瀏覽器通知',
     inAppNotifications: '頁面內通知',
     constructionComplete: '建築完成',
     researchComplete: '研究完成',
     unlockNotification: '解鎖通知',
     browserPermission: '啟用瀏覽器通知',
-    permissionGranted: '已獲得權限',
-    permissionDenied: '權限被拒絕/未獲得',
+    permissionGranted: '已獲得許可權',
+    permissionDenied: '許可權被拒絕/未獲得',
     inAppNotificationsDesc: '透過頁面彈窗顯示',
     notificationsDisabled: '啟用上方任一開關以配置具體通知',
     suppressInFocus: '頁面聚焦時不傳送瀏覽器通知',
@@ -1549,7 +1549,7 @@ export default {
         medium: '普通',
         hard: '困難'
       },
-      aiType: 'AI類型',
+      aiType: 'AI型別',
       aiTypes: {
         aggressive: '侵略型',
         defensive: '防守型',
@@ -1610,7 +1610,7 @@ export default {
     sections: {
       introduction: {
         title: '簡介',
-        content: '本隱私協議說明了 OGame-Vue-Ts 如何處理您的資料。我們致力於保護您的隱私，本遊戲的設計完全尊重使用者隱私。'
+        content: '本隱私協議說明瞭 OGame-Vue-Ts 如何處理您的資料。我們致力於保護您的隱私，本遊戲的設計完全尊重使用者隱私。'
       },
       dataCollection: {
         title: '資料收集',
@@ -1944,8 +1944,8 @@ export default {
       colonizer: '成功殖民星球次數',
       spy: '執行偵查任務次數',
       deployer: '執行部署任務次數',
-      explorer: '遠征總次數',
-      luckyExplorer: '遠征成功次數',
+      explorer: '遠徵總次數',
+      luckyExplorer: '遠徵成功次數',
       recycler: '回收任務次數',
       scavenger: '回收資源總量',
       destroyer: '摧毀星球次數',
@@ -2046,7 +2046,7 @@ export default {
     },
     systems: {
       title: '遊戲系統',
-      description: '瞭解遊戲的核心系統機制',
+      description: '瞭解遊戲的核心繫統機制',
       resource: {
         title: '資源系統',
         content1: '資源是遊戲的核心，用於建造建築、研發科技和生產艦船。',
@@ -2065,7 +2065,7 @@ export default {
       },
       missions: {
         title: '艦隊任務',
-        content1: '艦隊可以執行多種類型的任務。',
+        content1: '艦隊可以執行多種型別的任務。',
         item1: '攻擊 - 攻擊敵方星球，掠奪資源',
         item2: '運輸 - 在自己的星球間運送資源',
         item3: '部署 - 將艦隊永久轉移到另一個星球',
@@ -2150,7 +2150,7 @@ export default {
       title: '情報報告',
       from: '情報來源',
       target: '目標NPC',
-      type: '情報類型',
+      type: '情報型別',
       types: {
         enemyFleet: '艦隊情報',
         enemyResources: '資源情報',
@@ -2165,7 +2165,7 @@ export default {
       noFleet: '未偵測到艦隊',
       noData: '暫無資料',
       targetPosition: '目標座標',
-      missionType: '任務類型'
+      missionType: '任務型別'
     },
     jointAttack: {
       title: '聯合攻擊邀請',
@@ -2333,7 +2333,7 @@ export default {
       },
       '2_2': {
         title: '深空探險',
-        description: '派遣艦隊進行遠征探險'
+        description: '派遣艦隊進行遠徵探險'
       },
       '2_3': {
         title: '神秘訊號',
@@ -2461,10 +2461,10 @@ export default {
       buildColonyShip: '建造殖民船',
       colonizeNewPlanet: '殖民新星球',
       colonizeMultiple: '殖民5個星球',
-      completeExpedition: '完成3次遠征任務',
-      expeditionDeepSpace: '完成2次深空遠征',
+      completeExpedition: '完成3次遠徵任務',
+      expeditionDeepSpace: '完成2次深空遠徵',
       expeditionUncharted: '探索1次未知區域',
-      expeditionDangerous: '完成3次危險星雲遠征',
+      expeditionDangerous: '完成3次危險星雲遠徵',
       discoverRuins: '發現古代遺跡',
       researchComputer: '研究電腦技術到4級',
       researchImpulse: '研究脈衝驅動到3級',
@@ -2507,7 +2507,7 @@ export default {
         prologue_1: '有了科技的支援，你可以開始建造艦隊了。建造船塢，生產你的第一艘戰艦。'
       },
       '1_4': {
-        prologue_1: '你的艦隊已經成型。現在，讓我們瞭解一下周圍的環境。派出間諜探測器，偵查附近的勢力。',
+        prologue_1: '你的艦隊已經成型。現在，讓我們瞭解一下週圍的環境。派出間諜探測器，偵查附近的勢力。',
         prologue_2: '你並不孤單...銀河系中還有其他文明存在...'
       },
       '1_5': {
@@ -2520,7 +2520,7 @@ export default {
         prologue_2: '宇宙是無限的...更多的星球意味著更多的可能性...'
       },
       '2_2': {
-        prologue_1: '殖民成功！但宇宙深處還有更多秘密等待發現。派遣艦隊進行遠征探險吧。',
+        prologue_1: '殖民成功！但宇宙深處還有更多秘密等待發現。派遣艦隊進行遠徵探險吧。',
         prologue_2: '遠方傳來微弱的訊號...那裡有什麼在等待著你...'
       },
       '2_3': {
@@ -2587,7 +2587,7 @@ export default {
         epilogue_1: '你做到了！古代的守護者已被擊敗。銀河系的秘密向你敞開。'
       },
       '5_4': {
-        prologue_1: '和平終於來臨。在這個新紀元中，建立新的殖民地，擴展你的帝國。'
+        prologue_1: '和平終於來臨。在這個新紀元中，建立新的殖民地，擴張你的帝國。'
       },
       '5_5': {
         prologue_1: '你的傳奇才剛剛開始。繼續探索，征服更多的星系！',

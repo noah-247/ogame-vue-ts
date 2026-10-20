@@ -7,7 +7,7 @@
 :root {
   --radius: 0.625rem;
 
-  /* Light mode colors - 更护眼的暖色调配色 */
+  /* Light mode colors - 更護眼的暖色調配色 */
   --background: oklch(0.95 0.008 85);
   --foreground: oklch(0.3 0.02 85);
   --card: oklch(0.97 0.006 85);
@@ -121,9 +121,9 @@
   }
 
   html {
-    /* 平滑过渡 */
+    /* 平滑過渡 */
     transition: background-color 0.3s ease, color 0.3s ease;
-    /* 禁用文本大小调整，防止移动端自动放大文本 */
+    /* 禁用文字大小調整，防止移動端自動放大文字 */
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -137,7 +137,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* 滚动条样式 */
+  /* 捲軸樣式 */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -156,7 +156,7 @@
   }
 }
 
-/* 自定义动画 */
+/* 自定義動畫 */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -173,7 +173,7 @@
   animation: fade-in 0.3s ease-out;
 }
 
-/* 侧边栏导航按钮悬停效果 */
+/* 側邊欄導航按鈕懸停效果 */
 aside nav a {
   transition: all 0.2s ease;
 }
@@ -182,7 +182,7 @@ aside nav a:hover button {
   transform: translate3d(4px, 0, 0);
 }
 
-/* 资源数字更新动画 */
+/* 資源數字更新動畫 */
 @keyframes pulse-resource {
 
   0%,
@@ -199,7 +199,7 @@ aside nav a:hover button {
   animation: pulse-resource 2s ease-in-out infinite;
 }
 
-/* Popover 和 Tooltip 样式修复 - 使用硬编码颜色 */
+/* Popover 和 Tooltip 樣式修復 - 使用硬編碼顏色 */
 .popover-content-custom {
   background-color: oklch(0.15 0.02 264.695) !important;
   color: oklch(0.984 0.003 247.858) !important;
@@ -223,7 +223,7 @@ aside nav a:hover button {
   color: oklch(0.95 0.008 85) !important;
 }
 
-/* 修复 Edge-to-Edge 模式下 Portal 容器的定位问题 */
+/* 修復 Edge-to-Edge 模式下 Portal 容器的定位問題 */
 [data-reka-portal],
 [data-radix-portal] {
   position: fixed !important;

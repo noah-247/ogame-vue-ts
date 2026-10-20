@@ -24,12 +24,12 @@ import { serializeGameSave, deserializeGameSave } from '@/stores/gameSaveSeriali
 export const useGameStore = defineStore('game', {
   state: () => ({
     gameTime: Date.now(),
-    // BLK-1 虚拟时间偏移（毫秒，持久化）：gameNow = Date.now() + timeOffset。
-    // 快转只增加 offset，游戏时钟随真实时间持续推进，不冻结、不倒退。
+    // BLK-1 虛擬時間偏移（毫秒，持久化）：gameNow = Date.now() + timeOffset。
+    // 快轉只增加 offset，遊戲時鐘隨真實時間持續推進，不凍結、不倒退。
     timeOffset: 0,
     isPaused: false,
     gameSpeed: 1,
-    battleToFinish: true, // 战斗到底模式：false=经典模式(6回合平局)，true=战斗到底(最多100回合)
+    battleToFinish: true, // 戰鬥到底模式：false=經典模式(6回合平局)，true=戰鬥到底(最多100回合)
     player: {
       id: 'player1',
       name: '',
@@ -50,15 +50,15 @@ export const useGameStore = defineStore('game', {
       giftRejectedNotifications: [],
       points: 0,
       bonusPoints: 0,
-      isGMEnabled: false, // 明确设置 GM 模式默认为 false
-      lastVersionCheckTime: 0, // 最后一次检查版本的时间戳，默认为0
+      isGMEnabled: false, // 明確設定 GM 模式預設為 false
+      lastVersionCheckTime: 0, // 最後一次檢查版本的時間戳，預設為0
       achievementStats: initializeAchievementStats() as AchievementStats,
       achievements: initializeAchievements() as Record<string, AchievementProgress>
     } as Player,
     currentPlanetId: '',
     isDark: '',
     locale: 'zh-CN' as Locale,
-    npcNameLocale: 'en' as 'en' | 'auto', // NPC 名称语言：'en' 固定英文，'auto' 跟随界面语言
+    npcNameLocale: 'en' as 'en' | 'auto', // NPC 名稱語言：'en' 固定英文，'auto' 跟隨介面語言
     notificationSettings: {
       browser: false,
       inApp: true,

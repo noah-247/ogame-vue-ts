@@ -136,7 +136,7 @@ export const BUILDINGS: Record<BuildingType, BuildingConfig> = {
   [BuildingType.Hangar]: {
     id: BuildingType.Hangar,
     name: '機庫',
-    description: '專門用於擴充套件艦隊儲存容量，支援星球專業化發展',
+    description: '專門用於擴充艦隊儲存容量，支援星球專業化發展',
     baseCost: { metal: 200, crystal: 100, deuterium: 50, darkMatter: 0, energy: 0 },
     baseTime: 20,
     costMultiplier: 1.8,

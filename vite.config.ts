@@ -31,7 +31,7 @@ export default defineConfig(async () => {
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'image' || request.destination === 'audio',
-            handler: 'CacheFirst', // 优先使用缓存
+            handler: 'CacheFirst', // 優先使用快取
             options: { cacheName: 'game-assets', expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 } }
           }
         ]
@@ -39,9 +39,9 @@ export default defineConfig(async () => {
     })
   ]
 
-  // 只在 ELECTRON_BUILD 环境变量存在时才加载 Electron 插件
+  // 只在 ELECTRON_BUILD 環境變數存在時才載入 Electron 外掛
   if (process.env.ELECTRON_BUILD) {
-    // @ts-ignore - 动态导入 electron 插件
+    // @ts-ignore - 動態匯入 electron 外掛
     const { default: electron } = await import('vite-plugin-electron/simple')
     const electronPlugins = await electron({
       main: {
@@ -64,30 +64,30 @@ export default defineConfig(async () => {
           manualChunks(id: string) {
             // Vue 核心框架
             if (id.includes('node_modules/vue/') || id.includes('node_modules/@vue/')) return 'vendor-vue-core'
-            // Vue 生态
+            // Vue 生態
             if (id.includes('node_modules/vue-router')) return 'vendor-vue-router'
             if (id.includes('node_modules/pinia')) return 'vendor-pinia'
-            // UI 组件库
+            // UI 元件庫
             if (id.includes('node_modules/reka-ui')) return 'vendor-reka-ui'
             if (id.includes('node_modules/@vueuse/core')) return 'vendor-vueuse'
             if (id.includes('node_modules/lucide-vue-next')) return 'vendor-icons'
-            // 工具库
+            // 工具庫
             if (id.includes('node_modules/crypto-js')) return 'vendor-crypto'
             if (id.includes('node_modules/file-saver')) return 'vendor-utils'
             if (id.includes('node_modules/clsx') || id.includes('node_modules/tailwind-merge')) return 'vendor-utils'
             // Tailwind CSS
             if (id.includes('node_modules/@tailwindcss') || id.includes('node_modules/tailwindcss')) return 'vendor-tailwind'
-            // 游戏逻辑模块
+            // 遊戲邏輯模組
             if (id.includes('/src/logic/')) return 'game-logic'
-            // 配置和类型
+            // 配置和型別
             if (id.includes('/src/config/') || id.includes('/src/types/')) return 'game-config'
-            // 本地化 - 只打包默认语言和index，其他语言通过动态导入自动分割
+            // 本地化 - 只打包預設語言和index，其他語言透過動態匯入自動分割
             if (id.includes('/src/locales/index') || id.includes('/src/locales/zh-CN')) return 'locale-default'
-            // 其他语言文件不指定chunk，让Vite根据动态导入自动分割
-            // 其他 node_modules 依赖
+            // 其他語言檔案不指定chunk，讓Vite根據動態匯入自動分割
+            // 其他 node_modules 依賴
             if (id.includes('node_modules/')) return 'vendor-others'
           },
-          // 优化输出文件名
+          // 最佳化輸出檔名
           chunkFileNames: 'assets/[name]-[hash].js',
           entryFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash].[ext]'
@@ -97,20 +97,20 @@ export default defineConfig(async () => {
     plugins,
     resolve: { alias: { '@': path.resolve(__dirname, './src') } },
     css: {
-      // 使用 lightningcss 处理 CSS，自动转换 oklch 等新语法为兼容格式
+      // 使用 lightningcss 處理 CSS，自動轉換 oklch 等新語法為相容格式
       transformer: 'lightningcss',
       lightningcss: {
-        // 目标浏览器：降低到更保守的版本以支持华为等国产手机 WebView
+        // 目標瀏覽器：降低到更保守的版本以支援華為等國產手機 WebView
         targets: {
           android: (4 << 16) | (4 << 8), // Android 4.4
           chrome: 49 << 16, // Chrome 49 (Android 4.4 WebView)
           ios_saf: (9 << 16) | (3 << 8) // iOS Safari 9.3
         },
-        // 禁用现代 CSS 特性，确保兼容旧版浏览器
+        // 禁用現代 CSS 特性，確保相容舊版瀏覽器
         drafts: { customMedia: false }
       }
     },
-    // 优化依赖预构建
+    // 最佳化依賴預構建
     optimizeDeps: { include: ['vue', 'vue-router', 'pinia', 'reka-ui', '@vueuse/core', 'lucide-vue-next', 'crypto-js', 'file-saver'] }
   }
 })

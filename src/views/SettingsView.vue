@@ -664,7 +664,7 @@
           console.warn('ExternalStorage failed, trying Documents:', extError)
         }
 
-        // 備選方案：儲存到應用文件目錄 (TapPlay 等沙盒環境)
+        // 備選方案：儲存到應用檔案目錄 (TapPlay 等沙盒環境)
         try {
           const result = await Filesystem.writeFile({
             path: fileName,

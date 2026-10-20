@@ -1,12 +1,12 @@
 /**
- * WebDAV 同步服务
- * 支持将存档上传到 WebDAV 服务器（如坚果云、Nextcloud、NAS等）
- * 注意：WebDAV 配置存储在 gameStore.webdavConfig 中，与用户数据一起持久化
+ * WebDAV 同步服務
+ * 支援將存檔上傳到 WebDAV 伺服器（如堅果雲、Nextcloud、NAS等）
+ * 注意：WebDAV 配置儲存在 gameStore.webdavConfig 中，與使用者資料一起持久化
  */
 
 import type { WebDAVConfig } from '@/types/game'
 
-// 重新导出类型以保持向后兼容
+// 重新匯出型別以保持向後相容
 export type { WebDAVConfig }
 
 export interface WebDAVFile {
@@ -17,9 +17,9 @@ export interface WebDAVFile {
   isDirectory: boolean
 }
 
-// WebDAV 消息 key（用于 i18n）
+// WebDAV 訊息 key（用於 i18n）
 export const WebDAVMessageKey = {
-  // 连接相关
+  // 連線相關
   connectionSuccess: 'webdav.connectionSuccess',
   connectionSuccessDirectoryCreated: 'webdav.connectionSuccessDirectoryCreated',
   authFailed: 'webdav.authFailed',
@@ -28,23 +28,23 @@ export const WebDAVMessageKey = {
   networkError: 'webdav.networkError',
   connectionError: 'webdav.connectionError',
 
-  // 上传相关
+  // 上傳相關
   uploadSuccess: 'webdav.uploadSuccess',
   noWritePermission: 'webdav.noWritePermission',
   insufficientStorage: 'webdav.insufficientStorage',
   uploadFailedHttp: 'webdav.uploadFailedHttp',
   uploadError: 'webdav.uploadError',
 
-  // 下载相关
+  // 下載相關
   fileNotExist: 'webdav.fileNotExist',
   downloadFailedHttp: 'webdav.downloadFailedHttp',
   downloadError: 'webdav.downloadError',
 
-  // 列表相关
+  // 列表相關
   listFailedHttp: 'webdav.listFailedHttp',
   listError: 'webdav.listError',
 
-  // 删除相关
+  // 刪除相關
   deleteFailedHttp: 'webdav.deleteFailedHttp',
   deleteError: 'webdav.deleteError'
 } as const
@@ -60,13 +60,13 @@ export interface WebDAVResult {
   files?: WebDAVFile[]
 }
 
-// 构建 Authorization header
+// 構建 Authorization header
 const buildAuthHeader = (config: WebDAVConfig): string => {
   const credentials = btoa(`${config.username}:${config.password}`)
   return `Basic ${credentials}`
 }
 
-// 规范化 URL 路径
+// 規範化 URL 路徑
 const normalizePath = (serverUrl: string, basePath: string, fileName?: string): string => {
   let url = serverUrl.replace(/\/+$/, '')
   let path = basePath.replace(/^\/+/, '').replace(/\/+$/, '')
@@ -82,7 +82,7 @@ const normalizePath = (serverUrl: string, basePath: string, fileName?: string): 
   return url
 }
 
-// 测试 WebDAV 连接
+// 測試 WebDAV 連線
 export const testWebDAVConnection = async (config: WebDAVConfig): Promise<WebDAVResult> => {
   try {
     const url = normalizePath(config.serverUrl, config.basePath)
@@ -105,7 +105,7 @@ export const testWebDAVConnection = async (config: WebDAVConfig): Promise<WebDAV
     }
 
     if (response.status === 404) {
-      // 尝试创建目录
+      // 嘗試建立目錄
       const createResult = await createDirectory(config, config.basePath)
       if (createResult) {
         return { success: true, messageKey: WebDAVMessageKey.connectionSuccessDirectoryCreated }
@@ -116,7 +116,7 @@ export const testWebDAVConnection = async (config: WebDAVConfig): Promise<WebDAV
     return { success: false, messageKey: WebDAVMessageKey.connectionFailedHttp, messageParams: { status: response.status } }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    // CORS 错误的处理
+    // CORS 錯誤的處理
     if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
       return { success: false, messageKey: WebDAVMessageKey.networkError }
     }
@@ -124,7 +124,7 @@ export const testWebDAVConnection = async (config: WebDAVConfig): Promise<WebDAV
   }
 }
 
-// 创建目录
+// 建立目錄
 const createDirectory = async (config: WebDAVConfig, path: string): Promise<boolean> => {
   try {
     const url = normalizePath(config.serverUrl, path)
@@ -143,10 +143,10 @@ const createDirectory = async (config: WebDAVConfig, path: string): Promise<bool
   }
 }
 
-// 上传存档到 WebDAV
+// 上傳存檔到 WebDAV
 export const uploadToWebDAV = async (config: WebDAVConfig, data: string, fileName?: string): Promise<WebDAVResult> => {
   try {
-    // 生成带时间戳的文件名
+    // 生成帶時間戳的檔名
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
     const actualFileName = fileName || `ogame-save-${timestamp}.json`
     const url = normalizePath(config.serverUrl, config.basePath, actualFileName)
@@ -183,7 +183,7 @@ export const uploadToWebDAV = async (config: WebDAVConfig, data: string, fileNam
   }
 }
 
-// 解析 PROPFIND XML 响应
+// 解析 PROPFIND XML 響應
 const parsePropfindResponse = (xml: string, _basePath: string): WebDAVFile[] => {
   const parser = new DOMParser()
   const doc = parser.parseFromString(xml, 'application/xml')
@@ -200,11 +200,11 @@ const parsePropfindResponse = (xml: string, _basePath: string): WebDAVFile[] => 
     const resourceType = response.getElementsByTagNameNS('DAV:', 'resourcetype')[0]
     const isCollection = resourceType ? resourceType.getElementsByTagNameNS('DAV:', 'collection').length > 0 : false
 
-    // 解码 URL 编码的路径
+    // 解碼 URL 編碼的路徑
     const decodedHref = decodeURIComponent(href)
     const fileName = displayName || decodedHref.split('/').filter(Boolean).pop() || ''
 
-    // 跳过目录本身和非 JSON 文件
+    // 跳過目錄本身和非 JSON 檔案
     if (isCollection) continue
     if (!fileName.endsWith('.json')) continue
 
@@ -217,11 +217,11 @@ const parsePropfindResponse = (xml: string, _basePath: string): WebDAVFile[] => 
     })
   }
 
-  // 按修改时间降序排序（最新的在前）
+  // 按修改時間降序排序（最新的在前）
   return files.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
 }
 
-// 列出 WebDAV 目录中的存档文件
+// 列出 WebDAV 目錄中的存檔檔案
 export const listWebDAVFiles = async (config: WebDAVConfig): Promise<WebDAVResult> => {
   try {
     const url = normalizePath(config.serverUrl, config.basePath)
@@ -255,7 +255,7 @@ export const listWebDAVFiles = async (config: WebDAVConfig): Promise<WebDAVResul
   }
 }
 
-// 从 WebDAV 下载存档
+// 從 WebDAV 下載存檔
 export const downloadFromWebDAV = async (config: WebDAVConfig, fileName: string): Promise<WebDAVResult> => {
   try {
     const url = normalizePath(config.serverUrl, config.basePath, fileName)
@@ -285,7 +285,7 @@ export const downloadFromWebDAV = async (config: WebDAVConfig, fileName: string)
   }
 }
 
-// 删除 WebDAV 文件
+// 刪除 WebDAV 檔案
 export const deleteFromWebDAV = async (config: WebDAVConfig, fileName: string): Promise<WebDAVResult> => {
   try {
     const url = normalizePath(config.serverUrl, config.basePath, fileName)
@@ -306,7 +306,7 @@ export const deleteFromWebDAV = async (config: WebDAVConfig, fileName: string): 
     }
 
     if (response.status === 404) {
-      return { success: true, messageKey: WebDAVMessageKey.connectionSuccess } // 文件不存在也视为删除成功
+      return { success: true, messageKey: WebDAVMessageKey.connectionSuccess } // 檔案不存在也視為刪除成功
     }
 
     return { success: false, messageKey: WebDAVMessageKey.deleteFailedHttp, messageParams: { status: response.status } }
