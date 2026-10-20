@@ -41,7 +41,7 @@
               </EmptyContent>
             </Empty>
             <div v-else class="divide-y p-4 space-y-3">
-              <!-- 等待队列项 -->
+              <!-- 等待佇列項 -->
               <template v-if="tab.isWaiting">
                 <div v-for="item in tab.items" :key="item.id" class="space-y-1.5">
                   <div class="flex items-center justify-between text-xs sm:text-sm gap-2">
@@ -77,7 +77,7 @@
                       </Button>
                     </div>
                   </div>
-                  <!-- 预估成本显示 -->
+                  <!-- 預估成本顯示 -->
                   <div class="flex gap-2 text-[10px] text-muted-foreground ml-4">
                     <span v-if="getWaitingItemCost(item as WaitingQueueItem).metal > 0">
                       {{ t('resources.metal') }}: {{ formatNumber(getWaitingItemCost(item as WaitingQueueItem).metal) }}
@@ -91,7 +91,7 @@
                   </div>
                 </div>
               </template>
-              <!-- 正式队列项 -->
+              <!-- 正式佇列項 -->
               <template v-else>
                 <div v-for="item in tab.items" :key="item.id" class="space-y-1.5">
                   <div class="flex items-center justify-between text-xs sm:text-sm gap-2">
@@ -159,19 +159,19 @@
   const isOpen = ref(false)
   const activeTab = ref('all')
 
-  // 响应式时间戳，用于驱动时间和进度的动态更新
+  // 響應式時間戳，用於驅動時間和進度的動態更新
   const currentTime = ref(getGameNow())
   let timerInterval: ReturnType<typeof setInterval> | null = null
 
-  // 当弹窗打开时启动计时器，关闭时停止
+  // 當彈窗開啟時啟動計時器，關閉時停止
   watch(isOpen, open => {
     if (open) {
-      // 启动每秒更新的计时器
+      // 啟動每秒更新的計時器
       timerInterval = setInterval(() => {
         currentTime.value = getGameNow()
       }, 1000)
     } else {
-      // 停止计时器
+      // 停止計時器
       if (timerInterval) {
         clearInterval(timerInterval)
         timerInterval = null
@@ -179,7 +179,7 @@
     }
   })
 
-  // 组件卸载时清理计时器
+  // 元件解除安裝時清理計時器
   onUnmounted(() => {
     if (timerInterval) {
       clearInterval(timerInterval)
@@ -187,37 +187,37 @@
     }
   })
 
-  // 获取当前星球的建造队列
+  // 獲取當前星球的建造佇列
   const buildQueue = computed(() => {
     return gameStore.currentPlanet?.buildQueue || []
   })
 
-  // 获取研究队列
+  // 獲取研究佇列
   const researchQueue = computed(() => {
     return gameStore.player.researchQueue || []
   })
 
-  // 获取当前星球的建造等待队列
+  // 獲取當前星球的建造等待佇列
   const buildWaitingQueue = computed(() => {
     return gameStore.currentPlanet?.waitingBuildQueue || []
   })
 
-  // 获取研究等待队列
+  // 獲取研究等待佇列
   const researchWaitingQueue = computed(() => {
     return gameStore.player.waitingResearchQueue || []
   })
 
-  // 合并所有等待队列
+  // 合併所有等待佇列
   const allWaitingQueue = computed(() => {
     return [...buildWaitingQueue.value, ...researchWaitingQueue.value]
   })
 
-  // 总队列数量（包括等待队列）
+  // 總佇列數量（包括等待佇列）
   const totalQueueCount = computed(() => {
     return buildQueue.value.length + researchQueue.value.length + allWaitingQueue.value.length
   })
 
-  // 标签页配置（用于循环渲染）
+  // 標籤頁配置（用於迴圈渲染）
   const tabConfig = computed(() => [
     { value: 'all', items: [...buildQueue.value, ...researchQueue.value], isWaiting: false },
     { value: 'buildings', items: buildQueue.value.filter(item => item.type === 'building' || item.type === 'demolish'), isWaiting: false },
@@ -227,7 +227,7 @@
     { value: 'waiting', items: allWaitingQueue.value, isWaiting: true }
   ])
 
-  // 获取队列项名称
+  // 獲取佇列項名稱
   const getItemName = (item: BuildQueueItem | WaitingQueueItem): string => {
     if (item.type === 'building' || item.type === 'demolish') {
       return BUILDINGS.value[item.itemType as BuildingType].name
@@ -241,17 +241,17 @@
     return ''
   }
 
-  // 检查是否是等待队列项
+  // 檢查是否是等待佇列項
   const isWaitingItem = (item: BuildQueueItem | WaitingQueueItem): item is WaitingQueueItem => {
     return 'addedTime' in item && 'priority' in item
   }
 
-  // 获取等待队列项的预估成本
+  // 獲取等待佇列項的預估成本
   const getWaitingItemCost = (item: WaitingQueueItem): Resources => {
     return waitingQueueLogic.calculateWaitingItemCost(item)
   }
 
-  // 检查等待队列项资源是否足够
+  // 檢查等待佇列項資源是否足夠
   const isWaitingItemResourcesReady = (item: WaitingQueueItem): boolean => {
     const cost = getWaitingItemCost(item)
     const resources = gameStore.currentPlanet?.resources
@@ -259,12 +259,12 @@
     return resourceLogic.checkResourcesAvailable(resources, cost)
   }
 
-  // 获取剩余时间（使用响应式 currentTime 确保动态更新）
+  // 獲取剩餘時間（使用響應式 currentTime 確保動態更新）
   const getRemainingTime = (item: BuildQueueItem): number => {
     return Math.max(0, Math.floor((item.endTime - currentTime.value) / 1000))
   }
 
-  // 获取队列进度（使用响应式 currentTime 确保动态更新）
+  // 獲取佇列進度（使用響應式 currentTime 確保動態更新）
   const getQueueProgress = (item: BuildQueueItem): number => {
     const elapsed = currentTime.value - item.startTime
     const total = item.endTime - item.startTime
@@ -272,9 +272,9 @@
     return Math.max(0, Math.min(100, (elapsed / total) * 100))
   }
 
-  // 统一的取消处理
+  // 統一的取消處理
   const handleCancel = (item: BuildQueueItem | WaitingQueueItem) => {
-    // 检查是否是等待队列项
+    // 檢查是否是等待佇列項
     if (isWaitingItem(item)) {
       handleRemoveFromWaiting(item)
       return
@@ -293,23 +293,23 @@
     window.dispatchEvent(event)
   }
 
-  // 从等待队列移除
+  // 從等待佇列移除
   const handleRemoveFromWaiting = (item: WaitingQueueItem) => {
     const planet = gameStore.currentPlanet
     if (!planet) return
 
     if (item.type === 'technology') {
-      // 从研究等待队列移除
+      // 從研究等待佇列移除
       waitingQueueLogic.removeFromResearchWaitingQueue(gameStore.player, item.id)
     } else {
-      // 从建筑等待队列移除
+      // 從建築等待佇列移除
       waitingQueueLogic.removeFromBuildWaitingQueue(planet, item.id)
     }
   }
 
-  // 获取状态指示点颜色
+  // 獲取狀態指示點顏色
   const getStatusDotClass = (item: BuildQueueItem | WaitingQueueItem): string => {
-    // 等待队列项根据资源是否足够显示不同颜色
+    // 等待佇列項根據資源是否足夠顯示不同顏色
     if (isWaitingItem(item)) {
       return isWaitingItemResourcesReady(item) ? 'bg-green-500 dark:bg-green-400' : 'bg-yellow-500 dark:bg-yellow-400'
     }

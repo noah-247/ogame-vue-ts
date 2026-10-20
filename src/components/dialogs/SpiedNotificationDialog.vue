@@ -12,7 +12,7 @@
       </DialogHeader>
 
       <div v-if="notification" class="space-y-4">
-        <!-- 侦查者信息 -->
+        <!-- 偵查者資訊 -->
         <div class="p-4 bg-muted/50 rounded-lg border">
           <div class="flex items-center gap-3">
             <div class="p-2 bg-background rounded-full border">
@@ -32,7 +32,7 @@
           </div>
         </div>
 
-        <!-- 被侦查星球 -->
+        <!-- 被偵查星球 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('messagesView.targetPlanet') }}</h4>
           <div class="p-3 bg-muted/30 rounded-md border flex items-center gap-2">
@@ -41,7 +41,7 @@
           </div>
         </div>
 
-        <!-- 消息内容 -->
+        <!-- 訊息內容 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('messagesView.detectionResult') }}</h4>
           <div class="p-3 bg-muted/30 rounded-md border">
@@ -56,7 +56,7 @@
           </div>
         </div>
 
-        <!-- 建议 -->
+        <!-- 建議 -->
         <div class="p-3 bg-muted/30 rounded-md border">
           <p class="text-sm text-muted-foreground">
             {{ t('messagesView.spiedNotificationTip') }}
@@ -110,18 +110,18 @@
     emit('update:open', newValue)
   })
 
-  // 获取NPC名称
+  // 獲取NPC名稱
   const npcName = computed(() => {
     if (!props.notification) return ''
     if (!npcStore.npcs?.length) return props.notification.npcName
 
-    // 通过 npcId 查找
+    // 透過 npcId 查詢
     if (props.notification.npcId) {
       const npc = npcStore.npcs.find(n => n.id === props.notification!.npcId)
       if (npc) return npc.name
     }
 
-    // 尝试从旧名称中提取ID并查找
+    // 嘗試從舊名稱中提取ID並查詢
     const idMatch = props.notification.npcName.match(/npc_\d+/)
     if (idMatch) {
       const extractedId = idMatch[0]
@@ -132,7 +132,7 @@
     return props.notification.npcName
   })
 
-  // 在银河系中查看NPC
+  // 在銀河系中檢視NPC
   const viewNPCInGalaxy = () => {
     if (!props.notification?.npcId) return
     const npc = npcStore.npcs.find(n => n.id === props.notification!.npcId)

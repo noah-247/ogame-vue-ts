@@ -2,7 +2,7 @@
   <div v-if="planet" class="container mx-auto p-4 sm:p-6">
     <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">{{ t('buildingsView.title') }}</h1>
 
-    <!-- 占地显示 -->
+    <!-- 佔地顯示 -->
     <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-muted/50 rounded-lg border">
       <div class="flex items-center justify-between">
         <div class="text-sm sm:text-base font-medium flex items-center gap-2">
@@ -35,7 +35,7 @@
           :alt="BUILDINGS[buildingType].name"
           :locked="!isEntityUnlocked(BUILDINGS[buildingType].requirements, getBuildingLevel(buildingType))"
         />
-        <!-- 前置条件遮罩 -->
+        <!-- 前置條件遮罩 -->
         <CardUnlockOverlay :requirements="BUILDINGS[buildingType].requirements" :currentLevel="getBuildingLevel(buildingType)" />
 
         <CardHeader>
@@ -95,12 +95,12 @@
               </div>
             </div>
 
-            <!-- 升级按钮 -->
+            <!-- 升級按鈕 -->
             <Button @click="handleUpgrade(buildingType, $event)" :disabled="!canUpgrade(buildingType)" class="w-full">
               {{ getUpgradeButtonText(buildingType) }}
             </Button>
 
-            <!-- 添加到等待队列按钮 -->
+            <!-- 新增到等待佇列按鈕 -->
             <Button
               v-if="canAddToWaitingQueue(buildingType)"
               @click="handleAddToWaiting(buildingType, $event)"
@@ -110,7 +110,7 @@
               {{ t('queue.addToWaiting') }}
             </Button>
 
-            <!-- 拆除按钮 -->
+            <!-- 拆除按鈕 -->
             <Button
               v-if="getBuildingLevel(buildingType) > 0"
               @click="handleDemolish(buildingType)"
@@ -121,7 +121,7 @@
               {{ t('buildingsView.demolish') }}
             </Button>
 
-            <!-- 拆除信息提示 -->
+            <!-- 拆除資訊提示 -->
             <div v-if="getBuildingLevel(buildingType) > 0" class="text-xs text-muted-foreground">
               <p>{{ t('buildingsView.demolishRefund') }}</p>
               <div class="flex gap-2 flex-wrap">
@@ -148,7 +148,7 @@
       </Card>
     </div>
 
-    <!-- 提示对话框 -->
+    <!-- 提示對話方塊 -->
     <AlertDialog :open="alertDialogOpen" @update:open="alertDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -172,7 +172,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 拆除确认对话框 -->
+    <!-- 拆除確認對話方塊 -->
     <AlertDialog :open="demolishConfirmOpen" @update:open="demolishConfirmOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -233,23 +233,23 @@
   const { BUILDINGS, TECHNOLOGIES } = useGameConfig()
   const planet = computed(() => gameStore.currentPlanet)
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const alertDialogOpen = ref(false)
   const alertDialogTitle = ref('')
   const alertDialogMessage = ref('')
   const alertDialogRequirements = ref<Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }>>([])
   const alertDialogShowRequirements = ref(false)
 
-  // 防抖状态：防止快速点击
+  // 防抖狀態：防止快速點選
   const isProcessing = ref(false)
-  const DEBOUNCE_DELAY = 300 // 防抖延迟（毫秒）
+  const DEBOUNCE_DELAY = 300 // 防抖延遲（毫秒）
 
-  // 拆除确认对话框状态
+  // 拆除確認對話方塊狀態
   const demolishConfirmOpen = ref(false)
   const demolishConfirmMessage = ref('')
   const pendingDemolishBuilding = ref<BuildingType | null>(null)
 
-  // 资源类型配置（用于成本显示）
+  // 資源型別配置（用於成本顯示）
   const costResourceTypes = [
     { key: 'metal' as const },
     { key: 'crystal' as const },
@@ -257,17 +257,17 @@
     { key: 'darkMatter' as const }
   ]
 
-  // 根据星球类型过滤可用建筑
+  // 根據星球型別過濾可用建築
   const availableBuildings = computed<BuildingType[]>(() => {
     if (!planet.value) return []
     return (Object.values(BuildingType) as BuildingType[]).filter(buildingType => {
       const config = BUILDINGS.value[buildingType]
       if (planet.value!.isMoon) {
-        // 月球可以建造：月球专属建筑 + 非行星专属建筑（如机器人工厂、船坞、机库等）
-        // OGame规则：月球不能建造 planetOnly 的建筑（矿场、研究实验室、纳米工厂等）
+        // 月球可以建造：月球專屬建築 + 非行星專屬建築（如機器人工廠、船塢、機庫等）
+        // OGame規則：月球不能建造 planetOnly 的建築（礦場、研究實驗室、奈米工廠等）
         return config.planetOnly !== true
       } else {
-        // 行星不能建造月球专属建筑
+        // 行星不能建造月球專屬建築
         return config.moonOnly !== true
       }
     })
@@ -283,7 +283,7 @@
     )
     if (!validation.valid) return { success: false, reason: validation.reason }
 
-    // 追踪资源消耗（在扣除前计算成本）
+    // 追蹤資源消耗（在扣除前計算成本）
     const currentLevel = gameStore.currentPlanet.buildings[buildingType] || 0
     const cost = buildingLogic.calculateBuildingCost(buildingType, currentLevel + 1)
     gameLogic.trackResourceConsumption(gameStore.player, cost)
@@ -297,16 +297,16 @@
     return buildingLogic.calculateUsedSpace(planet)
   }
 
-  // 升级建筑
+  // 升級建築
   const handleUpgrade = (buildingType: BuildingType, event: MouseEvent) => {
-    // 防抖：防止快速点击
+    // 防抖：防止快速點選
     if (isProcessing.value) return
     isProcessing.value = true
     setTimeout(() => {
       isProcessing.value = false
     }, DEBOUNCE_DELAY)
 
-    // 检查前置条件
+    // 檢查前置條件
     if (!checkUpgradeRequirements(buildingType)) {
       alertDialogTitle.value = t('common.requirementsNotMet')
       alertDialogRequirements.value = getRequirementsList(buildingType)
@@ -323,48 +323,48 @@
       alertDialogShowRequirements.value = false
       alertDialogOpen.value = true
     } else {
-      // 触发抛物线动画
+      // 觸發拋物線動畫
       triggerQueueAnimation(event, 'building')
     }
   }
 
-  // 获取建筑等级
+  // 獲取建築等級
   const getBuildingLevel = (buildingType: BuildingType): number => {
     return planet.value?.buildings[buildingType] || 0
   }
 
-  // 检查升级前置条件是否满足
+  // 檢查升級前置條件是否滿足
   const checkUpgradeRequirements = (buildingType: BuildingType): boolean => {
     if (!planet.value) return false
     const config = BUILDINGS.value[buildingType]
     const currentLevel = getBuildingLevel(buildingType)
     const targetLevel = currentLevel + 1
 
-    // 获取目标等级的所有前置条件（包括等级门槛）
+    // 獲取目標等級的所有前置條件（包括等級門檻）
     const requirements = publicLogic.getLevelRequirements(config, targetLevel)
 
     if (!requirements || Object.keys(requirements).length === 0) return true
     return publicLogic.checkRequirements(planet.value, gameStore.player.technologies, requirements)
   }
 
-  // 获取升级按钮文本
+  // 獲取升級按鈕文字
   const getUpgradeButtonText = (buildingType: BuildingType): string => {
     if (!planet.value) return t('buildingsView.upgrade')
 
     const config = BUILDINGS.value[buildingType]
     const currentLevel = getBuildingLevel(buildingType)
 
-    // 检查是否达到等级上限
+    // 檢查是否達到等級上限
     if (config.maxLevel !== undefined && currentLevel >= config.maxLevel) {
-      return t('buildingsView.maxLevelReached') // "等级已满"
+      return t('buildingsView.maxLevelReached') // "等級已滿"
     }
 
-    // 0级为建造，1级及以上为升级
+    // 0級為建造，1級及以上為升級
     const buttonTextKey = currentLevel === 0 ? 'buildingsView.build' : 'buildingsView.upgrade'
 
     if (planet.value.buildQueue.length > 0) return t(buttonTextKey)
 
-    // 检查前置条件
+    // 檢查前置條件
     if (!checkUpgradeRequirements(buildingType)) {
       return t('buildingsView.requirementsNotMet')
     }
@@ -372,7 +372,7 @@
     return t(buttonTextKey)
   }
 
-  // 获取前置条件列表
+  // 獲取前置條件列表
   const getRequirementsList = (
     buildingType: BuildingType
   ): Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }> => {
@@ -380,21 +380,21 @@
     const currentLevel = getBuildingLevel(buildingType)
     const targetLevel = currentLevel + 1
 
-    // 获取目标等级的所有前置条件（包括等级门槛）
+    // 獲取目標等級的所有前置條件（包括等級門檻）
     const requirements = publicLogic.getLevelRequirements(config, targetLevel)
 
     if (!requirements || !planet.value) return []
 
     const items: Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }> = []
     for (const [key, requiredLevel] of Object.entries(requirements)) {
-      // 检查是否为建筑类型
+      // 檢查是否為建築型別
       if (Object.values(BuildingType).includes(key as BuildingType)) {
         const bt = key as BuildingType
         const currentLevel = planet.value.buildings[bt] || 0
         const name = BUILDINGS.value[bt]?.name || bt
         items.push({ name, requiredLevel, currentLevel, met: currentLevel >= requiredLevel })
       }
-      // 检查是否为科技类型
+      // 檢查是否為科技型別
       else if (Object.values(TechnologyType).includes(key as TechnologyType)) {
         const tt = key as TechnologyType
         const currentLevel = gameStore.player.technologies[tt] || 0
@@ -405,19 +405,19 @@
     return items
   }
 
-  // 检查是否可以升级
+  // 檢查是否可以升級
   const canUpgrade = (buildingType: BuildingType): boolean => {
     if (!planet.value) return false
 
     const config = BUILDINGS.value[buildingType]
     const currentLevel = getBuildingLevel(buildingType)
 
-    // 检查是否达到等级上限
+    // 檢查是否達到等級上限
     if (config.maxLevel !== undefined && currentLevel >= config.maxLevel) {
       return false
     }
 
-    // 检查建造队列是否已满（只计算建筑类型的队列项）
+    // 檢查建造佇列是否已滿（只計算建築型別的佇列項）
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxQueue = publicLogic.getMaxBuildQueue(planet.value, bonuses.additionalBuildQueue)
     const buildingQueueCount = planet.value.buildQueue.filter(item => item.type === 'building' || item.type === 'demolish').length
@@ -425,7 +425,7 @@
       return false
     }
 
-    // 检查前置条件
+    // 檢查前置條件
     const validation = buildingValidation.validateBuildingUpgrade(
       planet.value,
       buildingType,
@@ -453,7 +453,7 @@
 
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
 
-    // 获取机器人工厂和纳米工厂等级
+    // 獲取機器人工廠和奈米工廠等級
     const roboticsFactoryLevel = planet.value.buildings[BuildingType.RoboticsFactory] || 0
     const naniteFactoryLevel = planet.value.buildings[BuildingType.NaniteFactory] || 0
 
@@ -466,7 +466,7 @@
     )
   }
 
-  // 拆除建筑
+  // 拆除建築
   const demolishBuilding = (buildingType: BuildingType): boolean => {
     if (!gameStore.currentPlanet) return false
     const validation = buildingValidation.validateBuildingDemolish(gameStore.currentPlanet, buildingType, gameStore.player.officers)
@@ -501,12 +501,12 @@ ${refund.darkMatter ? `${t('resources.darkMatter')}: ${formatNumber(refund.darkM
     pendingDemolishBuilding.value = null
   }
 
-  // 检查是否可以拆除
+  // 檢查是否可以拆除
   const canDemolish = (buildingType: BuildingType): boolean => {
     if (!planet.value) return false
     if (getBuildingLevel(buildingType) <= 0) return false
 
-    // 检查建造队列是否已满（只计算建筑类型的队列项）
+    // 檢查建造佇列是否已滿（只計算建築型別的佇列項）
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxQueue = publicLogic.getMaxBuildQueue(planet.value, bonuses.additionalBuildQueue)
     const buildingQueueCount = planet.value.buildQueue.filter(item => item.type === 'building' || item.type === 'demolish').length
@@ -517,40 +517,40 @@ ${refund.darkMatter ? `${t('resources.darkMatter')}: ${formatNumber(refund.darkM
     return true
   }
 
-  // 获取拆除返还资源
+  // 獲取拆除返還資源
   const getDemolishRefund = (buildingType: BuildingType): Resources => {
     const currentLevel = getBuildingLevel(buildingType)
     return buildingLogic.calculateDemolishRefund(buildingType, currentLevel)
   }
 
-  // 检查是否可以添加到等待队列
+  // 檢查是否可以新增到等待佇列
   const canAddToWaitingQueue = (buildingType: BuildingType): boolean => {
     if (!planet.value) return false
 
     const config = BUILDINGS.value[buildingType]
     const currentLevel = getBuildingLevel(buildingType)
 
-    // 计算目标等级：当前等级 + 正式队列中的升级数 + 等待队列中的升级数 + 1
+    // 計算目標等級：當前等級 + 正式佇列中的升級數 + 等待佇列中的升級數 + 1
     const upgradesInBuildQueue = planet.value.buildQueue.filter(q => q.type === 'building' && q.itemType === buildingType).length
     const waitingQueue = planet.value.waitingBuildQueue || []
     const upgradesInWaitingQueue = waitingQueue.filter(q => q.type === 'building' && q.itemType === buildingType).length
     const targetLevel = currentLevel + upgradesInBuildQueue + upgradesInWaitingQueue + 1
 
-    // 检查是否达到等级上限（使用计算后的目标等级）
+    // 檢查是否達到等級上限（使用計算後的目標等級）
     if (config.maxLevel !== undefined && targetLevel > config.maxLevel) {
       return false
     }
 
-    // 检查目标等级的前置条件是否满足
-    // 如果该建筑已经在队列中（正式或等待），说明基本条件已满足，跳过检查
+    // 檢查目標等級的前置條件是否滿足
+    // 如果該建築已經在佇列中（正式或等待），說明基本條件已滿足，跳過檢查
     const alreadyInQueue = upgradesInBuildQueue > 0 || upgradesInWaitingQueue > 0
     if (!alreadyInQueue) {
-      // 第一次添加时，检查当前等级+1的前置条件
+      // 第一次新增時，檢查當前等級+1的前置條件
       if (!checkUpgradeRequirements(buildingType)) {
         return false
       }
     } else {
-      // 后续添加时，检查目标等级的前置条件
+      // 後續新增時，檢查目標等級的前置條件
       const requirements = publicLogic.getLevelRequirements(config, targetLevel)
       if (requirements && Object.keys(requirements).length > 0) {
         if (!publicLogic.checkRequirements(planet.value, gameStore.player.technologies, requirements)) {
@@ -559,8 +559,8 @@ ${refund.darkMatter ? `${t('resources.darkMatter')}: ${formatNumber(refund.darkM
       }
     }
 
-    // 建筑可以多次排队（比如金属矿升级到2、3、4、5级）
-    // 只需要检查等待队列是否已满
+    // 建築可以多次排隊（比如金屬礦升級到2、3、4、5級）
+    // 只需要檢查等待佇列是否已滿
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxWaitingQueue = waitingQueueLogic.getMaxBuildWaitingQueue(planet.value, bonuses.additionalBuildQueue)
     if (waitingQueue.length >= maxWaitingQueue) {
@@ -570,13 +570,13 @@ ${refund.darkMatter ? `${t('resources.darkMatter')}: ${formatNumber(refund.darkM
     return true
   }
 
-  // 添加到等待队列
+  // 新增到等待佇列
   const handleAddToWaiting = (buildingType: BuildingType, event: MouseEvent) => {
     if (!planet.value) return
 
     const currentLevel = getBuildingLevel(buildingType)
 
-    // 计算目标等级：当前等级 + 正式队列中的升级数 + 等待队列中的升级数 + 1
+    // 計算目標等級：當前等級 + 正式佇列中的升級數 + 等待佇列中的升級數 + 1
     const upgradesInBuildQueue = planet.value.buildQueue.filter(q => q.type === 'building' && q.itemType === buildingType).length
     const waitingQueue = planet.value.waitingBuildQueue || []
     const upgradesInWaitingQueue = waitingQueue.filter(q => q.type === 'building' && q.itemType === buildingType).length
@@ -593,7 +593,7 @@ ${refund.darkMatter ? `${t('resources.darkMatter')}: ${formatNumber(refund.darkM
       return
     }
 
-    // 触发抛物线动画
+    // 觸發拋物線動畫
     triggerQueueAnimation(event, 'building')
 
     waitingQueueLogic.addToBuildWaitingQueue(planet.value, item)

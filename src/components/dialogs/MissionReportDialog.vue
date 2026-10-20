@@ -12,7 +12,7 @@
       </DialogHeader>
 
       <div v-if="report" class="space-y-4">
-        <!-- 任务状态 -->
+        <!-- 任務狀態 -->
         <div class="p-4 bg-muted/50 rounded-lg border">
           <div class="flex items-center gap-2 mb-2">
             <h3 class="font-semibold text-lg">{{ getMissionTypeName(report.missionType) }}</h3>
@@ -26,7 +26,7 @@
           <p class="text-sm">{{ report.message }}</p>
         </div>
 
-        <!-- 起点和终点 -->
+        <!-- 起點和終點 -->
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <h4 class="font-semibold text-sm">{{ t('messagesView.origin') }}</h4>
@@ -45,9 +45,9 @@
           </div>
         </div>
 
-        <!-- 任务详情 -->
+        <!-- 任務詳情 -->
         <div class="space-y-4">
-          <!-- 运输任务详情 -->
+          <!-- 運輸任務詳情 -->
           <div v-if="report.details?.transportedResources" class="space-y-3">
             <div class="flex items-center gap-2">
               <Package class="h-4 w-4" />
@@ -66,7 +66,7 @@
             </div>
           </div>
 
-          <!-- 回收任务详情 -->
+          <!-- 回收任務詳情 -->
           <div v-if="report.details?.recycledResources" class="space-y-3">
             <div class="flex items-center gap-2">
               <Recycle class="h-4 w-4" />
@@ -81,7 +81,7 @@
                 <p class="text-lg font-bold">+{{ report.details.recycledResources[res.key].toLocaleString() }}</p>
               </div>
             </div>
-            <!-- 剩余残骸 -->
+            <!-- 剩餘殘骸 -->
             <div v-if="report.details.remainingDebris" class="mt-3">
               <div class="flex items-center gap-2 mb-2">
                 <AlertTriangle class="h-4 w-4" />
@@ -99,7 +99,7 @@
             </div>
           </div>
 
-          <!-- 殖民任务详情 -->
+          <!-- 殖民任務詳情 -->
           <div v-if="report.details?.newPlanetName">
             <p class="text-xs font-semibold text-muted-foreground">{{ t('messagesView.newPlanet') }}:</p>
             <div class="flex items-center gap-2 mt-1">
@@ -108,11 +108,11 @@
             </div>
           </div>
 
-          <!-- 导弹攻击详情 -->
+          <!-- 導彈攻擊詳情 -->
           <div v-if="report.details?.missileCount !== undefined" class="space-y-4">
-            <!-- 导弹统计卡片 -->
+            <!-- 導彈統計卡片 -->
             <div class="grid grid-cols-3 gap-3">
-              <!-- 发射数量 -->
+              <!-- 發射數量 -->
               <div class="p-3 bg-muted/50 rounded-lg border">
                 <div class="flex items-center gap-2 mb-1">
                   <Rocket class="h-4 w-4" />
@@ -120,7 +120,7 @@
                 </div>
                 <p class="text-xl font-bold">{{ report.details.missileCount }}</p>
               </div>
-              <!-- 命中数量 -->
+              <!-- 命中數量 -->
               <div class="p-3 bg-muted/50 rounded-lg border">
                 <div class="flex items-center gap-2 mb-1">
                   <Target class="h-4 w-4" />
@@ -128,7 +128,7 @@
                 </div>
                 <p class="text-xl font-bold">{{ report.details.missileHits }}</p>
               </div>
-              <!-- 被拦截数量 -->
+              <!-- 被攔截數量 -->
               <div class="p-3 bg-muted/50 rounded-lg border">
                 <div class="flex items-center gap-2 mb-1">
                   <ShieldAlert class="h-4 w-4" />
@@ -138,7 +138,7 @@
               </div>
             </div>
 
-            <!-- 防御损失 -->
+            <!-- 防禦損失 -->
             <div v-if="Object.keys(report.details.defenseLosses || {}).length > 0">
               <div class="flex items-center gap-2 mb-2">
                 <Flame class="h-4 w-4" />
@@ -158,7 +158,7 @@
               </div>
             </div>
 
-            <!-- 无损失提示 -->
+            <!-- 無損失提示 -->
             <div
               v-else-if="report.details.missileHits === 0"
               class="p-3 bg-muted/50 rounded-lg border flex items-center gap-2"
@@ -168,7 +168,7 @@
             </div>
           </div>
 
-          <!-- 探险任务详情 - 探险区域 -->
+          <!-- 探險任務詳情 - 探險區域 -->
           <div v-if="report.missionType === MissionType.Expedition && report.details?.expeditionZone" class="space-y-1">
             <p class="text-xs font-semibold text-muted-foreground">{{ t('fleetView.expeditionZone') }}:</p>
             <div class="p-2 bg-muted/50 rounded flex items-center gap-2">
@@ -177,7 +177,7 @@
             </div>
           </div>
 
-          <!-- 探险任务详情 - 发现资源 -->
+          <!-- 探險任務詳情 - 發現資源 -->
           <div v-if="report.details?.foundResources" class="space-y-1">
             <p class="text-xs font-semibold text-muted-foreground">{{ t('messagesView.resources') }}:</p>
             <div class="grid grid-cols-2 gap-2 text-sm p-2 bg-muted/50 rounded">
@@ -192,7 +192,7 @@
             </div>
           </div>
 
-          <!-- 探险任务详情 - 发现舰船 -->
+          <!-- 探險任務詳情 - 發現艦船 -->
           <div v-if="report.details?.foundFleet" class="space-y-1">
             <p class="text-xs font-semibold text-muted-foreground">{{ t('messagesView.fleet') }}:</p>
             <div class="grid grid-cols-2 gap-2 text-sm p-2 bg-muted/50 rounded">
@@ -203,7 +203,7 @@
             </div>
           </div>
 
-          <!-- 探险任务详情 - 损失舰船 -->
+          <!-- 探險任務詳情 - 損失艦船 -->
           <div v-if="report.details?.fleetLost" class="space-y-1">
             <p class="text-xs font-semibold text-muted-foreground">{{ t('messagesView.attackerLosses') }}:</p>
             <div class="grid grid-cols-2 gap-2 text-sm p-2 bg-muted/50 rounded">
@@ -275,7 +275,7 @@
     emit('update:open', newValue)
   })
 
-  // 资源字段配置
+  // 資源欄位配置
   type BasicResourceKey = 'metal' | 'crystal' | 'deuterium'
   const basicResourceFields: { key: BasicResourceKey }[] = [{ key: 'metal' }, { key: 'crystal' }, { key: 'deuterium' }]
 
@@ -290,7 +290,7 @@
     { key: 'darkMatter' }
   ]
 
-  // 获取任务类型名称
+  // 獲取任務型別名稱
   const getMissionTypeName = (missionType?: MissionType): string => {
     if (missionType === undefined) return ''
     switch (missionType) {
@@ -317,7 +317,7 @@
     }
   }
 
-  // 获取任务图标
+  // 獲取任務圖示
   const getMissionIcon = (missionType?: MissionType) => {
     if (missionType === undefined) return Package
     switch (missionType) {

@@ -75,7 +75,7 @@
   import { motion, useMotionValue, useSpring } from 'motion-v'
   import { computed, onMounted, ref, watch } from 'vue'
 
-  // 本地定义类型，因为 motion-v 不导出这些类型
+  // 本地定義型別，因為 motion-v 不匯出這些型別
   interface SpringOptions {
     stiffness?: number
     damping?: number

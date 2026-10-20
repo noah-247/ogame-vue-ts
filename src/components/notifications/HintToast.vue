@@ -9,16 +9,16 @@
   >
     <div v-if="isHintVisible && currentHint" class="fixed top-16 right-2 max-w-[280px] z-100 pointer-events-auto">
       <div class="bg-card border rounded-lg shadow-lg p-3" role="alert" aria-live="polite">
-        <!-- 标题栏 -->
+        <!-- 標題欄 -->
         <div class="flex items-center gap-2 mb-2">
           <component :is="getIcon(currentHint.icon)" class="h-4 w-4 text-primary shrink-0" />
           <h4 class="font-medium text-sm">{{ t(currentHint.titleKey) }}</h4>
         </div>
 
-        <!-- 内容 -->
+        <!-- 內容 -->
         <p class="text-sm text-muted-foreground mb-3 line-clamp-3">{{ t(currentHint.messageKey) }}</p>
 
-        <!-- 操作按钮 -->
+        <!-- 操作按鈕 -->
         <div class="flex items-center justify-end">
           <Button size="sm" class="text-xs h-7" @click="handleDismiss">
             {{ t('hints.dontShowAgain') }}
@@ -54,7 +54,7 @@
   const { t } = useI18n()
   const { currentHint, isHintVisible, dismissHint } = useHints()
 
-  // 图标名称到组件的映射
+  // 圖示名稱到元件的對映
   const iconMap: Record<string, Component> = {
     home: Home,
     building: Building,
@@ -76,7 +76,7 @@
     return iconMap[iconName] || Lightbulb
   }
 
-  // 不再显示 - 永久关闭
+  // 不再顯示 - 永久關閉
   const handleDismiss = () => {
     dismissHint(true)
   }

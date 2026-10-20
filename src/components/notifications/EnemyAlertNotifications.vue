@@ -35,11 +35,11 @@
             @click="handleAlertClick(alert)"
           >
             <div class="flex items-center gap-3">
-              <!-- 左侧：任务图标 -->
+              <!-- 左側：任務圖示 -->
               <div class="shrink-0">
                 <component :is="getMissionIcon(alert.missionType)" class="h-5 w-5" :class="getMissionIconColor(alert.missionType)" />
               </div>
-              <!-- 中间：主要信息 -->
+              <!-- 中間：主要資訊 -->
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="font-medium text-sm truncate">{{ getNpcName(alert) }}</span>
@@ -51,13 +51,13 @@
                   {{ alert.targetPlanetName }} · {{ t('enemyAlert.fleetSize') }}: {{ alert.fleetSize }}
                 </p>
               </div>
-              <!-- 右侧：倒计时 -->
+              <!-- 右側：倒計時 -->
               <div class="shrink-0 text-right">
                 <span class="text-sm font-bold block" :class="getRemainingTimeColor(alert)">
                   {{ formatRemainingTime(alert) }}
                 </span>
               </div>
-              <!-- 未读标记 -->
+              <!-- 未讀標記 -->
               <span v-if="!alert.read" class="h-2 w-2 rounded-full bg-destructive shrink-0 animate-pulse" />
             </div>
           </div>
@@ -71,7 +71,7 @@
     </PopoverContent>
   </Popover>
 
-  <!-- 警报详情对话框 -->
+  <!-- 警報詳情對話方塊 -->
   <Dialog :open="detailDialogOpen" @update:open="detailDialogOpen = $event">
     <DialogContent class="max-w-md">
       <DialogHeader>
@@ -90,7 +90,7 @@
       </DialogHeader>
 
       <div v-if="selectedAlert" class="space-y-4">
-        <!-- 敌方信息 -->
+        <!-- 敵方資訊 -->
         <div class="flex items-center gap-3 p-4 bg-destructive/10 rounded-lg">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-1">
@@ -105,7 +105,7 @@
           </div>
         </div>
 
-        <!-- 目标信息 -->
+        <!-- 目標資訊 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('enemyAlert.targetInfo') }}</h4>
           <div class="p-3 bg-muted/30 rounded-md flex items-center gap-2">
@@ -114,7 +114,7 @@
           </div>
         </div>
 
-        <!-- 到达时间 -->
+        <!-- 到達時間 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('enemyAlert.arrivalTime') }}</h4>
           <div class="p-3 bg-muted/30 rounded-md">
@@ -174,7 +174,7 @@
   const currentTime = ref(getGameNow())
   let timeInterval: ReturnType<typeof setInterval> | null = null
 
-  // 启动计时器，用于实时更新倒计时
+  // 啟動計時器，用於實時更新倒計時
   onMounted(() => {
     timeInterval = setInterval(() => {
       currentTime.value = getGameNow()
@@ -188,29 +188,29 @@
     }
   })
 
-  // 获取活跃的警报（未到达的）
+  // 獲取活躍的警報（未到達的）
   const activeAlerts = computed(() => {
     const now = currentTime.value
     return (gameStore.player.incomingFleetAlerts || [])
       .filter(alert => alert.arrivalTime > now)
-      .sort((a, b) => a.arrivalTime - b.arrivalTime) // 按到达时间排序
+      .sort((a, b) => a.arrivalTime - b.arrivalTime) // 按到達時間排序
   })
 
   /**
-   * 获取NPC当前名称
-   * 优先使用当前NPC的实际名称，如果NPC不存在则尝试从旧名称中提取ID查找
+   * 獲取NPC當前名稱
+   * 優先使用當前NPC的實際名稱，如果NPC不存在則嘗試從舊名稱中提取ID查詢
    */
   const getNpcName = (alert: IncomingFleetAlert): string => {
     if (!npcStore.npcs?.length) return alert.npcName
 
-    // 1. 先通过 npcId 查找
+    // 1. 先透過 npcId 查詢
     if (alert.npcId) {
       const npc = npcStore.npcs.find(n => n.id === alert.npcId)
       if (npc) return npc.name
     }
 
-    // 2. 尝试从旧名称中提取ID并查找
-    // 旧格式如 "NPC-npc_182"，新ID格式为 "npc_182"
+    // 2. 嘗試從舊名稱中提取ID並查詢
+    // 舊格式如 "NPC-npc_182"，新ID格式為 "npc_182"
     const idMatch = alert.npcName.match(/npc_\d+/)
     if (idMatch) {
       const extractedId = idMatch[0]
@@ -221,7 +221,7 @@
     return alert.npcName
   }
 
-  // 获取任务类型图标
+  // 獲取任務型別圖示
   const getMissionIcon = (missionType: MissionType) => {
     switch (missionType) {
       case MissionType.Spy:
@@ -235,7 +235,7 @@
     }
   }
 
-  // 获取任务类型图标颜色
+  // 獲取任務型別圖示顏色
   const getMissionIconColor = (missionType: MissionType) => {
     switch (missionType) {
       case MissionType.Spy:
@@ -249,12 +249,12 @@
     }
   }
 
-  // 获取任务类型Badge样式
+  // 獲取任務型別Badge樣式
   const getMissionBadgeVariant = (missionType: MissionType): 'destructive' | 'secondary' => {
     return missionType === MissionType.Attack ? 'destructive' : 'secondary'
   }
 
-  // 获取任务类型文本
+  // 獲取任務型別文字
   const getMissionTypeText = (missionType: MissionType) => {
     switch (missionType) {
       case MissionType.Spy:
@@ -268,7 +268,7 @@
     }
   }
 
-  // 获取任务警告文本
+  // 獲取任務警告文字
   const getMissionWarningText = (missionType: MissionType) => {
     switch (missionType) {
       case MissionType.Spy:
@@ -282,7 +282,7 @@
     }
   }
 
-  // 格式化剩余时间
+  // 格式化剩餘時間
   const formatRemainingTime = (alert: IncomingFleetAlert) => {
     const remaining = Math.max(0, Math.floor((alert.arrivalTime - currentTime.value) / 1000))
     if (remaining <= 0) {
@@ -291,49 +291,49 @@
     return formatTime(remaining)
   }
 
-  // 获取剩余时间颜色
+  // 獲取剩餘時間顏色
   const getRemainingTimeColor = (alert: IncomingFleetAlert) => {
     const remaining = alert.arrivalTime - currentTime.value
-    if (remaining <= 0) return 'text-red-600 dark:text-red-400 font-bold' // 已到达
-    if (remaining < 60000) return 'text-red-600 dark:text-red-400' // < 1分钟
-    if (remaining < 300000) return 'text-orange-600 dark:text-orange-400' // < 5分钟
+    if (remaining <= 0) return 'text-red-600 dark:text-red-400 font-bold' // 已到達
+    if (remaining < 60000) return 'text-red-600 dark:text-red-400' // < 1分鐘
+    if (remaining < 300000) return 'text-orange-600 dark:text-orange-400' // < 5分鐘
     return 'text-muted-foreground'
   }
 
-  // 处理警报点击
+  // 處理警報點選
   const handleAlertClick = (alert: IncomingFleetAlert) => {
     alert.read = true
     selectedAlert.value = alert
     isOpen.value = true
-    // 打开对话框
+    // 開啟對話方塊
     detailDialogOpen.value = true
   }
 
-  // 标记所有为已读
+  // 標記所有為已讀
   const markAllAsRead = () => {
     gameStore.player.incomingFleetAlerts?.forEach(alert => {
       alert.read = true
     })
   }
 
-  // 跳转到舰队页面
+  // 跳轉到艦隊頁面
   const goToFleet = () => {
     isOpen.value = false
     router.push('/fleet')
   }
 
-  // 从对话框跳转到消息页面
+  // 從對話方塊跳轉到訊息頁面
   const goToMessagesFromDialog = () => {
     detailDialogOpen.value = false
     router.push('/messages')
   }
 
-  // 打开弹窗（供外部调用）
+  // 開啟彈窗（供外部呼叫）
   const open = () => {
     isOpen.value = true
   }
 
-  // 暴露方法给父组件
+  // 暴露方法給父元件
   defineExpose({
     open
   })

@@ -1,7 +1,7 @@
 <template>
   <div v-if="showWarning" class="bg-destructive/10 border-b border-destructive/20">
     <div class="px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
-      <!-- 警告图标和信息 -->
+      <!-- 警告圖示和資訊 -->
       <div class="flex items-center gap-2 flex-1 min-w-0">
         <Zap class="h-5 w-5 text-destructive shrink-0 animate-pulse" />
         <div class="flex-1 min-w-0">
@@ -14,7 +14,7 @@
         </div>
       </div>
 
-      <!-- 建造电站按钮 -->
+      <!-- 建造電站按鈕 -->
       <Button @click="goToBuildSolarPlant" variant="outline" size="sm" class="shrink-0">
         {{ t('energy.buildSolarPlant') }}
       </Button>
@@ -37,10 +37,10 @@
   const router = useRouter()
   const { t } = useI18n()
 
-  // 获取当前星球
+  // 獲取當前星球
   const planet = computed(() => gameStore.currentPlanet)
 
-  // 计算能量产量
+  // 計算能量產量
   const energyProduction = computed(() => {
     if (!planet.value) return 0
     const now = getGameNow()
@@ -48,25 +48,25 @@
     return resourceLogic.calculateEnergyProduction(planet.value, { energyProductionBonus: bonuses.energyProductionBonus })
   })
 
-  // 计算能量消耗
+  // 計算能量消耗
   const energyConsumption = computed(() => {
     if (!planet.value) return 0
     return resourceLogic.calculateEnergyConsumption(planet.value)
   })
 
-  // 是否显示警告（电力产量 < 消耗）
+  // 是否顯示警告（電力產量 < 消耗）
   const showWarning = computed(() => {
     if (!planet.value) return false
     return energyProduction.value < energyConsumption.value
   })
 
-  // 详细消息
+  // 詳細訊息
   const detailMessage = computed(() => {
     const deficit = Math.ceil(energyConsumption.value - energyProduction.value)
     return t('energy.deficitDetail', { deficit: deficit.toString() })
   })
 
-  // 跳转到建筑页面建造太阳能电站
+  // 跳轉到建築頁面建造太陽能電站
   const goToBuildSolarPlant = () => {
     router.push('/buildings')
   }

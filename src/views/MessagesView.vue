@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between">
       <h1 class="text-2xl sm:text-3xl font-bold">{{ t('messagesView.title') }}</h1>
 
-      <!-- 清空消息按钮 -->
+      <!-- 清空訊息按鈕 -->
       <Popover v-model:open="showClearPopover">
         <PopoverTrigger as-child>
           <Button variant="outline" size="sm" class="gap-2">
@@ -32,7 +32,7 @@
       </Popover>
     </div>
 
-    <!-- 标签切换 -->
+    <!-- 標籤切換 -->
     <Tabs v-model="activeTab" class="w-full">
       <TabsList class="grid w-full grid-cols-2 sm:grid-cols-4" :tab-count="4">
         <TabsTrigger v-for="tab in tabs" :key="tab.value" :value="tab.value" class="flex items-center justify-center gap-1 px-2">
@@ -44,7 +44,7 @@
         </TabsTrigger>
       </TabsList>
 
-      <!-- 战斗报告列表 -->
+      <!-- 戰鬥報告列表 -->
       <TabsContent value="battles" class="mt-4 space-y-2 pb-20">
         <Empty v-if="gameStore.player.battleReports.length === 0" class="border rounded-lg">
           <EmptyContent>
@@ -80,7 +80,7 @@
         </Card>
       </TabsContent>
 
-      <!-- 间谍报告列表（合并：侦查报告 + 被侦查通知） -->
+      <!-- 間諜報告列表（合併：偵查報告 + 被偵查通知） -->
       <TabsContent value="spy" class="mt-4 space-y-2 pb-20">
         <Empty v-if="gameStore.player.spyReports.length === 0 && sortedSpiedNotifications.length === 0" class="border rounded-lg">
           <EmptyContent>
@@ -89,7 +89,7 @@
           </EmptyContent>
         </Empty>
 
-        <!-- 侦查报告 -->
+        <!-- 偵查報告 -->
         <Card
           v-for="report in sortedSpyReports"
           :key="report.id"
@@ -114,7 +114,7 @@
           </CardHeader>
         </Card>
 
-        <!-- 被侦查通知 -->
+        <!-- 被偵查通知 -->
         <Card
           v-for="notification in sortedSpiedNotifications"
           :key="notification.id"
@@ -143,7 +143,7 @@
         </Card>
       </TabsContent>
 
-      <!-- NPC相关消息（活动、礼物、被拒绝、贸易提议、情报、联合攻击邀请） -->
+      <!-- NPC相關訊息（活動、禮物、被拒絕、貿易提議、情報、聯合攻擊邀請） -->
       <TabsContent value="npc" class="mt-4 space-y-2 pb-20">
         <Empty
           v-if="
@@ -162,7 +162,7 @@
           </EmptyContent>
         </Empty>
 
-        <!-- 贸易提议 -->
+        <!-- 貿易提議 -->
         <Card
           v-for="offer in sortedTradeOffers"
           :key="offer.id"
@@ -227,7 +227,7 @@
           </CardContent>
         </Card>
 
-        <!-- 情报报告 -->
+        <!-- 情報報告 -->
         <Card
           v-for="intel in sortedIntelReports"
           :key="intel.id"
@@ -254,7 +254,7 @@
           </CardHeader>
         </Card>
 
-        <!-- 联合攻击邀请 -->
+        <!-- 聯合攻擊邀請 -->
         <Card
           v-for="invite in sortedJointAttackInvites"
           :key="invite.id"
@@ -301,7 +301,7 @@
           </CardContent>
         </Card>
 
-        <!-- NPC活动通知 -->
+        <!-- NPC活動通知 -->
         <Card
           v-for="notification in sortedNPCActivityNotifications"
           :key="notification.id"
@@ -330,7 +330,7 @@
           </CardHeader>
         </Card>
 
-        <!-- 礼物通知 -->
+        <!-- 禮物通知 -->
         <Card
           v-for="gift in sortedGiftNotifications"
           :key="gift.id"
@@ -382,7 +382,7 @@
           </CardContent>
         </Card>
 
-        <!-- 礼物被拒绝通知 -->
+        <!-- 禮物被拒絕通知 -->
         <Card
           v-for="rejection in sortedGiftRejectedNotifications"
           :key="rejection.id"
@@ -428,7 +428,7 @@
         </Card>
       </TabsContent>
 
-      <!-- 任务报告列表 -->
+      <!-- 任務報告列表 -->
       <TabsContent value="missions" class="mt-4 space-y-2 pb-20">
         <Empty v-if="sortedMissionReports.length === 0" class="border rounded-lg">
           <EmptyContent>
@@ -470,22 +470,22 @@
       </TabsContent>
     </Tabs>
 
-    <!-- 固定底部分页 -->
+    <!-- 固定底部分頁 -->
     <FixedPagination v-model:page="currentPage[activeTab]" :total-pages="getPaginationConfig(activeTab).totalPages" />
 
-    <!-- 战斗报告对话框 -->
+    <!-- 戰鬥報告對話方塊 -->
     <BattleReportDialog v-model:open="showBattleDialog" :report="selectedBattleReport" />
 
-    <!-- 间谍报告对话框 -->
+    <!-- 間諜報告對話方塊 -->
     <SpyReportDialog v-model:open="showSpyDialog" :report="selectedSpyReport" />
 
-    <!-- 被侦查通知对话框 -->
+    <!-- 被偵查通知對話方塊 -->
     <SpiedNotificationDialog v-model:open="showSpiedDialog" :notification="selectedSpiedNotification" />
 
-    <!-- 任务报告对话框 -->
+    <!-- 任務報告對話方塊 -->
     <MissionReportDialog v-model:open="showMissionDialog" :report="selectedMissionReport" />
 
-    <!-- NPC活动通知对话框 -->
+    <!-- NPC活動通知對話方塊 -->
     <NPCActivityDialog v-model:open="showNPCActivityDialog" :notification="selectedNPCActivityNotification" />
   </div>
 </template>
@@ -548,7 +548,7 @@
   const { t } = useI18n()
   const activeTab = ref<'battles' | 'spy' | 'missions' | 'npc'>('battles')
 
-  // 清空消息功能
+  // 清空訊息功能
   const showClearPopover = ref(false)
   type ClearOptionKey =
     | 'battles'
@@ -574,7 +574,7 @@
     jointAttackInvites: false
   })
 
-  // 清空消息选项配置
+  // 清空訊息選項配置
   const clearOptionFields = computed(() => [
     { key: 'battles' as ClearOptionKey, labelKey: 'clearBattleReports', count: gameStore.player.battleReports.length },
     { key: 'spyReports' as ClearOptionKey, labelKey: 'clearSpyReports', count: gameStore.player.spyReports.length },
@@ -604,26 +604,26 @@
     }
   ])
 
-  // 基础资源字段配置（用于显示资源列表）
+  // 基礎資源欄位配置（用於顯示資源列表）
   type BasicResourceKey = 'metal' | 'crystal' | 'deuterium'
   const basicResourceFields: { key: BasicResourceKey }[] = [{ key: 'metal' }, { key: 'crystal' }, { key: 'deuterium' }]
 
   /**
-   * 获取NPC当前名称
-   * 优先使用当前NPC的实际名称，如果NPC不存在则使用通知中保存的旧名称
-   * 支持通过ID查找，也支持通过旧名称中的ID模式匹配
+   * 獲取NPC當前名稱
+   * 優先使用當前NPC的實際名稱，如果NPC不存在則使用通知中儲存的舊名稱
+   * 支援透過ID查詢，也支援透過舊名稱中的ID模式匹配
    */
   const getNpcName = (npcId: string | undefined, fallbackName: string): string => {
     if (!npcStore.npcs?.length) return fallbackName
 
-    // 1. 先通过 npcId 查找
+    // 1. 先透過 npcId 查詢
     if (npcId) {
       const npc = npcStore.npcs.find(n => n.id === npcId)
       if (npc) return npc.name
     }
 
-    // 2. 尝试从旧名称中提取ID并查找
-    // 旧格式如 "NPC-npc_182"，新ID格式为 "npc_182"
+    // 2. 嘗試從舊名稱中提取ID並查詢
+    // 舊格式如 "NPC-npc_182"，新ID格式為 "npc_182"
     const idMatch = fallbackName.match(/npc_\d+/)
     if (idMatch) {
       const extractedId = idMatch[0]
@@ -635,16 +635,16 @@
   }
 
   /**
-   * 获取侦查报告的目标名称
-   * 显示 NPC 名称（如果是 NPC 星球）或星球名称
+   * 獲取偵查報告的目標名稱
+   * 顯示 NPC 名稱（如果是 NPC 星球）或星球名稱
    */
   const getSpyReportTargetName = (report: SpyReport): string => {
-    // 尝试通过 targetPlayerId 获取 NPC 名称
+    // 嘗試透過 targetPlayerId 獲取 NPC 名稱
     if (report.targetPlayerId && report.targetPlayerId !== 'unknown') {
       const npc = npcStore.npcs.find(n => n.id === report.targetPlayerId)
       if (npc) return npc.name
     }
-    // 回退到星球名称
+    // 回退到星球名稱
     return report.targetPlanetName || report.targetPlanetId
   }
 
@@ -684,7 +684,7 @@
       gameStore.player.jointAttackInvites = []
     }
 
-    // 重置选项
+    // 重置選項
     clearOptions.value = {
       battles: false,
       spyReports: false,
@@ -698,14 +698,14 @@
       jointAttackInvites: false
     }
 
-    // 关闭popover
+    // 關閉popover
     showClearPopover.value = false
 
-    // 显示成功提示
+    // 顯示成功提示
     toast.success(t('messagesView.clearSuccess'))
   }
 
-  // 分页状态
+  // 分頁狀態
   const ITEMS_PER_PAGE = 10
   const currentPage = ref({
     battles: 1,
@@ -714,7 +714,7 @@
     npc: 1
   })
 
-  // 对话框状态
+  // 對話方塊狀態
   const showBattleDialog = ref(false)
   const showSpyDialog = ref(false)
   const showSpiedDialog = ref(false)
@@ -726,17 +726,17 @@
   const selectedMissionReport = ref<MissionReport | null>(null)
   const selectedNPCActivityNotification = ref<NPCActivityNotification | null>(null)
 
-  // 排序后的战斗报告（最新的在前）- 全部数据
+  // 排序後的戰鬥報告（最新的在前）- 全部資料
   const allBattleReports = computed(() => {
     return [...gameStore.player.battleReports].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 排序后的间谍报告（最新的在前）- 全部数据
+  // 排序後的間諜報告（最新的在前）- 全部資料
   const allSpyReports = computed(() => {
     return [...gameStore.player.spyReports].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 排序后的被侦查通知（最新的在前）- 全部数据
+  // 排序後的被偵查通知（最新的在前）- 全部資料
   const allSpiedNotifications = computed(() => {
     if (!gameStore.player.spiedNotifications) {
       return []
@@ -744,7 +744,7 @@
     return [...gameStore.player.spiedNotifications].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 排序后的任务报告（最新的在前）- 全部数据
+  // 排序後的任務報告（最新的在前）- 全部資料
   const allMissionReports = computed(() => {
     if (!gameStore.player.missionReports) {
       return []
@@ -752,7 +752,7 @@
     return [...gameStore.player.missionReports].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 排序后的NPC活动通知（最新的在前）- 全部数据
+  // 排序後的NPC活動通知（最新的在前）- 全部資料
   const allNPCActivityNotifications = computed(() => {
     if (!gameStore.player.npcActivityNotifications) {
       return []
@@ -760,7 +760,7 @@
     return [...gameStore.player.npcActivityNotifications].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 战斗报告分页
+  // 戰鬥報告分頁
   const battleReportsTotalPages = computed(() => Math.ceil(allBattleReports.value.length / ITEMS_PER_PAGE))
   const sortedBattleReports = computed(() => {
     const start = (currentPage.value.battles - 1) * ITEMS_PER_PAGE
@@ -768,7 +768,7 @@
     return allBattleReports.value.slice(start, end)
   })
 
-  // 侦查标签页合并数据（侦查报告 + 被侦查通知）
+  // 偵查標籤頁合併資料（偵查報告 + 被偵查通知）
   const allSpyTabItems = computed(() => {
     const spyReports = allSpyReports.value.map(item => ({ ...item, type: 'spy' as const }))
     const spiedNotifications = allSpiedNotifications.value.map(item => ({ ...item, type: 'spied' as const }))
@@ -782,7 +782,7 @@
     return allSpyTabItems.value.slice(start, end)
   })
 
-  // 从分页后的混合数据中分离出侦查报告和被侦查通知
+  // 從分頁後的混合資料中分離出偵查報告和被偵查通知
   const sortedSpyReports = computed(() => {
     return paginatedSpyTabItems.value.filter(item => item.type === 'spy')
   })
@@ -791,7 +791,7 @@
     return paginatedSpyTabItems.value.filter(item => item.type === 'spied')
   })
 
-  // 任务报告分页
+  // 任務報告分頁
   const missionReportsTotalPages = computed(() => Math.ceil(allMissionReports.value.length / ITEMS_PER_PAGE))
   const sortedMissionReports = computed(() => {
     const start = (currentPage.value.missions - 1) * ITEMS_PER_PAGE
@@ -799,25 +799,25 @@
     return allMissionReports.value.slice(start, end)
   })
 
-  // 贸易提议数据
+  // 貿易提議資料
   const allTradeOffers = computed(() => {
     if (!gameStore.player.tradeOffers) return []
     return [...gameStore.player.tradeOffers].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 情报报告数据
+  // 情報報告資料
   const allIntelReports = computed(() => {
     if (!gameStore.player.intelReports) return []
     return [...gameStore.player.intelReports].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 联合攻击邀请数据
+  // 聯合攻擊邀請資料
   const allJointAttackInvites = computed(() => {
     if (!gameStore.player.jointAttackInvites) return []
     return [...gameStore.player.jointAttackInvites].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // NPC标签页合并数据（活动通知 + 礼物通知 + 礼物被拒绝通知 + 贸易提议 + 情报报告 + 联合攻击邀请）
+  // NPC標籤頁合併資料（活動通知 + 禮物通知 + 禮物被拒絕通知 + 貿易提議 + 情報報告 + 聯合攻擊邀請）
   const allNPCTabItems = computed(() => {
     const activities = allNPCActivityNotifications.value.map(item => ({ ...item, type: 'activity' as const }))
     const gifts = allGiftNotifications.value.map(item => ({ ...item, type: 'gift' as const }))
@@ -835,7 +835,7 @@
     return allNPCTabItems.value.slice(start, end)
   })
 
-  // 从分页后的混合数据中分离出各种NPC消息
+  // 從分頁後的混合資料中分離出各種NPC訊息
   const sortedNPCActivityNotifications = computed(() => {
     return paginatedNPCTabItems.value.filter(item => item.type === 'activity')
   })
@@ -860,17 +860,17 @@
     return paginatedNPCTabItems.value.filter(item => item.type === 'jointAttack')
   })
 
-  // 未读战斗报告数量
+  // 未讀戰鬥報告數量
   const unreadBattles = computed(() => {
     return gameStore.player.battleReports.filter(r => !r.read).length
   })
 
-  // 未读间谍报告数量
+  // 未讀間諜報告數量
   const unreadSpyReports = computed(() => {
     return gameStore.player.spyReports.filter(r => !r.read).length
   })
 
-  // 未读被侦查通知数量
+  // 未讀被偵查通知數量
   const unreadSpiedNotifications = computed(() => {
     if (!gameStore.player.spiedNotifications) {
       return 0
@@ -878,7 +878,7 @@
     return gameStore.player.spiedNotifications.filter(n => !n.read).length
   })
 
-  // 未读NPC活动通知数量
+  // 未讀NPC活動通知數量
   const unreadNPCActivity = computed(() => {
     if (!gameStore.player.npcActivityNotifications) {
       return 0
@@ -886,7 +886,7 @@
     return gameStore.player.npcActivityNotifications.filter(n => !n.read).length
   })
 
-  // 未读任务报告数量
+  // 未讀任務報告數量
   const unreadMissionReports = computed(() => {
     if (!gameStore.player.missionReports) {
       return 0
@@ -894,7 +894,7 @@
     return gameStore.player.missionReports.filter(r => !r.read).length
   })
 
-  // 未读礼物通知数量
+  // 未讀禮物通知數量
   const unreadGiftNotifications = computed(() => {
     if (!gameStore.player.giftNotifications) {
       return 0
@@ -902,7 +902,7 @@
     return gameStore.player.giftNotifications.filter(n => !n.read).length
   })
 
-  // 未读礼物被拒绝通知数量
+  // 未讀禮物被拒絕通知數量
   const unreadGiftRejected = computed(() => {
     if (!gameStore.player.giftRejectedNotifications) {
       return 0
@@ -910,29 +910,29 @@
     return gameStore.player.giftRejectedNotifications.filter(n => !n.read).length
   })
 
-  // 待处理贸易提议数量（未过期）
+  // 待處理貿易提議數量（未過期）
   const pendingTradeOffers = computed(() => {
     const now = Date.now()
     return (gameStore.player.tradeOffers || []).filter(o => o.expiresAt > now).length
   })
 
-  // 未读情报报告数量
+  // 未讀情報報告數量
   const unreadIntelReports = computed(() => {
     return (gameStore.player.intelReports || []).filter(r => !r.read).length
   })
 
-  // 待处理联合攻击邀请数量（未过期）
+  // 待處理聯合攻擊邀請數量（未過期）
   const pendingJointAttackInvites = computed(() => {
     const now = Date.now()
     return (gameStore.player.jointAttackInvites || []).filter(i => i.expiresAt > now).length
   })
 
-  // 合并：侦查相关未读总数（侦查报告 + 被侦查通知）
+  // 合併：偵查相關未讀總數（偵查報告 + 被偵查通知）
   const unreadSpyTotal = computed(() => {
     return unreadSpyReports.value + unreadSpiedNotifications.value
   })
 
-  // 合并：NPC相关未读总数（NPC活动 + 礼物通知 + 礼物被拒绝 + 贸易提议 + 情报 + 联合攻击邀请）
+  // 合併：NPC相關未讀總數（NPC活動 + 禮物通知 + 禮物被拒絕 + 貿易提議 + 情報 + 聯合攻擊邀請）
   const unreadNPCTotal = computed(() => {
     return (
       unreadNPCActivity.value +
@@ -944,7 +944,7 @@
     )
   })
 
-  // 标签页配置
+  // 標籤頁配置
   const tabs = computed(() => [
     {
       value: 'battles',
@@ -972,7 +972,7 @@
     }
   ])
 
-  // 礼物通知和被拒绝通知的全部数据（用于NPC标签页合并）
+  // 禮物通知和被拒絕通知的全部資料（用於NPC標籤頁合併）
   const allGiftNotifications = computed(() => {
     if (!gameStore.player.giftNotifications) {
       return []
@@ -987,7 +987,7 @@
     return [...gameStore.player.giftRejectedNotifications].sort((a, b) => b.timestamp - a.timestamp)
   })
 
-  // 分页配置
+  // 分頁配置
   type PageKey = 'battles' | 'spy' | 'missions' | 'npc'
   const paginationConfigs = computed(() => ({
     battles: {
@@ -1004,69 +1004,69 @@
     }
   }))
 
-  // 获取指定标签页的分页配置
+  // 獲取指定標籤頁的分頁配置
   const getPaginationConfig = (key: PageKey) => paginationConfigs.value[key]
 
-  // 判断战斗结果Badge颜色
+  // 判斷戰鬥結果Badge顏色
   const getBattleResultVariant = (report: BattleResult): 'default' | 'destructive' | 'secondary' => {
     if (report.winner === 'draw') {
       return 'secondary'
     }
 
-    // 判断玩家是攻击方还是防守方
+    // 判斷玩家是攻擊方還是防守方
     const isPlayerAttacker = report.attackerId === gameStore.player.id
     const playerWon = isPlayerAttacker ? report.winner === 'attacker' : report.winner === 'defender'
 
     return playerWon ? 'default' : 'destructive'
   }
 
-  // 获取战斗结果文本
+  // 獲取戰鬥結果文字
   const getBattleResultText = (report: BattleResult): string => {
     if (report.winner === 'draw') {
       return t('messagesView.draw')
     }
 
-    // 判断玩家是攻击方还是防守方
+    // 判斷玩家是攻擊方還是防守方
     const isPlayerAttacker = report.attackerId === gameStore.player.id
     const playerWon = isPlayerAttacker ? report.winner === 'attacker' : report.winner === 'defender'
 
     return playerWon ? t('messagesView.victory') : t('messagesView.defeat')
   }
 
-  // 打开战斗报告
+  // 開啟戰鬥報告
   const openBattleReport = (report: BattleResult) => {
     selectedBattleReport.value = report
     showBattleDialog.value = true
-    // 标记为已读
+    // 標記為已讀
     if (!report.read) {
       report.read = true
     }
   }
 
-  // 打开间谍报告
+  // 開啟間諜報告
   const openSpyReport = (report: SpyReport) => {
     selectedSpyReport.value = report
     showSpyDialog.value = true
-    // 找到原始间谍报告对象并标记为已读（因为sortedSpyReports是副本）
+    // 找到原始間諜報告物件並標記為已讀（因為sortedSpyReports是副本）
     const originalReport = gameStore.player.spyReports.find(r => r.id === report.id)
     if (originalReport && !originalReport.read) {
       originalReport.read = true
     }
   }
 
-  // 打开被侦查通知
+  // 開啟被偵查通知
   const openSpiedNotification = (notification: SpiedNotification) => {
-    // 找到原始通知对象并标记为已读（因为sortedSpiedNotifications是副本）
+    // 找到原始通知物件並標記為已讀（因為sortedSpiedNotifications是副本）
     const originalNotification = gameStore.player.spiedNotifications?.find(n => n.id === notification.id)
     if (originalNotification && !originalNotification.read) {
       originalNotification.read = true
     }
-    // 设置选中的通知并打开详情对话框
+    // 設定選中的通知並開啟詳情對話方塊
     selectedSpiedNotification.value = notification
     showSpiedDialog.value = true
   }
 
-  // 删除战斗报告
+  // 刪除戰鬥報告
   const deleteBattleReport = (reportId: string) => {
     const index = gameStore.player.battleReports.findIndex(r => r.id === reportId)
     if (index > -1) {
@@ -1074,7 +1074,7 @@
     }
   }
 
-  // 删除间谍报告
+  // 刪除間諜報告
   const deleteSpyReport = (reportId: string) => {
     const index = gameStore.player.spyReports.findIndex(r => r.id === reportId)
     if (index > -1) {
@@ -1082,7 +1082,7 @@
     }
   }
 
-  // 删除被侦查通知
+  // 刪除被偵查通知
   const deleteSpiedNotification = (notificationId: string) => {
     if (!gameStore.player.spiedNotifications) {
       return
@@ -1093,19 +1093,19 @@
     }
   }
 
-  // 打开NPC活动通知
+  // 開啟NPC活動通知
   const openNPCActivityNotification = (notification: NPCActivityNotification) => {
-    // 找到原始通知对象并标记为已读（因为sortedNPCActivityNotifications是副本）
+    // 找到原始通知物件並標記為已讀（因為sortedNPCActivityNotifications是副本）
     const originalNotification = gameStore.player.npcActivityNotifications?.find(n => n.id === notification.id)
     if (originalNotification && !originalNotification.read) {
       originalNotification.read = true
     }
-    // 设置选中的通知并打开详情对话框
+    // 設定選中的通知並開啟詳情對話方塊
     selectedNPCActivityNotification.value = notification
     showNPCActivityDialog.value = true
   }
 
-  // 删除NPC活动通知
+  // 刪除NPC活動通知
   const deleteNPCActivityNotification = (notificationId: string) => {
     if (!gameStore.player.npcActivityNotifications) {
       return
@@ -1116,7 +1116,7 @@
     }
   }
 
-  // 获取任务类型名称
+  // 獲取任務型別名稱
   const getMissionTypeName = (missionType: string): string => {
     const typeMap: Record<string, string> = {
       [MissionType.Attack]: t('fleetView.attack'),
@@ -1134,18 +1134,18 @@
     return typeMap[missionType] || missionType
   }
 
-  // 打开任务报告
+  // 開啟任務報告
   const openMissionReport = (report: MissionReport) => {
-    // 标记为已读
+    // 標記為已讀
     if (!report.read) {
       report.read = true
     }
-    // 设置选中的报告并打开详情对话框
+    // 設定選中的報告並開啟詳情對話方塊
     selectedMissionReport.value = report
     showMissionDialog.value = true
   }
 
-  // 删除任务报告
+  // 刪除任務報告
   const deleteMissionReport = (reportId: string) => {
     if (!gameStore.player.missionReports) {
       return
@@ -1156,16 +1156,16 @@
     }
   }
 
-  // 标记礼物通知为已读
+  // 標記禮物通知為已讀
   const markGiftAsRead = (gift: GiftNotification) => {
-    // 找到原始礼物通知对象并标记为已读（因为gifts是副本）
+    // 找到原始禮物通知物件並標記為已讀（因為gifts是副本）
     const originalGift = gameStore.player.giftNotifications?.find(g => g.id === gift.id)
     if (originalGift && !originalGift.read) {
       originalGift.read = true
     }
   }
 
-  // 接受礼物
+  // 接受禮物
   const acceptGift = (gift: GiftNotification) => {
     const npc = npcStore.npcs.find(n => n.id === gift.fromNpcId)
     if (npc) {
@@ -1173,7 +1173,7 @@
     }
   }
 
-  // 拒绝礼物
+  // 拒絕禮物
   const rejectGift = (gift: GiftNotification) => {
     const npc = npcStore.npcs.find(n => n.id === gift.fromNpcId)
     if (npc) {
@@ -1181,7 +1181,7 @@
     }
   }
 
-  // 删除礼物通知
+  // 刪除禮物通知
   const deleteGiftNotification = (giftId: string) => {
     if (!gameStore.player.giftNotifications) {
       return
@@ -1192,16 +1192,16 @@
     }
   }
 
-  // 标记礼物被拒绝通知为已读
+  // 標記禮物被拒絕通知為已讀
   const markGiftRejectedAsRead = (rejection: GiftRejectedNotification) => {
-    // 找到原始拒绝通知对象并标记为已读（因为rejections是副本）
+    // 找到原始拒絕通知物件並標記為已讀（因為rejections是副本）
     const originalRejection = gameStore.player.giftRejectedNotifications?.find(r => r.id === rejection.id)
     if (originalRejection && !originalRejection.read) {
       originalRejection.read = true
     }
   }
 
-  // 删除礼物被拒绝通知
+  // 刪除禮物被拒絕通知
   const deleteGiftRejectedNotification = (rejectionId: string) => {
     if (!gameStore.player.giftRejectedNotifications) {
       return
@@ -1212,28 +1212,28 @@
     }
   }
 
-  // ========== 贸易提议相关 ==========
+  // ========== 貿易提議相關 ==========
 
-  // 通过 NPC ID 获取名称
+  // 透過 NPC ID 獲取名稱
   const getNpcNameById = (npcId: string): string => {
     const npc = npcStore.npcs.find(n => n.id === npcId)
     return npc?.name || npcId
   }
 
-  // 检查贸易提议是否过期
+  // 檢查貿易提議是否過期
   const isOfferExpired = (offer: TradeOffer): boolean => {
     const now = Date.now()
     return offer.expiresAt <= now
   }
 
-  // 检查联合攻击邀请是否过期
+  // 檢查聯合攻擊邀請是否過期
   const isInviteExpired = (invite: JointAttackInvite): boolean => {
     const now = Date.now()
     return invite.expiresAt <= now
   }
 
-  // 辅助函数：从资源对象中提取资源信息（兼容新旧格式）
-  // 用于模板显示和逻辑处理
+  // 輔助函式：從資源物件中提取資源資訊（相容新舊格式）
+  // 用於模板顯示和邏輯處理
   const getResourceInfo = (resource: any): { type: 'metal' | 'crystal' | 'deuterium'; amount: number } | null => {
     if (!resource) return null
 
@@ -1242,7 +1242,7 @@
       return { type: resource.type, amount: resource.amount }
     }
 
-    // 旧格式：{ metal: 1000, crystal: 0, deuterium: 0 }
+    // 舊格式：{ metal: 1000, crystal: 0, deuterium: 0 }
     if (typeof resource.metal === 'number' && resource.metal > 0) {
       return { type: 'metal', amount: resource.metal }
     }
@@ -1256,10 +1256,10 @@
     return null
   }
 
-  // 别名，供内部逻辑使用
+  // 別名，供內部邏輯使用
   const extractResourceInfo = getResourceInfo
 
-  // 检查是否可以接受贸易
+  // 檢查是否可以接受貿易
   const canAcceptTrade = (offer: TradeOffer): boolean => {
     const planet = gameStore.player.planets[0]
     if (!planet) return false
@@ -1270,12 +1270,12 @@
     return planet.resources[requested.type] >= requested.amount
   }
 
-  // 打开贸易提议详情对话框（目前直接操作，后续可添加对话框）
+  // 開啟貿易提議詳情對話方塊（目前直接操作，後續可新增對話方塊）
   const openTradeOfferDialog = (_offer: TradeOffer) => {
-    // 目前贸易提议直接在卡片上操作，不需要单独的对话框
+    // 目前貿易提議直接在卡片上操作，不需要單獨的對話方塊
   }
 
-  // 接受贸易提议
+  // 接受貿易提議
   const acceptTradeOffer = (offer: TradeOffer) => {
     if (isOfferExpired(offer)) {
       toast.error(t('npcBehavior.trade.expired'))
@@ -1297,16 +1297,16 @@
       return
     }
 
-    // 扣除请求的资源
+    // 扣除請求的資源
     planet.resources[requested.type] -= requested.amount
 
-    // 添加获得的资源
+    // 新增獲得的資源
     planet.resources[offered.type] += offered.amount
 
-    // 移除贸易提议
+    // 移除貿易提議
     deleteTradeOffer(offer.id)
 
-    // 提高与该NPC的好感度（使用 npcStore）
+    // 提高與該NPC的好感度（使用 npcStore）
     const npcRelation = npcStore.npcs.find(n => n.id === offer.npcId)?.relations?.[gameStore.player.id]
     if (npcRelation) {
       npcRelation.reputation += 10
@@ -1315,13 +1315,13 @@
     toast.success(t('npcBehavior.trade.acceptSuccess'))
   }
 
-  // 拒绝贸易提议
+  // 拒絕貿易提議
   const declineTradeOffer = (offer: TradeOffer) => {
     deleteTradeOffer(offer.id)
     toast.info(t('npcBehavior.trade.declined'))
   }
 
-  // 删除贸易提议
+  // 刪除貿易提議
   const deleteTradeOffer = (offerId: string) => {
     if (!gameStore.player.tradeOffers) return
     const index = gameStore.player.tradeOffers.findIndex(o => o.id === offerId)
@@ -1330,19 +1330,19 @@
     }
   }
 
-  // ========== 情报报告相关 ==========
+  // ========== 情報報告相關 ==========
 
-  // 打开情报报告详情对话框
+  // 開啟情報報告詳情對話方塊
   const openIntelReportDialog = (intel: IntelReport) => {
-    // 标记为已读
+    // 標記為已讀
     const originalIntel = gameStore.player.intelReports?.find(i => i.id === intel.id)
     if (originalIntel && !originalIntel.read) {
       originalIntel.read = true
     }
-    // 目前情报报告直接显示在卡片上，后续可添加详情对话框
+    // 目前情報報告直接顯示在卡片上，後續可新增詳情對話方塊
   }
 
-  // 删除情报报告
+  // 刪除情報報告
   const deleteIntelReport = (intelId: string) => {
     if (!gameStore.player.intelReports) return
     const index = gameStore.player.intelReports.findIndex(i => i.id === intelId)
@@ -1351,40 +1351,40 @@
     }
   }
 
-  // ========== 联合攻击邀请相关 ==========
+  // ========== 聯合攻擊邀請相關 ==========
 
-  // 打开联合攻击邀请详情对话框
+  // 開啟聯合攻擊邀請詳情對話方塊
   const openJointAttackDialog = (_invite: JointAttackInvite) => {
-    // 目前联合攻击邀请直接在卡片上操作，后续可添加详情对话框
+    // 目前聯合攻擊邀請直接在卡片上操作，後續可新增詳情對話方塊
   }
 
-  // 接受联合攻击邀请
+  // 接受聯合攻擊邀請
   const acceptJointAttack = (invite: JointAttackInvite) => {
     if (isInviteExpired(invite)) {
       toast.error(t('npcBehavior.jointAttack.expired'))
       return
     }
 
-    // 移除邀请
+    // 移除邀請
     deleteJointAttackInvite(invite.id)
 
-    // 提高与该NPC的好感度（使用 npcStore）
+    // 提高與該NPC的好感度（使用 npcStore）
     const npcRelation = npcStore.npcs.find(n => n.id === invite.fromNpcId)?.relations?.[gameStore.player.id]
     if (npcRelation) {
       npcRelation.reputation += 15
     }
 
     toast.success(t('npcBehavior.jointAttack.acceptSuccess'))
-    // 后续可以添加实际的联合攻击逻辑
+    // 後續可以新增實際的聯合攻擊邏輯
   }
 
-  // 拒绝联合攻击邀请
+  // 拒絕聯合攻擊邀請
   const declineJointAttack = (invite: JointAttackInvite) => {
     deleteJointAttackInvite(invite.id)
     toast.info(t('npcBehavior.jointAttack.declined'))
   }
 
-  // 删除联合攻击邀请
+  // 刪除聯合攻擊邀請
   const deleteJointAttackInvite = (inviteId: string) => {
     if (!gameStore.player.jointAttackInvites) return
     const index = gameStore.player.jointAttackInvites.findIndex(i => i.id === inviteId)

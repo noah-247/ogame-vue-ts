@@ -8,7 +8,7 @@
       </div>
     </div>
 
-    <!-- 玩家排名概览 -->
+    <!-- 玩家排名概覽 -->
     <div class="flex items-center gap-4 p-3 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10">
       <Crown class="h-5 w-5 text-yellow-500 shrink-0" />
       <span class="text-sm text-muted-foreground">{{ t('ranking.yourRanking') }}</span>
@@ -17,7 +17,7 @@
       <span class="ml-auto text-lg font-bold text-primary">{{ formatNumber(playerScore) }}</span>
     </div>
 
-    <!-- 分类标签 -->
+    <!-- 分類標籤 -->
     <Tabs v-model="activeCategory" class="w-full">
       <TabsList class="w-full grid grid-cols-5 h-10">
         <TabsTrigger v-for="category in categories" :key="category.value" :value="category.value" class="text-xs sm:text-sm">
@@ -76,7 +76,7 @@
         </Table>
       </TabsContent>
     </Tabs>
-    <!-- 分页 -->
+    <!-- 分頁 -->
     <FixedPagination v-model:page="currentPage" :total-pages="totalPages" />
   </div>
 </template>
@@ -101,7 +101,7 @@
 
   const activeCategory = ref<RankingCategory>(RankingCategory.Total)
 
-  // 分页
+  // 分頁
   const ITEMS_PER_PAGE = 10
   const currentPage = ref(1)
 
@@ -113,49 +113,49 @@
     { value: RankingCategory.Defense }
   ]
 
-  // 获取排行榜数据
+  // 獲取排行榜資料
   const rankingData = computed<RankingEntry[]>(() => {
     return getRanking(gameStore.player, npcStore.npcs, activeCategory.value)
   })
 
-  // 按当前类别排序的排行榜
+  // 按當前類別排序的排行榜
   const sortedRanking = computed(() => {
     return [...rankingData.value].sort((a, b) => b.scores[activeCategory.value] - a.scores[activeCategory.value])
   })
 
-  // 总页数
+  // 總頁數
   const totalPages = computed(() => Math.ceil(sortedRanking.value.length / ITEMS_PER_PAGE))
 
-  // 分页后的排行榜
+  // 分頁後的排行榜
   const paginatedRanking = computed(() => {
     const start = (currentPage.value - 1) * ITEMS_PER_PAGE
     const end = start + ITEMS_PER_PAGE
     return sortedRanking.value.slice(start, end)
   })
 
-  // 获取实际排名（考虑分页偏移）
+  // 獲取實際排名（考慮分頁偏移）
   const getActualRank = (index: number): number => {
     return (currentPage.value - 1) * ITEMS_PER_PAGE + index + 1
   }
 
-  // 切换分类时重置页码
+  // 切換分類時重置頁碼
   watch(activeCategory, () => {
     currentPage.value = 1
   })
 
-  // 玩家当前排名
+  // 玩家當前排名
   const playerRank = computed(() => {
     const index = sortedRanking.value.findIndex(entry => entry.isPlayer)
     return index >= 0 ? index + 1 : '-'
   })
 
-  // 玩家当前积分
+  // 玩家當前積分
   const playerScore = computed(() => {
     const playerEntry = rankingData.value.find(entry => entry.isPlayer)
     return playerEntry?.scores[activeCategory.value] || 0
   })
 
-  // 获取类别图标
+  // 獲取類別圖示
   const getCategoryIcon = (category: RankingCategory) => {
     switch (category) {
       case RankingCategory.Total:
@@ -171,7 +171,7 @@
     }
   }
 
-  // 获取排名徽章样式
+  // 獲取排名徽章樣式
   const getRankBadgeClass = (rank: number) => {
     switch (rank) {
       case 1:

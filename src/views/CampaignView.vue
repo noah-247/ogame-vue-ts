@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-6 max-w-6xl">
-    <!-- 战役标题和总进度 -->
+    <!-- 戰役標題和總進度 -->
     <Card class="mb-6">
       <CardHeader>
         <div class="flex items-center justify-between">
@@ -26,7 +26,7 @@
       </CardContent>
     </Card>
 
-    <!-- 章节选择标签 -->
+    <!-- 章節選擇標籤 -->
     <Tabs v-model="activeChapter" class="mb-6">
       <TabsList class="grid w-full" :style="{ gridTemplateColumns: `repeat(${chapters.length}, 1fr)` }">
         <TabsTrigger
@@ -48,21 +48,21 @@
         </TabsTrigger>
       </TabsList>
 
-      <!-- 章节内容 -->
+      <!-- 章節內容 -->
       <TabsContent v-for="chapter in chapters" :key="chapter.id" :value="chapter.number.toString()" class="mt-4">
-        <!-- 章节背景故事 -->
+        <!-- 章節背景故事 -->
         <Card class="mb-4 bg-gradient-to-r from-primary/5 to-transparent">
           <CardContent class="py-4">
             <p class="text-sm text-muted-foreground italic">{{ t(chapter.backgroundStoryKey) }}</p>
           </CardContent>
         </Card>
 
-        <!-- 任务地图 -->
+        <!-- 任務地圖 -->
         <QuestMap :quests="getChapterQuests(chapter.number)" :progress="campaignProgress" @select-quest="handleQuestSelect" />
       </TabsContent>
     </Tabs>
 
-    <!-- 任务详情面板 -->
+    <!-- 任務詳情面板 -->
     <Card v-if="selectedQuest" class="mt-6">
       <CardHeader>
         <div class="flex items-center justify-between">
@@ -90,7 +90,7 @@
         </div>
       </CardHeader>
       <CardContent class="space-y-6">
-        <!-- 任务目标 -->
+        <!-- 任務目標 -->
         <div>
           <h4 class="font-semibold mb-3 flex items-center gap-2">
             <Target class="h-4 w-4" />
@@ -123,7 +123,7 @@
           </div>
         </div>
 
-        <!-- 任务奖励 -->
+        <!-- 任務獎勵 -->
         <div>
           <h4 class="font-semibold mb-3 flex items-center gap-2">
             <Gift class="h-4 w-4" />
@@ -159,7 +159,7 @@
       </CardContent>
     </Card>
 
-    <!-- 剧情对话框 -->
+    <!-- 劇情對話方塊 -->
     <StoryDialog v-if="showStoryDialog" :dialogues="currentDialogues" @close="handleDialogueClose" @choice="handleDialogueChoice" />
   </div>
 </template>
@@ -190,21 +190,21 @@
   const gameStore = useGameStore()
   const npcStore = useNPCStore()
 
-  // 初始化战役进度
+  // 初始化戰役進度
   onMounted(() => {
     if (!gameStore.player.campaignProgress) {
       gameStore.player.campaignProgress = campaignLogic.initializeCampaignProgress(gameStore.player)
     }
   })
 
-  // 响应式状态
+  // 響應式狀態
   const activeChapter = ref('1')
   const selectedQuestId = ref<string | null>(null)
   const showStoryDialog = ref(false)
   const currentDialogues = ref<StoryDialogue[]>([])
   const pendingAction = ref<'start' | 'claim' | null>(null)
 
-  // 计算属性
+  // 計算屬性
   const chapters = computed(() => MAIN_CAMPAIGN.chapters)
 
   const campaignProgress = computed(() => gameStore.player.campaignProgress)
@@ -225,24 +225,24 @@
     return getQuestById(selectedQuestId.value)
   })
 
-  // 获取章节任务
+  // 獲取章節任務
   const getChapterQuests = (chapterNumber: number): CampaignQuestConfig[] => {
     return getQuestsByChapter(chapterNumber)
   }
 
-  // 获取章节进度
+  // 獲取章節進度
   const getChapterProgress = (chapterNumber: number): number => {
     if (!campaignProgress.value) return 0
     return campaignLogic.calculateChapterProgress(campaignProgress.value, chapterNumber)
   }
 
-  // 获取任务状态
+  // 獲取任務狀態
   const getQuestStatus = (questId: string): QuestStatus => {
     if (!campaignProgress.value) return QuestStatus.Locked
     return campaignLogic.getQuestStatus(campaignProgress.value, questId)
   }
 
-  // 获取任务状态样式
+  // 獲取任務狀態樣式
   const getQuestStatusClass = (questId: string): string => {
     const status = getQuestStatus(questId)
     switch (status) {
@@ -257,7 +257,7 @@
     }
   }
 
-  // 获取任务状态图标
+  // 獲取任務狀態圖示
   const getQuestStatusIcon = (questId: string) => {
     const status = getQuestStatus(questId)
     switch (status) {
@@ -272,47 +272,47 @@
     }
   }
 
-  // 检查是否可以开始任务
+  // 檢查是否可以開始任務
   const canStartQuest = (questId: string): boolean => {
     const status = getQuestStatus(questId)
     return status === QuestStatus.Available
   }
 
-  // 检查是否可以领取奖励
+  // 檢查是否可以領取獎勵
   const canClaimRewards = (questId: string): boolean => {
     const status = getQuestStatus(questId)
     const progress = campaignProgress.value?.questProgress[questId]
     return status === QuestStatus.Completed && !progress?.rewardsClaimed
   }
 
-  // 检查目标是否完成
+  // 檢查目標是否完成
   const isObjectiveCompleted = (questId: string, objectiveId: string): boolean => {
     const progress = campaignProgress.value?.questProgress[questId]
     return progress?.objectives[objectiveId]?.completed || false
   }
 
-  // 获取目标进度
+  // 獲取目標進度
   const getObjectiveProgress = (questId: string, objectiveId: string): number => {
     const progress = campaignProgress.value?.questProgress[questId]
     return progress?.objectives[objectiveId]?.current || 0
   }
 
-  // 获取舰船名称
+  // 獲取艦船名稱
   const getShipName = (shipType: string): string => {
     const ship = SHIPS[shipType as keyof typeof SHIPS]
     return ship?.name || shipType
   }
 
-  // 处理任务选择
+  // 處理任務選擇
   const handleQuestSelect = (questId: string) => {
     selectedQuestId.value = questId
   }
 
-  // 处理开始任务
+  // 處理開始任務
   const handleStartQuest = (questId: string) => {
     const quest = getQuestById(questId)
 
-    // 如果有开场对话，先显示对话
+    // 如果有開場對話，先顯示對話
     if (quest?.prologueDialogues && quest.prologueDialogues.length > 0) {
       currentDialogues.value = quest.prologueDialogues
       pendingAction.value = 'start'
@@ -320,27 +320,27 @@
       return
     }
 
-    // 直接开始任务
+    // 直接開始任務
     executeStartQuest(questId)
   }
 
-  // 执行开始任务
+  // 執行開始任務
   const executeStartQuest = (questId: string) => {
     const result = campaignLogic.startQuest(gameStore.player, questId)
     if (result.success) {
       toast.success(t('campaign.notifications.questStarted'))
-      // 立即检查进度
+      // 立即檢查進度
       campaignLogic.checkAllActiveQuestsProgress(gameStore.player, npcStore.npcs)
     } else if (result.error) {
       toast.error(t(result.error))
     }
   }
 
-  // 处理领取奖励
+  // 處理領取獎勵
   const handleClaimRewards = (questId: string) => {
     const quest = getQuestById(questId)
 
-    // 如果有结束对话，先显示对话
+    // 如果有結束對話，先顯示對話
     if (quest?.epilogueDialogues && quest.epilogueDialogues.length > 0) {
       currentDialogues.value = quest.epilogueDialogues
       pendingAction.value = 'claim'
@@ -348,11 +348,11 @@
       return
     }
 
-    // 直接领取奖励
+    // 直接領取獎勵
     executeClaimRewards(questId)
   }
 
-  // 执行领取奖励
+  // 執行領取獎勵
   const executeClaimRewards = (questId: string) => {
     const result = campaignLogic.claimQuestRewards(gameStore.player, questId)
     if (result.success) {
@@ -362,7 +362,7 @@
     }
   }
 
-  // 处理对话关闭
+  // 處理對話關閉
   const handleDialogueClose = () => {
     showStoryDialog.value = false
 
@@ -378,7 +378,7 @@
     currentDialogues.value = []
   }
 
-  // 处理对话选项选择
+  // 處理對話選項選擇
   const handleDialogueChoice = (choice: DialogueChoice) => {
     if (!choice.effect) return
 
@@ -387,7 +387,7 @@
     switch (choice.effect) {
       case 'reputation_up':
       case 'reputation_down': {
-        // 需要指定NPC ID才能修改声望
+        // 需要指定NPC ID才能修改聲望
         if (!choice.npcId) {
           return
         }
@@ -397,7 +397,7 @@
           return
         }
 
-        // 确保 relations 对象存在
+        // 確保 relations 物件存在
         if (!npc.relations) {
           npc.relations = {}
         }
@@ -413,7 +413,7 @@
           t('campaign.dialogue.choiceEffect')
         )
 
-        // 显示提示
+        // 顯示提示
         if (change > 0) {
           toast.success(t('campaign.notifications.reputationUp', { npcName: npc.name, value: change }))
         } else {
@@ -423,12 +423,12 @@
       }
 
       case 'unlock_branch': {
-        // 解锁分支任务
+        // 解鎖分支任務
         if (!choice.branchId) {
           return
         }
 
-        // 将分支任务ID添加到已解锁分支列表
+        // 將分支任務ID新增到已解鎖分支列表
         if (!gameStore.player.campaignProgress) return
 
         if (!gameStore.player.campaignProgress.unlockedBranches) {
@@ -444,7 +444,7 @@
     }
   }
 
-  // 监听章节变化，自动选择第一个可用任务
+  // 監聽章節變化，自動選擇第一個可用任務
   watch(activeChapter, newChapter => {
     const chapterQuests = getChapterQuests(parseInt(newChapter))
     const availableQuest = chapterQuests.find(quest => {
@@ -461,7 +461,7 @@
     }
   })
 
-  // 初始选择当前任务
+  // 初始選擇當前任務
   onMounted(() => {
     if (campaignProgress.value?.currentQuestId) {
       selectedQuestId.value = campaignProgress.value.currentQuestId

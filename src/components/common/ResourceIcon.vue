@@ -8,7 +8,7 @@
   interface Props {
     type: 'metal' | 'crystal' | 'deuterium' | 'darkMatter' | 'energy'
     size?: 'sm' | 'md' | 'lg'
-    /** 无障碍/悬停提示的资源名称 */
+    /** 無障礙/懸停提示的資源名稱 */
     title?: string
   }
 
@@ -17,7 +17,7 @@
     title: undefined
   })
 
-  // Lucide SVG 图标（SVG 在 Android WebView 同样可靠，比纯色块更易辨认）
+  // Lucide SVG 圖示（SVG 在 Android WebView 同樣可靠，比純色塊更易辨認）
   const icons = {
     metal: Pickaxe,
     crystal: Gem,

@@ -1,28 +1,28 @@
 <template>
   <Dialog :open="true" @update:open="handleClose">
     <DialogContent class="max-w-2xl p-0 overflow-hidden bg-gradient-to-b from-background to-background/95">
-      <!-- 可访问性标题（隐藏） -->
+      <!-- 可訪問性標題（隱藏） -->
       <VisuallyHidden>
         <DialogTitle>{{ t('campaign.dialogue.title') }}</DialogTitle>
         <DialogDescription>{{ t('campaign.dialogue.description') }}</DialogDescription>
       </VisuallyHidden>
 
-      <!-- 对话框头部 - 星空效果 -->
+      <!-- 對話方塊頭部 - 星空效果 -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden">
         <div class="stars-bg" />
       </div>
 
-      <!-- 对话内容区 -->
+      <!-- 對話內容區 -->
       <div class="relative p-6 min-h-[300px] flex flex-col">
-        <!-- 说话者信息 -->
+        <!-- 說話者資訊 -->
         <div v-if="currentDialogue" class="mb-4">
           <div class="flex items-center gap-3">
-            <!-- 头像 -->
+            <!-- 頭像 -->
             <div :class="['w-12 h-12 rounded-full flex items-center justify-center', speakerStyles.bg]">
               <component :is="speakerIcon" :class="['w-6 h-6', speakerStyles.text]" />
             </div>
 
-            <!-- 说话者名称 -->
+            <!-- 說話者名稱 -->
             <div>
               <span :class="['font-semibold', speakerStyles.text]">
                 {{ getSpeakerName(currentDialogue) }}
@@ -34,7 +34,7 @@
           </div>
         </div>
 
-        <!-- 对话文本 - 打字机效果 -->
+        <!-- 對話文字 - 打字機效果 -->
         <div class="flex-1 min-h-[120px]">
           <div class="text-base leading-relaxed">
             <span>{{ displayedText }}</span>
@@ -42,7 +42,7 @@
           </div>
         </div>
 
-        <!-- 选项按钮 -->
+        <!-- 選項按鈕 -->
         <div v-if="showChoices && currentDialogue?.choices" class="space-y-2 mt-4">
           <Button
             v-for="(choice, index) in currentDialogue.choices"
@@ -56,7 +56,7 @@
           </Button>
         </div>
 
-        <!-- 继续按钮 -->
+        <!-- 繼續按鈕 -->
         <div v-if="!showChoices" class="mt-4 flex justify-end gap-2">
           <Button v-if="isTyping" variant="ghost" size="sm" @click="skipTyping">
             {{ t('campaign.dialogue.skip') }}
@@ -67,7 +67,7 @@
           </Button>
         </div>
 
-        <!-- 进度指示器 -->
+        <!-- 進度指示器 -->
         <div class="mt-4 flex justify-center gap-1">
           <div
             v-for="(_, index) in dialogues"
@@ -103,26 +103,26 @@
 
   const { t } = useI18n()
 
-  // 当前对话索引
+  // 當前對話索引
   const currentIndex = ref(0)
 
-  // 打字机效果状态
+  // 打字機效果狀態
   const displayedText = ref('')
   const isTyping = ref(false)
   const typewriterInterval = ref<ReturnType<typeof setInterval> | null>(null)
 
-  // 当前对话
+  // 當前對話
   const currentDialogue = computed(() => props.dialogues[currentIndex.value])
 
-  // 是否是最后一个对话
+  // 是否是最後一個對話
   const isLastDialogue = computed(() => currentIndex.value >= props.dialogues.length - 1)
 
-  // 是否显示选项
+  // 是否顯示選項
   const showChoices = computed(() => {
     return !isTyping.value && currentDialogue.value?.choices && currentDialogue.value.choices.length > 0
   })
 
-  // 说话者图标
+  // 說話者圖示
   const speakerIcon = computed(() => {
     switch (currentDialogue.value?.speaker) {
       case 'player':
@@ -136,7 +136,7 @@
     }
   })
 
-  // 说话者样式
+  // 說話者樣式
   const speakerStyles = computed(() => {
     switch (currentDialogue.value?.speaker) {
       case 'player':
@@ -150,7 +150,7 @@
     }
   })
 
-  // 获取说话者名称
+  // 獲取說話者名稱
   const getSpeakerName = (dialogue: StoryDialogue): string => {
     if (dialogue.speakerNameKey) {
       return t(dialogue.speakerNameKey)
@@ -167,7 +167,7 @@
     }
   }
 
-  // 开始打字机效果
+  // 開始打字機效果
   const startTypewriter = () => {
     const text = t(currentDialogue.value?.textKey || '')
     if (!text) return
@@ -183,10 +183,10 @@
       } else {
         stopTypewriter()
       }
-    }, 30) // 每30ms显示一个字符
+    }, 30) // 每30ms顯示一個字元
   }
 
-  // 停止打字机效果
+  // 停止打字機效果
   const stopTypewriter = () => {
     if (typewriterInterval.value) {
       clearInterval(typewriterInterval.value)
@@ -195,13 +195,13 @@
     isTyping.value = false
   }
 
-  // 跳过打字机效果
+  // 跳過打字機效果
   const skipTyping = () => {
     stopTypewriter()
     displayedText.value = t(currentDialogue.value?.textKey || '')
   }
 
-  // 处理继续
+  // 處理繼續
   const handleContinue = () => {
     if (isLastDialogue.value) {
       emit('close')
@@ -210,11 +210,11 @@
     }
   }
 
-  // 处理选项选择
+  // 處理選項選擇
   const handleChoice = (choice: DialogueChoice) => {
     emit('choice', choice)
 
-    // 如果有下一个对话ID，跳转到对应对话
+    // 如果有下一個對話ID，跳轉到對應對話
     if (choice.nextDialogueId) {
       const nextIndex = props.dialogues.findIndex(d => d.id === choice.nextDialogueId)
       if (nextIndex !== -1) {
@@ -223,18 +223,18 @@
       }
     }
 
-    // 否则继续到下一个
+    // 否則繼續到下一個
     handleContinue()
   }
 
-  // 处理关闭
+  // 處理關閉
   const handleClose = (open: boolean) => {
     if (!open) {
       emit('close')
     }
   }
 
-  // 监听对话变化，启动打字机
+  // 監聽對話變化，啟動打字機
   watch(
     currentIndex,
     () => {

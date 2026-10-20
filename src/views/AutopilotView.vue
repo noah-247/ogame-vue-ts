@@ -13,14 +13,14 @@
 
     <div v-if="!planet || !config" class="text-muted-foreground">—</div>
     <template v-else>
-      <!-- 副官合约卡（v3 付费机制） -->
+      <!-- 副官合約卡（v3 付費機制） -->
       <Card>
         <CardHeader>
           <CardTitle>{{ t('autopilot.contract.title') }}</CardTitle>
           <CardDescription>{{ t('autopilot.contract.description') }}</CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
-          <!-- 方案 / 状态 -->
+          <!-- 方案 / 狀態 -->
           <div class="flex flex-wrap items-center gap-3 text-sm">
             <span class="text-muted-foreground">{{ t('autopilot.contract.planLabel') }}:</span>
             <Badge v-if="contract" variant="secondary">{{ t(planKey) }}</Badge>
@@ -28,7 +28,7 @@
             <Badge :variant="statusVariant">{{ t(statusKey) }}</Badge>
           </div>
 
-          <!-- 余额不足暂停的醒目提示 -->
+          <!-- 餘額不足暫停的醒目提示 -->
           <div v-if="contract?.status === 'paused_funds'" role="alert" class="rounded border border-destructive/50 bg-destructive/10 p-3 space-y-1">
             <p class="text-sm font-semibold text-destructive flex items-center gap-2">
               <AlertTriangle class="h-4 w-4" />{{ t('autopilot.contract.fundsWarningTitle') }}
@@ -36,7 +36,7 @@
             <p class="text-sm text-destructive/90">{{ t('autopilot.contract.fundsWarning') }}</p>
           </div>
 
-          <!-- 付款星球 / 服务星球 -->
+          <!-- 付款星球 / 服務星球 -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1">
               <Label>{{ t('autopilot.contract.payerPlanet') }}</Label>
@@ -62,7 +62,7 @@
             </div>
           </div>
 
-          <!-- 三资源即时价格 + 可用量 + 瓶颈 -->
+          <!-- 三資源即時價格 + 可用量 + 瓶頸 -->
           <div class="space-y-2">
             <p class="text-sm font-medium">{{ t('autopilot.contract.ratesTitle') }}</p>
             <div class="grid gap-2 sm:grid-cols-3">
@@ -87,7 +87,7 @@
             </div>
           </div>
 
-          <!-- 本期累计已扣 -->
+          <!-- 本期累計已扣 -->
           <p class="text-sm">
             <span class="text-muted-foreground">{{ t('autopilot.contract.totalConsumed') }}: </span>
             <span v-for="r in resourceKeys" :key="r" class="mr-3">
@@ -95,7 +95,7 @@
             </span>
           </p>
 
-          <!-- 自动续费 -->
+          <!-- 自動續費 -->
           <div v-if="contract" class="flex items-center gap-2">
             <Switch :checked="contract.autoRenew" @update:checked="v => contract && (contract.autoRenew = v)" />
             <div>
@@ -104,7 +104,7 @@
             </div>
           </div>
 
-          <!-- 操作按钮 -->
+          <!-- 操作按鈕 -->
           <div class="flex flex-wrap gap-2">
             <Button
               v-if="!contract || contract.status === 'inactive' || contract.status === 'terminated'"
@@ -127,7 +127,7 @@
         </CardContent>
       </Card>
 
-      <!-- 聘请二次确认对话框 -->
+      <!-- 聘請二次確認對話方塊 -->
       <Dialog v-model:open="hireDialogOpen">
         <ScrollableDialogContent container-class="max-w-lg">
           <template #header>
@@ -178,7 +178,7 @@
           </p>
         </CardContent>
       </Card>
-      <!-- 状态 -->
+      <!-- 狀態 -->
       <Card>
         <CardHeader>
           <CardTitle>{{ t('autopilot.transports') }}</CardTitle>
@@ -224,8 +224,8 @@
             <Button v-if="config.canResumeAuto" size="sm" @click="onResumeAuto">
               <Play class="mr-2 h-4 w-4" />{{ t('autopilot.resumeAuto') }}
             </Button>
-            <!-- MAJ-5：执行模式下只保留「恢复自主」（受 canResumeAuto 守卫），
-                 不提供无条件手动切回，避免绕过 B8 滞后区间 -->
+            <!-- MAJ-5：執行模式下只保留「恢復自主」（受 canResumeAuto 守衛），
+                 不提供無條件手動切回，避免繞過 B8 滯後區間 -->
             <Button v-if="config.enabled && config.mode === 'auto'" size="sm" variant="outline" @click="onSwitchMode('execute')">
               {{ t('autopilot.switchToExecute') }}
             </Button>
@@ -253,7 +253,7 @@
         </CardContent>
       </Card>
 
-      <!-- 目标清单 -->
+      <!-- 目標清單 -->
       <Card>
         <CardHeader>
           <CardTitle>{{ t('autopilot.targets') }}</CardTitle>
@@ -303,7 +303,7 @@
             <span class="text-xs text-muted-foreground whitespace-nowrap">
               {{ t('autopilot.currentLevel') }} {{ planet.buildings[target.buildingType] || 0 }}
             </span>
-            <!-- BLK-4：草稿+失焦提交+夹值，避免打字途中被 B12 重推删掉 -->
+            <!-- BLK-4：草稿+失焦提交+夾值，避免打字途中被 B12 重推刪掉 -->
             <Input
               :model-value="target.targetLevel"
               type="number"
@@ -328,7 +328,7 @@
         </CardContent>
       </Card>
 
-      <!-- 蓝图 -->
+      <!-- 藍圖 -->
       <Card>
         <CardHeader>
           <CardTitle>{{ t('autopilot.blueprints.title') }}</CardTitle>
@@ -346,7 +346,7 @@
         </CardContent>
       </Card>
 
-      <!-- 蓝图预览：展示整条待补前置链（B4），确认后套用 -->
+      <!-- 藍圖預覽：展示整條待補前置鏈（B4），確認後套用 -->
       <Dialog v-model:open="blueprintPreviewOpen">
         <ScrollableDialogContent container-class="max-w-2xl">
           <template #header>
@@ -430,7 +430,7 @@
         </CardContent>
       </Card>
 
-      <!-- 离线说明 -->
+      <!-- 離線說明 -->
       <Card>
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
@@ -442,7 +442,7 @@
         </CardContent>
       </Card>
 
-      <!-- 帝国研究 -->
+      <!-- 帝國研究 -->
       <Card>
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
@@ -506,7 +506,7 @@
             <span class="text-xs text-muted-foreground whitespace-nowrap">
               {{ t('autopilot.currentLevel') }} {{ gameStore.player.technologies[target.technology] || 0 }}
             </span>
-            <!-- BLK-4：草稿+失焦提交+夹值 -->
+            <!-- BLK-4：草稿+失焦提交+夾值 -->
             <Input
               :model-value="target.targetLevel"
               type="number"
@@ -626,7 +626,7 @@
     current.alerts = { ...alertSettings.value, [field]: Math.min(720, Math.max(0, value)) }
   }
 
-  /** 确保当前星球有副官配置（默认关闭）；只在用户操作/进入视图时调用，不在 computed 里写 store */
+  /** 確保當前星球有副官配置（預設關閉）；只在使用者操作/進入檢視時呼叫，不在 computed 裡寫 store */
   function ensureConfig(): AutopilotPlanetConfig | null {
     const p = planet.value
     if (!p) return null
@@ -635,7 +635,7 @@
   }
   const config = computed<AutopilotPlanetConfig | null>(() => planet.value?.autopilot ?? null)
 
-  /** 帝国研究配置（默认关闭） */
+  /** 帝國研究配置（預設關閉） */
   function ensureResearchConfig(): EmpireResearchAutopilot | null {
     const player = gameStore.player
     if (!player) return null
@@ -648,11 +648,11 @@
     () => gameStore.player?.empireResearchAutopilot ?? null
   )
 
-  // ---------- 副官合约卡（v3 付费机制） ----------
+  // ---------- 副官合約卡（v3 付費機制） ----------
   const contract = computed<AutopilotContract | null>(() => gameStore.player.autopilotContract ?? null)
   const resourceKeys = ['metal', 'crystal', 'deuterium'] as const
   const hireDialogOpen = ref(false)
-  /** 聘请前的草稿：付款星球（默认母星）＋服务星球（默认全部） */
+  /** 聘請前的草稿：付款星球（預設母星）＋服務星球（預設全部） */
   const draftPayerPlanetId = ref('')
   const draftServicePlanetIds = ref<string[]>([])
   const initDraft = () => {
@@ -677,7 +677,7 @@
     if (c) c.servicePlanetIds = next
     else draftServicePlanetIds.value = next
   }
-  /** 服务星球的费率输入（沿用 App.vue 计费 tick 的能源效率判定） */
+  /** 服務星球的費率輸入（沿用 App.vue 計費 tick 的能源效率判定） */
   const rates = computed<ResourceTriple>(() => {
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const inputs = gameStore.player.planets
@@ -717,13 +717,13 @@
       effectivePayerPlanetId.value || gameStore.player.planets[0]?.id || '',
       [...serviceIds.value]
     )
-    // M-2：重聘保留累计扣款（不静默清空）
+    // M-2：重聘保留累計扣款（不靜默清空）
     if (old) {
       c.totalConsumedMetal = old.totalConsumedMetal
       c.totalConsumedCrystal = old.totalConsumedCrystal
       c.totalConsumedDeuterium = old.totalConsumedDeuterium
     }
-    // v3：无试用期，聘请即激活，下个 tick 起按分钟计费
+    // v3：無試用期，聘請即啟用，下個 tick 起按分鐘計費
     c.status = 'active'
     gameStore.player.autopilotContract = c
     hireDialogOpen.value = false
@@ -738,8 +738,8 @@
   const onResumeContract = () => {
     const c = contract.value
     if (!c) return
-    // v3：不从其他星球自动扫——余额不足就提示补资源；
-    // B-1：恢复即接受付费制，plan 一并设为 'standard'（迁移暂停用户 plan 为 'free'）
+    // v3：不從其他星球自動掃——餘額不足就提示補資源；
+    // B-1：恢復即接受付費制，plan 一併設為 'standard'（遷移暫停使用者 plan 為 'free'）
     const missing = autopilotBilling.resumeBillingContract(c, rates.value, availableTriple.value)
     if (missing.length) {
       toast.error(t('autopilot.contract.resumeInsufficient', {
@@ -763,7 +763,7 @@
   })
   watch(planet, () => ensureConfig())
 
-  // ---------- 状态操作 ----------
+  // ---------- 狀態操作 ----------
   const toggleEnabled = (v: boolean) => {
     const c = ensureConfig()
     if (!c) return
@@ -774,8 +774,8 @@
     const c = config.value
     const p = planet.value
     if (!c || !p) return
-    c.enabled = false // 玩家接管：副官停止规划
-    autopilotLogic.withdrawAutopilotWaiting(p) // MAJ-6：撤回副官等待项（已开工的不动）
+    c.enabled = false // 玩家接管：副官停止規劃
+    autopilotLogic.withdrawAutopilotWaiting(p) // MAJ-6：撤回副官等待項（已開工的不動）
   }
   const onSwitchMode = (mode: AutopilotMode) => {
     const c = config.value
@@ -798,12 +798,12 @@
     if (v) {
       c.paused = false
     } else {
-      // MAJ-6：关闭研究副官时撤回其等待项（已开工的不动）
+      // MAJ-6：關閉研究副官時撤回其等待項（已開工的不動）
       autopilotLogic.withdrawAutopilotResearchWaiting(gameStore.player)
     }
   }
 
-  // 上次 tick 的阻塞原因（App.vue 的副官 tick 把结果注入到这里）
+  // 上次 tick 的阻塞原因（App.vue 的副官 tick 把結果注入到這裡）
   const tickResults = inject<Ref<Map<string, autopilotLogic.AutopilotTickResult | autopilotLogic.EmpireResearchTickResult>>>(
     'autopilotTickResults',
     ref(new Map<string, autopilotLogic.AutopilotTickResult | autopilotLogic.EmpireResearchTickResult>())
@@ -819,7 +819,7 @@
     `${b.kind === 'building' ? t(`buildings.${b.itemType}`) : t(`technologies.${b.itemType}`)} ${b.level}`
   const researchBlockers = computed(() => tickResults.value.get('__empire__')?.blockers ?? [])
 
-  // ---------- 目标清单 ----------
+  // ---------- 目標清單 ----------
   const sortedTargets = computed(() =>
     [...(config.value?.targets ?? [])].sort((a, b) => a.priority - b.priority)
   )
@@ -864,7 +864,7 @@
     const c = config.value
     const p = planet.value
     if (!c || !p) return
-    autopilotLogic.withdrawAutopilotWaiting(p, id) // MAJ-6：精准撤回归属该目标的副官等待项
+    autopilotLogic.withdrawAutopilotWaiting(p, id) // MAJ-6：精準撤回歸屬該目標的副官等待項
     c.targets = c.targets.filter(tg => tg.id !== id)
     syncPriorities()
   }
@@ -873,8 +873,8 @@
     if (!c) return
     const j = index + dir
     if (j < 0 || j >= c.targets.length) return
-    // 直接对源数组做搬移并重排 priority：旧存档可能有重复 priority（如蓝图仓库全为 5），
-    // 单纯交换 priority 在相邻项相等时是空操作，必须用 splice 搬移
+    // 直接對源陣列做搬移並重排 priority：舊存檔可能有重複 priority（如藍圖倉庫全為 5），
+    // 單純交換 priority 在相鄰項相等時是空操作，必須用 splice 搬移
     const arr = [...c.targets].sort((a, b) => a.priority - b.priority)
     const [moved] = arr.splice(index, 1)
     if (!moved) return
@@ -887,7 +887,7 @@
   const onDragStart = (i: number) => {
     dragIndex.value = i
   }
-  /** BLK-4：目标等级输入用草稿+失焦提交+夹值，打字途中不写存档，避免被 B12 重推误删 */
+  /** BLK-4：目標等級輸入用草稿+失焦提交+夾值，打字途中不寫存檔，避免被 B12 重推誤刪 */
   const commitTargetLevel = (target: AutopilotTarget, raw: unknown) => {
     const p = planet.value
     if (!p) return
@@ -913,7 +913,7 @@
     })
   }
 
-  // ---------- 蓝图 ----------
+  // ---------- 藍圖 ----------
   const blueprints = autopilotLogic.AUTOPILOT_BLUEPRINTS
   const blueprintPreviewOpen = ref(false)
   const previewBlueprintId = ref<string | null>(null)
@@ -925,7 +925,7 @@
     chain: autopilotLogic.PrereqChainStep[]
     incompatible: boolean
   }
-  /** Minor-8 / B4：套用前展示整条待补前置链；月球上 planetOnly 的目标标记为不兼容 */
+  /** Minor-8 / B4：套用前展示整條待補前置鏈；月球上 planetOnly 的目標標記為不相容 */
   const blueprintChainPreview = computed<ChainPreviewItem[]>(() => {
     const p = planet.value
     const bp = previewBlueprint.value
@@ -948,7 +948,7 @@
     const id = previewBlueprintId.value
     blueprintPreviewOpen.value = false
     if (!c || !p || !id) return
-    // Minor-8：月球上过滤 planetOnly 建筑
+    // Minor-8：月球上過濾 planetOnly 建築
     const ok = applyBlueprintAndEnablePlanet(
       p, id, forecastContext.value, getGameNow(),
       t => !(p.isMoon && (BUILDINGS[t.buildingType]?.planetOnly ?? false))
@@ -956,7 +956,7 @@
     if (ok) toast.success(t('autopilot.blueprintApplied'))
   }
 
-  // ---------- 帝国研究 ----------
+  // ---------- 帝國研究 ----------
   const sortedResearchTargets = computed(() =>
     [...(researchConfig.value?.targets ?? [])].sort((a, b) => a.priority - b.priority)
   )
@@ -999,7 +999,7 @@
     if (!c) return
     const j = index + dir
     if (j < 0 || j >= c.targets.length) return
-    // 同 moveTarget：splice 搬移＋重排，避免重复 priority 导致交换空操作
+    // 同 moveTarget：splice 搬移＋重排，避免重複 priority 導致交換空操作
     const arr = [...c.targets].sort((a, b) => a.priority - b.priority)
     const [moved] = arr.splice(index, 1)
     if (!moved) return

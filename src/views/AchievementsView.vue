@@ -5,7 +5,7 @@
       <div class="flex items-center gap-2">{{ unlockedCount }} / {{ totalCount }} {{ t('achievements.unlocked') }}</div>
     </div>
 
-    <!-- 分类标签 -->
+    <!-- 分類標籤 -->
     <Tabs v-model="activeCategory" class="w-full">
       <TabsList class="w-full grid grid-cols-5 h-10">
         <TabsTrigger v-for="category in categories" :key="category.value" :value="category.value" class="text-xs sm:text-sm">
@@ -16,11 +16,11 @@
         </TabsTrigger>
       </TabsList>
 
-      <!-- 成就卡片网格 -->
+      <!-- 成就卡片網格 -->
       <TabsContent v-for="category in categories" :key="category.value" :value="category.value" class="mt-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card v-for="achievement in getAchievementsByCategory(category.value)" :key="achievement.id" class="relative overflow-hidden">
-            <!-- 等级指示条 -->
+            <!-- 等級指示條 -->
             <div class="absolute top-0 left-0 right-0 h-1 flex">
               <div v-for="tier in tierOrder" :key="tier" class="flex-1" :class="getTierBarClass(achievement.id, tier)" />
             </div>
@@ -45,7 +45,7 @@
             </CardHeader>
 
             <CardContent class="space-y-3">
-              <!-- 进度条 -->
+              <!-- 進度條 -->
               <div class="space-y-1">
                 <div class="flex justify-between text-xs">
                   <span class="text-muted-foreground">{{ t('achievements.progress') }}</span>
@@ -57,7 +57,7 @@
                 <Progress :model-value="getProgressPercentage(achievement.id)" class="h-2" />
               </div>
 
-              <!-- 下一等级奖励 -->
+              <!-- 下一等級獎勵 -->
               <div v-if="getNextTierConfig(achievement.id)" class="p-2 bg-muted/50 rounded-lg">
                 <p class="text-xs text-muted-foreground mb-1">
                   {{ t('achievements.nextTier') }}: {{ t(`achievements.tiers.${getNextTierConfig(achievement.id)!.tier}`) }}
@@ -74,7 +74,7 @@
                 </div>
               </div>
 
-              <!-- 已达最高等级 -->
+              <!-- 已達最高等級 -->
               <div
                 v-else-if="getCurrentTier(achievement.id) === 'diamond'"
                 class="p-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg"
@@ -158,7 +158,7 @@
 
   const tierOrder = TIER_ORDER
 
-  // 图标映射
+  // 圖示對映
   const iconMap: Record<string, any> = {
     Gem,
     Diamond,
@@ -202,7 +202,7 @@
     return iconMap[iconName] || Sparkles
   }
 
-  // 获取成就进度
+  // 獲取成就進度
   const getProgress = (achievementId: string) => {
     return gameStore.player.achievements?.[achievementId]
   }
@@ -244,12 +244,12 @@
     return getAchievementProgress(achievementId, currentValue, currentTier)
   }
 
-  // 按类别获取成就
+  // 按類別獲取成就
   const getAchievementsByCategory = (category: AchievementCategory) => {
     return ACHIEVEMENTS.filter(a => a.category === category)
   }
 
-  // 统计
+  // 統計
   const unlockedCount = computed(() => {
     if (!gameStore.player.achievements) return 0
     return Object.values(gameStore.player.achievements).filter(p => p.currentTier !== null).length
@@ -266,14 +266,14 @@
     }).length
   }
 
-  // 样式函数
+  // 樣式函式
   const getTierBarClass = (achievementId: string, tier: AchievementTier) => {
     const progress = getProgress(achievementId)
     if (!progress) return 'bg-muted'
 
     const tierUnlock = progress.tierUnlocks[tier]
     if (tierUnlock !== null) {
-      // 已解锁
+      // 已解鎖
       switch (tier) {
         case AchievementTier.Bronze:
           return 'bg-amber-600'

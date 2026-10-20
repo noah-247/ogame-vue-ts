@@ -14,22 +14,22 @@
           )
         "
       >
-      <!-- 固定的头部 -->
+      <!-- 固定的頭部 -->
       <div class="shrink-0 px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b">
         <slot name="header" />
       </div>
 
-      <!-- 可滚动的内容区域 -->
+      <!-- 可滾動的內容區域 -->
       <div class="overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 max-h-[60vh]">
         <slot />
       </div>
 
-      <!-- 可选的固定底部 -->
+      <!-- 可選的固定底部 -->
       <div v-if="$slots.footer" class="shrink-0 px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4 border-t">
         <slot name="footer" />
       </div>
 
-      <!-- 关闭按钮 -->
+      <!-- 關閉按鈕 -->
       <DialogClose
         v-if="showCloseButton"
         data-slot="dialog-close"

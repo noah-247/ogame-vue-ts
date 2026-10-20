@@ -12,7 +12,7 @@
       </DialogHeader>
 
       <div v-if="notification" class="space-y-4">
-        <!-- NPC信息 -->
+        <!-- NPC資訊 -->
         <div class="p-4 bg-muted/50 rounded-lg border">
           <div class="flex items-center gap-2 mb-2">
             <h3 class="font-semibold text-lg">{{ npcName }}</h3>
@@ -23,7 +23,7 @@
           </p>
         </div>
 
-        <!-- 活动位置 -->
+        <!-- 活動位置 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('messagesView.activityLocation') }}</h4>
           <div class="p-3 bg-muted/30 rounded-md">
@@ -41,7 +41,7 @@
           </div>
         </div>
 
-        <!-- 活动描述 -->
+        <!-- 活動描述 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('messagesView.activityDescription') }}</h4>
           <div class="p-3 bg-muted/30 rounded-md">
@@ -57,7 +57,7 @@
           </div>
         </div>
 
-        <!-- 到达时间 -->
+        <!-- 到達時間 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('messagesView.arrivalTime') }}</h4>
           <div class="p-3 bg-muted/30 rounded-md">
@@ -65,7 +65,7 @@
           </div>
         </div>
 
-        <!-- 提示信息 -->
+        <!-- 提示資訊 -->
         <div class="p-3 bg-muted/50 rounded-md border">
           <p class="text-sm text-muted-foreground">
             {{ t('messagesView.npcActivityTip') }}
@@ -119,18 +119,18 @@
     emit('update:open', newValue)
   })
 
-  // 获取NPC名称
+  // 獲取NPC名稱
   const npcName = computed(() => {
     if (!props.notification) return ''
     if (!npcStore.npcs?.length) return props.notification.npcName
 
-    // 通过 npcId 查找
+    // 透過 npcId 查詢
     if (props.notification.npcId) {
       const npc = npcStore.npcs.find(n => n.id === props.notification!.npcId)
       if (npc) return npc.name
     }
 
-    // 尝试从旧名称中提取ID并查找
+    // 嘗試從舊名稱中提取ID並查詢
     const idMatch = props.notification.npcName.match(/npc_\d+/)
     if (idMatch) {
       const extractedId = idMatch[0]
@@ -141,7 +141,7 @@
     return props.notification.npcName
   })
 
-  // 在银河系中查看位置
+  // 在銀河系中檢視位置
   const viewLocationInGalaxy = () => {
     if (!props.notification?.targetPosition) return
     isOpen.value = false

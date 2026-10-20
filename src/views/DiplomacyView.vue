@@ -5,9 +5,9 @@
         <h1 class="text-2xl sm:text-3xl font-bold">{{ t('diplomacy.title') }}</h1>
         <p class="text-sm text-muted-foreground mt-1">{{ t('diplomacy.description') }}</p>
       </div>
-      <!-- 视图切换和诊断按钮 -->
+      <!-- 檢視切換和診斷按鈕 -->
       <div class="flex items-center gap-2 shrink-0">
-        <!-- 视图模式切换 -->
+        <!-- 檢視模式切換 -->
         <div class="flex items-center border rounded-md">
           <Button
             variant="ghost"
@@ -30,7 +30,7 @@
             <LayoutGrid class="h-4 w-4" />
           </Button>
         </div>
-        <!-- NPC诊断按钮 -->
+        <!-- NPC診斷按鈕 -->
         <Button @click="showNPCDiagnostic" variant="outline" size="sm">
           <Activity class="h-4 w-4 sm:mr-2" />
           <span class="hidden sm:inline">{{ t('diplomacy.diagnostic.button') }}</span>
@@ -38,7 +38,7 @@
       </div>
     </div>
 
-    <!-- NPC诊断对话框 -->
+    <!-- NPC診斷對話方塊 -->
     <Dialog v-model:open="npcDiagnosticOpen">
       <ScrollableDialogContent container-class="max-w-4xl">
         <template #header>
@@ -57,7 +57,7 @@
           </DialogDescription>
         </template>
 
-        <!-- 诊断对话框搜索框 -->
+        <!-- 診斷對話方塊搜尋框 -->
         <div class="relative mb-4">
           <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input v-model="diagnosticSearchQuery" type="text" :placeholder="t('diplomacy.searchPlaceholder')" class="pl-10" />
@@ -154,7 +154,7 @@
             </div>
           </div>
 
-          <!-- 分页控制 -->
+          <!-- 分頁控制 -->
           <Pagination
             v-if="diagnosticTotalPages > 1"
             v-model:page="diagnosticPage"
@@ -181,9 +181,9 @@
       </ScrollableDialogContent>
     </Dialog>
 
-    <!-- 搜索和排序工具栏 -->
+    <!-- 搜尋和排序工具欄 -->
     <div class="flex flex-col sm:flex-row gap-4">
-      <!-- 搜索框 -->
+      <!-- 搜尋框 -->
       <div class="relative flex-1">
         <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input v-model="searchQuery" type="text" :placeholder="t('diplomacy.searchPlaceholder')" class="pl-10" />
@@ -214,7 +214,7 @@
       </div>
     </div>
 
-    <!-- 关系状态过滤标签 -->
+    <!-- 關係狀態過濾標籤 -->
     <Tabs v-model="activeTab" class="w-full">
       <TabsList class="grid w-full grid-cols-4">
         <TabsTrigger value="all">
@@ -264,7 +264,7 @@
           </EmptyContent>
         </Empty>
         <template v-else>
-          <!-- 卡片视图 -->
+          <!-- 卡片檢視 -->
           <div v-if="viewMode === 'card'" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-20">
             <NpcRelationCard
               v-for="npc in paginatedAllNpcs"
@@ -275,7 +275,7 @@
               :class="{ 'npc-highlight': highlightedNpcId === npc.id }"
             />
           </div>
-          <!-- 列表视图 -->
+          <!-- 列表檢視 -->
           <div v-else class="space-y-2 pb-20">
             <NpcRelationRow
               v-for="npc in paginatedAllNpcs"
@@ -298,7 +298,7 @@
           </EmptyContent>
         </Empty>
         <template v-else>
-          <!-- 卡片视图 -->
+          <!-- 卡片檢視 -->
           <div v-if="viewMode === 'card'" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-20">
             <NpcRelationCard
               v-for="npc in paginatedFriendlyNpcs"
@@ -309,7 +309,7 @@
               :class="{ 'npc-highlight': highlightedNpcId === npc.id }"
             />
           </div>
-          <!-- 列表视图 -->
+          <!-- 列表檢視 -->
           <div v-else class="space-y-2 pb-20">
             <NpcRelationRow
               v-for="npc in paginatedFriendlyNpcs"
@@ -332,7 +332,7 @@
           </EmptyContent>
         </Empty>
         <template v-else>
-          <!-- 卡片视图 -->
+          <!-- 卡片檢視 -->
           <div v-if="viewMode === 'card'" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-20">
             <NpcRelationCard
               v-for="npc in paginatedNeutralNpcs"
@@ -343,7 +343,7 @@
               :class="{ 'npc-highlight': highlightedNpcId === npc.id }"
             />
           </div>
-          <!-- 列表视图 -->
+          <!-- 列表檢視 -->
           <div v-else class="space-y-2 pb-20">
             <NpcRelationRow
               v-for="npc in paginatedNeutralNpcs"
@@ -357,7 +357,7 @@
         </template>
       </TabsContent>
 
-      <!-- 敌对NPC -->
+      <!-- 敵對NPC -->
       <TabsContent value="hostile" class="space-y-4 mt-6">
         <Empty v-if="hostileNpcs.length === 0" class="border rounded-lg">
           <EmptyContent>
@@ -366,7 +366,7 @@
           </EmptyContent>
         </Empty>
         <template v-else>
-          <!-- 卡片视图 -->
+          <!-- 卡片檢視 -->
           <div v-if="viewMode === 'card'" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-20">
             <NpcRelationCard
               v-for="npc in paginatedHostileNpcs"
@@ -377,7 +377,7 @@
               :class="{ 'npc-highlight': highlightedNpcId === npc.id }"
             />
           </div>
-          <!-- 列表视图 -->
+          <!-- 列表檢視 -->
           <div v-else class="space-y-2 pb-20">
             <NpcRelationRow
               v-for="npc in paginatedHostileNpcs"
@@ -392,7 +392,7 @@
       </TabsContent>
     </Tabs>
 
-    <!-- 固定底部分页 -->
+    <!-- 固定底部分頁 -->
     <FixedPagination v-model:page="currentPageValue" :total-pages="currentTotalPages" />
   </div>
 </template>
@@ -452,10 +452,10 @@
 
   const activeTab = ref('all')
 
-  // 视图模式: 'card' | 'list'
+  // 檢視模式: 'card' | 'list'
   const viewMode = ref<'card' | 'list'>('list')
 
-  // NPC卡片引用 Map（存储组件实例）
+  // NPC卡片引用 Map（儲存元件例項）
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cardRefs = ref<Map<string, any>>(new Map())
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -467,13 +467,13 @@
     }
   }
 
-  // 高亮状态
+  // 高亮狀態
   const highlightedNpcId = ref<string | null>(null)
 
-  // 搜索功能
+  // 搜尋功能
   const searchQuery = ref('')
 
-  // 排序状态
+  // 排序狀態
   const sortBy = ref<NPCSortBy>('reputation')
   const sortOrder = ref<'asc' | 'desc'>('desc')
 
@@ -481,7 +481,7 @@
     throw new Error(`Unexpected NPC sort type: ${value}`)
   }
 
-  // 排序函数
+  // 排序函式
   const sortNpcs = (npcs: NPC[], predicate: (npc: NPC) => boolean = () => true) => {
     return npcs.filter(predicate).sort((a, b) => {
       let valA = 0
@@ -497,7 +497,7 @@
           valB = b.planets.length
           break
         case 'difficulty':
-          // 简单=1, 普通=2, 困难=3
+          // 簡單=1, 普通=2, 困難=3
           // eslint-disable-next-line no-case-declarations
           const getDifficultyVal = (diff: string) => {
             if (diff === 'hard') return 3
@@ -523,7 +523,7 @@
     })
   }
 
-  // NPC诊断功能
+  // NPC診斷功能
   const npcDiagnosticOpen = ref(false)
   const npcDiagnostics = ref<npcBehaviorLogic.NPCDiagnosticInfo[]>([])
   const diagnosticPage = ref(1)
@@ -536,19 +536,19 @@
   const showNPCDiagnostic = () => {
     const currentTime = getGameNow()
     npcDiagnostics.value = npcBehaviorLogic.diagnoseNPCBehavior(npcStore.npcs, gameStore.player, currentTime)
-    diagnosticPage.value = 1 // 重置分页
-    diagnosticSearchQuery.value = '' // 重置搜索
+    diagnosticPage.value = 1 // 重置分頁
+    diagnosticSearchQuery.value = '' // 重置搜尋
     npcDiagnosticOpen.value = true
   }
 
-  // 诊断搜索过滤
+  // 診斷搜尋過濾
   const filteredDiagnostics = computed(() => {
     if (!diagnosticSearchQuery.value.trim()) return npcDiagnostics.value
     const query = diagnosticSearchQuery.value.toLowerCase().trim()
     return npcDiagnostics.value.filter(d => d.npcName.toLowerCase().includes(query) || d.npcId.toLowerCase().includes(query))
   })
 
-  // 诊断弹窗分页
+  // 診斷彈窗分頁
   const diagnosticTotalPages = computed(() => Math.ceil(filteredDiagnostics.value.length / DIAGNOSTIC_ITEMS_PER_PAGE))
   const paginatedDiagnostics = computed(() => {
     const start = (diagnosticPage.value - 1) * DIAGNOSTIC_ITEMS_PER_PAGE
@@ -558,7 +558,7 @@
 
   const diagnosticPageNumbers = computed(() => getPageNumbers(diagnosticPage.value, diagnosticTotalPages.value))
 
-  // 诊断面板关系状态本地化
+  // 診斷面板關係狀態本地化
   const getLocalizedRelationStatus = (statusKey: string) => {
     switch (statusKey) {
       case 'friendly':
@@ -576,7 +576,7 @@
     }
   }
 
-  // 诊断面板关系Badge样式
+  // 診斷面板關係Badge樣式
   const getRelationBadgeVariant = (statusKey: string) => {
     switch (statusKey) {
       case 'friendly':
@@ -588,45 +588,45 @@
     }
   }
 
-  // 翻译诊断原因
+  // 翻譯診斷原因
   const translateReason = (reason: { key: string; params?: Record<string, string | number> }) => {
     const translationKey = `diplomacy.diagnostic.reasons.${reason.key}`
     return reason.params ? t(translationKey, reason.params) : t(translationKey)
   }
 
-  // 检测并生成NPC盟友
+  // 檢測並生成NPC盟友
   const initializeNPCAllies = () => {
     const npcs = npcStore.npcs
-    if (npcs.length < 2) return // 至少需要2个NPC才能生成盟友关系
+    if (npcs.length < 2) return // 至少需要2個NPC才能生成盟友關係
 
     npcs.forEach(npc => {
-      // 如果NPC没有盟友列表,初始化为空数组
+      // 如果NPC沒有盟友列表,初始化為空陣列
       if (!npc.allies) {
         npc.allies = []
       }
 
-      // 如果NPC没有盟友,随机生成1-2个盟友
+      // 如果NPC沒有盟友,隨機生成1-2個盟友
       if (npc.allies.length === 0) {
         const otherNpcs = npcs.filter(n => n.id !== npc.id)
         if (otherNpcs.length === 0) return
 
-        // 随机选择1-2个盟友
+        // 隨機選擇1-2個盟友
         const allyCount = Math.min(Math.floor(Math.random() * 2) + 1, otherNpcs.length)
         const shuffled = [...otherNpcs].sort(() => Math.random() - 0.5)
         const selectedAllies = shuffled.slice(0, allyCount)
 
         selectedAllies.forEach(ally => {
-          // 添加双向盟友关系
+          // 新增雙向盟友關係
           if (!npc.allies!.includes(ally.id)) {
             npc.allies!.push(ally.id)
           }
 
-          // 确保盟友也有盟友列表
+          // 確保盟友也有盟友列表
           if (!ally.allies) {
             ally.allies = []
           }
 
-          // 确保双向关系
+          // 確保雙向關係
           if (!ally.allies.includes(npc.id)) {
             ally.allies.push(npc.id)
           }
@@ -635,30 +635,30 @@
     })
   }
 
-  // 滚动到指定NPC卡片
+  // 滾動到指定NPC卡片
   const scrollToNpcCard = (npcId: string) => {
-    // 切换到"全部"标签
+    // 切換到"全部"標籤
     activeTab.value = 'all'
 
-    // 等待DOM更新后再滚动
+    // 等待DOM更新後再滾動
     nextTick(() => {
-      // 找到目标NPC在列表中的索引
+      // 找到目標NPC在列表中的索引
       const npcIndex = allNpcs.value.findIndex(npc => npc.id === npcId)
       if (npcIndex === -1) return
 
-      // 计算目标NPC所在的页面
+      // 計算目標NPC所在的頁面
       const targetPage = Math.floor(npcIndex / ITEMS_PER_PAGE) + 1
       currentPage.value.all = targetPage
 
-      // 再次等待分页更新后滚动到卡片
+      // 再次等待分頁更新後滾動到卡片
       nextTick(() => {
-        // 从 cardRefs 获取组件实例
+        // 從 cardRefs 獲取元件例項
         const cardComponent = cardRefs.value.get(npcId)
         const targetEl = cardComponent?.$el as HTMLElement | undefined
 
         if (targetEl) {
           targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          // 添加高亮效果
+          // 新增高亮效果
           highlightedNpcId.value = npcId
           setTimeout(() => {
             highlightedNpcId.value = null
@@ -668,17 +668,17 @@
     })
   }
 
-  // 组件挂载时初始化NPC盟友
+  // 元件掛載時初始化NPC盟友
   onMounted(() => {
     initializeNPCAllies()
 
-    // 检查URL query参数，如果有npcId则滚动到该NPC
+    // 檢查URL query引數，如果有npcId則滾動到該NPC
     const npcIdFromQuery = route.query.npcId as string | undefined
     if (npcIdFromQuery) {
       scrollToNpcCard(npcIdFromQuery)
     }
 
-    // 监听滚动到NPC卡片的事件
+    // 監聽滾動到NPC卡片的事件
     const handleScrollToNpc = (event: Event) => {
       const customEvent = event as CustomEvent<{ npcId: string }>
       scrollToNpcCard(customEvent.detail.npcId)
@@ -686,13 +686,13 @@
 
     document.addEventListener('scrollToNpc', handleScrollToNpc)
 
-    // 清理事件监听器
+    // 清理事件監聽器
     onUnmounted(() => {
       document.removeEventListener('scrollToNpc', handleScrollToNpc)
     })
   })
 
-  // 分页状态
+  // 分頁狀態
   const ITEMS_PER_PAGE = 20
   const currentPage = ref<Record<string, number>>({
     all: 1,
@@ -701,21 +701,21 @@
     hostile: 1
   })
 
-  // 获取NPC对玩家的关系（统一使用 npc.relations）
+  // 獲取NPC對玩家的關係（統一使用 npc.relations）
   const getRelation = (npcId: string): DiplomaticRelation | undefined => {
     const npc = npcStore.npcs.find(n => n.id === npcId)
     return npc?.relations?.[gameStore.player.id]
   }
 
-  // 搜索过滤函数
+  // 搜尋過濾函式
   const matchesSearch = (npc: NPC) => {
     if (!searchQuery.value.trim()) return true
     const query = searchQuery.value.toLowerCase().trim()
     return npc.name.toLowerCase().includes(query) || npc.id.toLowerCase().includes(query)
   }
 
-  // 按关系状态分类NPC（同时应用搜索过滤）
-  // 先统一排序一次，避免不同标签页在同一批数据上重复排序
+  // 按關係狀態分類NPC（同時應用搜尋過濾）
+  // 先統一排序一次，避免不同標籤頁在同一批資料上重複排序
   const sortedNpcs = computed(() => sortNpcs(npcStore.npcs, matchesSearch))
 
   const allNpcs = computed(() => sortedNpcs.value)
@@ -741,7 +741,7 @@
     })
   })
 
-  // 分页辅助函数
+  // 分頁輔助函式
   const getPaginatedNpcs = (npcs: typeof allNpcs.value, tabKey: string) => {
     const page = currentPage.value[tabKey] || 1
     const start = (page - 1) * ITEMS_PER_PAGE
@@ -753,19 +753,19 @@
     return Math.ceil(npcs.length / ITEMS_PER_PAGE)
   }
 
-  // 分页后的NPC列表
+  // 分頁後的NPC列表
   const paginatedAllNpcs = computed(() => getPaginatedNpcs(allNpcs.value, 'all'))
   const paginatedFriendlyNpcs = computed(() => getPaginatedNpcs(friendlyNpcs.value, 'friendly'))
   const paginatedNeutralNpcs = computed(() => getPaginatedNpcs(neutralNpcs.value, 'neutral'))
   const paginatedHostileNpcs = computed(() => getPaginatedNpcs(hostileNpcs.value, 'hostile'))
 
-  // 总页数
+  // 總頁數
   const totalPagesAll = computed(() => getTotalPages(allNpcs.value))
   const totalPagesFriendly = computed(() => getTotalPages(friendlyNpcs.value))
   const totalPagesNeutral = computed(() => getTotalPages(neutralNpcs.value))
   const totalPagesHostile = computed(() => getTotalPages(hostileNpcs.value))
 
-  // 生成页码列表（用于诊断弹窗分页UI）
+  // 生成頁碼列表（用於診斷彈窗分頁UI）
   const getPageNumbers = (currentPageNum: number, totalPages: number) => {
     const pages: number[] = []
     const maxVisible = 3
@@ -795,7 +795,7 @@
     return pages
   }
 
-  // 当前标签页的分页数据（用于固定底部分页）
+  // 當前標籤頁的分頁資料（用於固定底部分頁）
   const currentTotalPages = computed(() => {
     switch (activeTab.value) {
       case 'friendly':
@@ -818,7 +818,7 @@
 </script>
 
 <style>
-  /* NPC卡片高亮动画 - 不使用scoped以便动态添加类生效 */
+  /* NPC卡片高亮動畫 - 不使用scoped以便動態新增類生效 */
   .npc-highlight {
     animation: highlight-pulse 1.5s ease-in-out 2 !important;
     box-shadow: 0 0 0 3px var(--primary) !important;

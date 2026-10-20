@@ -101,12 +101,12 @@
   const router = useRouter()
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
-  // 处理移动端侧边栏打开/关闭
+  // 處理移動端側邊欄開啟/關閉
   const handleOpenMobileChange = (open: boolean) => {
     setOpenMobile(open)
   }
 
-  // 监听路由变化，在移动端关闭侧边栏
+  // 監聽路由變化，在移動端關閉側邊欄
   watch(
     () => router.currentRoute.value.path,
     () => {

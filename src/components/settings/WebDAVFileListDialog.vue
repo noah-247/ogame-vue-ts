@@ -9,12 +9,12 @@
       </DialogHeader>
 
       <div class="py-4">
-        <!-- 加载状态 -->
+        <!-- 載入狀態 -->
         <div v-if="isLoading" class="flex items-center justify-center py-8">
           <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
 
-        <!-- 错误状态 -->
+        <!-- 錯誤狀態 -->
         <div v-else-if="error" class="text-center py-8">
           <p class="text-red-500 mb-4">{{ error }}</p>
           <Button variant="outline" @click="loadFiles">
@@ -27,7 +27,7 @@
           {{ t('settings.webdav.noFiles') }}
         </div>
 
-        <!-- 文件列表 -->
+        <!-- 檔案列表 -->
         <ScrollArea v-else class="h-[300px]">
           <div class="space-y-2">
             <div

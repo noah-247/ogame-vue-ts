@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <!-- 建筑/科技：等级范围表格 -->
+    <!-- 建築/科技：等級範圍表格 -->
     <div v-if="type === 'building' || type === 'technology'" class="border rounded-lg">
       <Table>
         <TableHeader>
@@ -11,7 +11,7 @@
             <TableHead class="text-center">{{ t('resources.deuterium') }}</TableHead>
             <TableHead v-if="showDarkMatterColumn" class="text-center">{{ t('resources.darkMatter') }}</TableHead>
             <TableHead class="text-center">{{ type === 'building' ? t('buildings.buildTime') : t('research.researchTime') }}</TableHead>
-            <!-- 建筑相关列 -->
+            <!-- 建築相關列 -->
             <TableHead v-if="type === 'building' && showProductionColumn" class="text-center">{{ t('buildings.production') }}</TableHead>
             <TableHead v-if="type === 'building' && showConsumptionColumn" class="text-center">{{ t('buildings.consumption') }}</TableHead>
             <TableHead v-if="type === 'building' && showCapacityColumn" class="text-center">{{ t('buildings.storageCapacity') }}</TableHead>
@@ -29,7 +29,7 @@
             <TableHead v-if="type === 'building' && showResearchSpeedColumn" class="text-center">
               {{ t('buildings.researchSpeedBonus') }}
             </TableHead>
-            <!-- 科技相关列 -->
+            <!-- 科技相關列 -->
             <TableHead v-if="type === 'technology' && showAttackBonusColumn" class="text-center">{{ t('research.attackBonus') }}</TableHead>
             <TableHead v-if="type === 'technology' && showShieldBonusColumn" class="text-center">{{ t('research.shieldBonus') }}</TableHead>
             <TableHead v-if="type === 'technology' && showArmorBonusColumn" class="text-center">{{ t('research.armorBonus') }}</TableHead>
@@ -68,7 +68,7 @@
               <NumberWithTooltip :value="getLevelData(level).cost.darkMatter" />
             </TableCell>
             <TableCell class="text-center text-sm">{{ formatTime(getLevelData(level).time) }}</TableCell>
-            <!-- 建筑相关数据 -->
+            <!-- 建築相關資料 -->
             <TableCell v-if="type === 'building' && showProductionColumn" class="text-center text-sm">
               <span v-if="getLevelData(level).production > 0" class="text-green-600 dark:text-green-400">
                 +
@@ -121,7 +121,7 @@
             <TableCell v-if="type === 'building' && showResearchSpeedColumn" class="text-center text-sm">
               <span class="text-indigo-600 dark:text-indigo-400">+{{ (getLevelData(level).researchSpeedBonus - 1) * 100 }}%</span>
             </TableCell>
-            <!-- 科技相关数据 -->
+            <!-- 科技相關資料 -->
             <TableCell v-if="type === 'technology' && showAttackBonusColumn" class="text-center text-sm">
               <span class="text-red-600 dark:text-red-400">+{{ level * 10 }}%</span>
             </TableCell>
@@ -166,7 +166,7 @@
       </Table>
     </div>
 
-    <!-- 矿脉储量信息（仅采矿建筑显示） -->
+    <!-- 礦脈儲量資訊（僅採礦建築顯示） -->
     <Card
       v-if="isMiningBuilding && oreDepositInfo && miningResourceType"
       class="border-2"
@@ -216,7 +216,7 @@
       </CardContent>
     </Card>
 
-    <!-- 建筑/科技：累积统计 -->
+    <!-- 建築/科技：累積統計 -->
     <div v-if="type === 'building' || type === 'technology'" class="grid grid-cols-2 gap-4">
       <Card>
         <CardHeader class="pb-3">
@@ -259,7 +259,7 @@
       </Card>
     </div>
 
-    <!-- 舰船/防御：基础属性 -->
+    <!-- 艦船/防禦：基礎屬性 -->
     <div v-if="type === 'ship' || type === 'defense'" class="grid grid-cols-2 md:grid-cols-3 gap-4">
       <Card>
         <CardHeader class="pb-3">
@@ -303,7 +303,7 @@
         </CardContent>
       </Card>
 
-      <!-- 仅舰船显示 -->
+      <!-- 僅艦船顯示 -->
       <Card v-if="type === 'ship'">
         <CardHeader class="pb-3">
           <CardTitle class="text-sm flex items-center gap-2">
@@ -347,7 +347,7 @@
       </Card>
     </div>
 
-    <!-- 舰船/防御：建造成本和时间 -->
+    <!-- 艦船/防禦：建造成本和時間 -->
     <div v-if="type === 'ship' || type === 'defense'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card>
         <CardHeader>
@@ -385,7 +385,7 @@
       </Card>
     </div>
 
-    <!-- 舰船/防御：批量建造计算器 -->
+    <!-- 艦船/防禦：批次建造計算器 -->
     <Card v-if="type === 'ship' || type === 'defense'">
       <CardHeader>
         <CardTitle class="text-sm">{{ t(`${typeKey}.batchCalculator`) }}</CardTitle>
@@ -469,18 +469,18 @@
 
   const quantity = ref(1)
 
-  // 资源类型配置（用于成本显示）
+  // 資源型別配置（用於成本顯示）
   const costResourceTypes = [{ key: 'metal' as const }, { key: 'crystal' as const }, { key: 'deuterium' as const }]
 
-  // 获取当前星球
+  // 獲取當前星球
   const currentPlanet = computed(() => gameStore.currentPlanet)
 
-  // 计算当前加成
+  // 計算當前加成
   const activeBonuses = computed(() => {
     return officerLogic.calculateActiveBonuses(gameStore.player.officers, gameStore.gameTime)
   })
 
-  // 获取工厂等级（用于建造时间计算）
+  // 獲取工廠等級（用於建造時間計算）
   const roboticsFactoryLevel = computed(() => {
     if (!currentPlanet.value) return 0
     return currentPlanet.value.buildings['roboticsFactory'] || 0
@@ -491,12 +491,12 @@
     return currentPlanet.value.buildings['naniteFactory'] || 0
   })
 
-  // 获取有效研究所等级（考虑星际研究网络）
+  // 獲取有效研究所等級（考慮星際研究網路）
   const researchLabLevel = computed(() => {
     if (!currentPlanet.value) return 0
     const intergalacticResearchNetworkLevel = gameStore.player.technologies[TechnologyType.IntergalacticResearchNetwork] || 0
 
-    // 如果有星际研究网络，计算有效实验室等级
+    // 如果有星際研究網路，計算有效實驗室等級
     if (intergalacticResearchNetworkLevel > 0) {
       return researchLogic.calculateEffectiveLabLevel(gameStore.player.planets, currentPlanet.value.id, intergalacticResearchNetworkLevel)
     }
@@ -504,18 +504,18 @@
     return currentPlanet.value.buildings['researchLab'] || 0
   })
 
-  // 获取能量科技等级（用于研究时间计算）
+  // 獲取能量科技等級（用於研究時間計算）
   const energyTechLevel = computed(() => {
     return gameStore.player.technologies['energyTechnology'] || 0
   })
 
-  // 获取大学等级（用于研究时间计算）
+  // 獲取大學等級（用於研究時間計算）
   const universityLevel = computed(() => {
     if (!currentPlanet.value) return 0
     return currentPlanet.value.buildings['university'] || 0
   })
 
-  // 翻译键（转换为复数形式）
+  // 翻譯鍵（轉換為複數形式）
   const typeKey = computed(() => {
     const typeMap = {
       building: 'buildings',
@@ -526,7 +526,7 @@
     return typeMap[props.type]
   })
 
-  // 控制建筑列显示
+  // 控制建築列顯示
   const showDarkMatterColumn = computed(() => {
     if (props.type === 'building') {
       const buildingType = props.itemType as BuildingType
@@ -547,7 +547,7 @@
   const showConsumptionColumn = computed(() => {
     if (props.type !== 'building') return false
     const buildingType = props.itemType as BuildingType
-    // 所有消耗电力的建筑
+    // 所有消耗電力的建築
     return [
       'metalMine',
       'crystalMine',
@@ -564,14 +564,14 @@
     ].includes(buildingType)
   })
 
-  // 是否显示矿脉储量信息（仅对采矿建筑）
+  // 是否顯示礦脈儲量資訊（僅對採礦建築）
   const isMiningBuilding = computed(() => {
     if (props.type !== 'building') return false
     const buildingType = props.itemType as BuildingType
     return ['metalMine', 'crystalMine', 'deuteriumSynthesizer'].includes(buildingType)
   })
 
-  // 获取当前建筑对应的资源类型
+  // 獲取當前建築對應的資源型別
   const miningResourceType = computed((): 'metal' | 'crystal' | 'deuterium' | null => {
     if (!isMiningBuilding.value) return null
     const buildingType = props.itemType as BuildingType
@@ -581,7 +581,7 @@
     return null
   })
 
-  // 矿脉储量信息
+  // 礦脈儲量資訊
   const oreDepositInfo = computed(() => {
     if (!currentPlanet.value || !miningResourceType.value || !currentPlanet.value.oreDeposits) {
       return null
@@ -590,20 +590,20 @@
     const resourceType = miningResourceType.value
     const remaining = deposits[resourceType]
 
-    // 获取深层钻探设施等级（星球级）和采矿技术等级（全局）
+    // 獲取深層鑽探設施等級（星球級）和採礦技術等級（全域性）
     const deepDrillingLevel = currentPlanet.value.buildings[BuildingType.DeepDrillingFacility] || 0
     const miningTechLevel = gameStore.player?.technologies?.[TechnologyType.MiningTechnology] || 0
 
-    // 使用增强版计算函数获取带加成的储量上限
+    // 使用增強版計算函式獲取帶加成的儲量上限
     const enhancedDeposits = oreDepositLogic.calculateEnhancedDeposits(deposits.position, deepDrillingLevel, miningTechLevel)
     const initial = enhancedDeposits[resourceType]
 
-    // 百分比基于增强后的上限计算
+    // 百分比基於增強後的上限計算
     const percentage = initial > 0 ? (remaining / initial) * 100 : 0
     const isWarning = percentage < ORE_DEPOSIT_CONFIG.WARNING_THRESHOLD * 100 && percentage > 0
     const isDepleted = remaining <= 0
 
-    // 计算当前产量（每小时）
+    // 計算當前產量（每小時）
     const production = resourceLogic.calculateResourceProduction(currentPlanet.value, {
       resourceProductionBonus: activeBonuses.value.resourceProductionBonus,
       darkMatterProductionBonus: activeBonuses.value.darkMatterProductionBonus,
@@ -611,7 +611,7 @@
     })
     const productionPerHour = production[resourceType]
 
-    // 计算耗尽时间
+    // 計算耗盡時間
     const depletionTimeHours = productionPerHour > 0 ? remaining / productionPerHour : Infinity
     const depletionTimeFormatted = oreDepositLogic.formatDepletionTime(depletionTimeHours)
 
@@ -686,7 +686,7 @@
     return false
   })
 
-  // 控制科技列显示
+  // 控制科技列顯示
   const showAttackBonusColumn = computed(() => {
     if (props.type !== 'technology') return false
     const techType = props.itemType as TechnologyType
@@ -729,35 +729,35 @@
     return ['combustionDrive', 'impulseDrive', 'hyperspaceDrive'].includes(techType)
   })
 
-  // 安全的当前等级（防止undefined）
+  // 安全的當前等級（防止undefined）
   const safeCurrentLevel = computed(() => props.currentLevel ?? 0)
 
-  // 类型安全：战斗单位配置（舰船/防御）
+  // 型別安全：戰鬥單位配置（艦船/防禦）
   const combatUnitConfig = computed(() => {
     if (props.type === 'ship') return SHIPS[props.itemType as ShipType]
     if (props.type === 'defense') return DEFENSES[props.itemType as DefenseType]
     return null
   })
 
-  // 类型安全：舰船配置
+  // 型別安全：艦船配置
   const shipConfig = computed(() => {
     if (props.type === 'ship') return SHIPS[props.itemType as ShipType]
     return null
   })
 
-  // 类型安全：单位成本（处理cost vs baseCost差异）
+  // 型別安全：單位成本（處理cost vs baseCost差異）
   const unitCost = computed(() => {
     if (props.type === 'ship') return SHIPS[props.itemType as ShipType].cost
     if (props.type === 'defense') return DEFENSES[props.itemType as DefenseType].cost
     return { metal: 0, crystal: 0, deuterium: 0 }
   })
 
-  // 类型安全：单位建造时间（处理buildTime vs baseTime差异，应用加成）
+  // 型別安全：單位建造時間（處理buildTime vs baseTime差異，應用加成）
   const unitBuildTime = computed(() => {
     if (props.type === 'ship') {
       return shipLogic.calculateShipBuildTime(
         props.itemType as ShipType,
-        1, // 单个单位
+        1, // 單個單位
         activeBonuses.value.buildingSpeedBonus,
         roboticsFactoryLevel.value,
         naniteFactoryLevel.value
@@ -766,7 +766,7 @@
     if (props.type === 'defense') {
       return shipLogic.calculateDefenseBuildTime(
         props.itemType as DefenseType,
-        1, // 单个单位
+        1, // 單個單位
         activeBonuses.value.buildingSpeedBonus,
         roboticsFactoryLevel.value,
         naniteFactoryLevel.value
@@ -775,7 +775,7 @@
     return 0
   })
 
-  // 建筑/科技：等级范围
+  // 建築/科技：等級範圍
   const levelRange = computed(() => {
     if (props.type !== 'building' && props.type !== 'technology') return []
     const current = props.currentLevel || 0
@@ -786,7 +786,7 @@
     return levels
   })
 
-  // 建筑/科技：获取某个等级的数据
+  // 建築/科技：獲取某個等級的資料
   const getLevelData = (level: number) => {
     if (level === 0) {
       return {
@@ -807,7 +807,7 @@
       const buildingType = props.itemType as BuildingType
       const cost = buildingLogic.calculateBuildingCost(buildingType, level)
 
-      // 使用实际的工厂等级和加成计算建造时间
+      // 使用實際的工廠等級和加成計算建造時間
       const time = buildingLogic.calculateBuildingTime(
         buildingType,
         level,
@@ -824,7 +824,7 @@
       let buildSpeedBonus = 0
       let researchSpeedBonus = 0
 
-      // 应用资源产量加成
+      // 應用資源產量加成
       const resourceBonus = 1 + (activeBonuses.value.resourceProductionBonus || 0) / 100
       const energyBonus = 1 + (activeBonuses.value.energyProductionBonus || 0) / 100
       const storageBonus = 1 + (activeBonuses.value.storageCapacityBonus || 0) / 100
@@ -934,7 +934,7 @@
       const techType = props.itemType as TechnologyType
       const cost = researchLogic.calculateTechnologyCost(techType, level)
 
-      // 使用实际的研究所等级和加成计算研究时间
+      // 使用實際的研究所等級和加成計算研究時間
       const time = researchLogic.calculateTechnologyTime(
         techType,
         level - 1,
@@ -966,7 +966,7 @@
     }
   }
 
-  // 建筑/科技：累积统计
+  // 建築/科技：累積統計
   const totalStats = computed(() => {
     if (props.type !== 'building' && props.type !== 'technology') {
       return { metal: 0, crystal: 0, deuterium: 0, points: 0 }
@@ -987,21 +987,21 @@
     return { metal, crystal, deuterium, points }
   })
 
-  // 舰船/防御：单位积分
+  // 艦船/防禦：單位積分
   const pointsPerUnit = computed(() => {
     if (props.type === 'ship') return pointsLogic.calculateShipPoints(props.itemType as ShipType, 1)
     if (props.type === 'defense') return pointsLogic.calculateDefensePoints(props.itemType as DefenseType, 1)
     return 0
   })
 
-  // 舰船/防御：批量成本
+  // 艦船/防禦：批次成本
   const batchCost = computed(() => ({
     metal: unitCost.value.metal * quantity.value,
     crystal: unitCost.value.crystal * quantity.value,
     deuterium: unitCost.value.deuterium * quantity.value
   }))
 
-  // 舰船/防御：批量积分
+  // 艦船/防禦：批次積分
   const batchPoints = computed(() => {
     if (props.type === 'ship') return pointsLogic.calculateShipPoints(props.itemType as ShipType, quantity.value)
     if (props.type === 'defense') return pointsLogic.calculateDefensePoints(props.itemType as DefenseType, quantity.value)

@@ -2,7 +2,7 @@
   <div class="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
     <h1 class="text-2xl sm:text-3xl font-bold">{{ t('galaxyView.title') }}</h1>
 
-    <!-- 坐标选择器 -->
+    <!-- 座標選擇器 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('galaxyView.selectCoordinates') }}</CardTitle>
@@ -58,7 +58,7 @@
           </div>
           <div v-if="!isInHomePlanetSystem" :class="highlightedNpc ? '' : 'col-span-2 sm:col-span-1'" class="space-y-2">
             <Label class="text-xs sm:text-sm opacity-0">{{ t('galaxyView.myPlanets') }}</Label>
-            <!-- 不在母星星系时显示Popover选择 -->
+            <!-- 不在母星星系時顯示Popover選擇 -->
             <Popover>
               <PopoverTrigger as-child>
                 <Button variant="outline" class="w-full">
@@ -151,7 +151,7 @@
       </CardContent>
     </Card>
 
-    <!-- 星系视图 -->
+    <!-- 星系檢視 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('galaxyView.galaxy') }} {{ currentGalaxy }}:{{ currentSystem }}</CardTitle>
@@ -166,18 +166,18 @@
             :class="{
               // 空位置
               'bg-muted/30': !slot.planet,
-              // 我的星球 - 蓝色
+              // 我的星球 - 藍色
               'bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700': slot.planet && isMyPlanet(slot.planet),
-              // 高亮NPC - 黄色
+              // 高亮NPC - 黃色
               'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-400 dark:ring-yellow-500':
                 slot.planet && isHighlightedNpcPlanet(slot.planet) && !isMyPlanet(slot.planet),
-              // 友好NPC - 绿色
+              // 友好NPC - 綠色
               'bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700':
                 slot.planet &&
                 !isMyPlanet(slot.planet) &&
                 !isHighlightedNpcPlanet(slot.planet) &&
                 getRelation(slot.planet)?.status === RelationStatus.Friendly,
-              // 敌对NPC - 红色
+              // 敵對NPC - 紅色
               'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-700':
                 slot.planet &&
                 !isMyPlanet(slot.planet) &&
@@ -192,18 +192,18 @@
                 (!getRelation(slot.planet) || getRelation(slot.planet)?.status === RelationStatus.Neutral)
             }"
           >
-            <!-- 移动端布局 -->
+            <!-- 移動端佈局 -->
             <div class="sm:hidden w-full space-y-2">
-              <!-- 第一行：位置编号 + 星球信息（名称、坐标、状态、残骸） -->
+              <!-- 第一行：位置編號 + 星球資訊（名稱、座標、狀態、殘骸） -->
               <div class="flex items-start gap-2 w-full">
-                <!-- 位置编号 -->
+                <!-- 位置編號 -->
                 <div class="w-8 text-center shrink-0">
                   <Badge variant="outline" class="text-xs">{{ slot.position }}</Badge>
                 </div>
-                <!-- 星球信息 -->
+                <!-- 星球資訊 -->
                 <div class="flex-1 min-w-0">
                   <div v-if="slot.planet" class="space-y-1">
-                    <!-- 第一行：名称、坐标、状态、残骸 -->
+                    <!-- 第一行：名稱、座標、狀態、殘骸 -->
                     <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
                       <h3 class="font-semibold text-sm truncate">
                         {{ isMyPlanet(slot.planet) ? slot.planet.name : getNpcPlanetDisplayName(slot.planet) }}
@@ -229,7 +229,7 @@
                           </p>
                         </PopoverContent>
                       </Popover>
-                      <!-- NPC难度等级徽章 -->
+                      <!-- NPC難度等級徽章 -->
                       <Badge
                         v-if="getNpcDifficultyLevel(slot.planet) !== null"
                         :variant="getDifficultyBadgeVariant(getNpcDifficultyLevel(slot.planet))"
@@ -269,7 +269,7 @@
                           </div>
                         </PopoverContent>
                       </Popover>
-                      <!-- 矿脉储量徽章 -->
+                      <!-- 礦脈儲量徽章 -->
                       <Popover v-if="getOreDeposits(slot.planet)">
                         <PopoverTrigger as-child>
                           <Badge
@@ -332,7 +332,7 @@
                   <!-- 空位置 -->
                   <div v-else class="space-y-1">
                     <div class="text-sm text-muted-foreground">{{ t('galaxyView.emptySlot') }}</div>
-                    <!-- 残骸场徽章 - 空位置时也显示 -->
+                    <!-- 殘骸場徽章 - 空位置時也顯示 -->
                     <Popover v-if="getDebrisFieldAt(currentGalaxy, currentSystem, slot.position)">
                       <PopoverTrigger as-child>
                         <Badge
@@ -369,7 +369,7 @@
                 </div>
               </div>
 
-              <!-- 第三行：操作按钮 -->
+              <!-- 第三行：操作按鈕 -->
               <div class="flex gap-1 pl-10">
                 <TooltipProvider :delay-duration="300">
                   <Tooltip v-if="slot.planet && !isMyPlanet(slot.planet)">
@@ -461,17 +461,17 @@
               </div>
             </div>
 
-            <!-- PC端布局：位置编号 + 星球信息（水平） -->
+            <!-- PC端佈局：位置編號 + 星球資訊（水平） -->
             <div class="hidden sm:flex items-center gap-4 flex-1 min-w-0">
-              <!-- 位置编号 -->
+              <!-- 位置編號 -->
               <div class="w-12 text-center shrink-0">
                 <Badge variant="outline" class="text-sm">{{ slot.position }}</Badge>
               </div>
 
-              <!-- 星球信息 -->
+              <!-- 星球資訊 -->
               <div class="flex-1 min-w-0">
                 <div v-if="slot.planet" class="space-y-1">
-                  <!-- PC端：标题和徽章 -->
+                  <!-- PC端：標題和徽章 -->
                   <div class="flex items-center gap-2 flex-wrap">
                     <h3 class="font-semibold text-base">
                       {{ isMyPlanet(slot.planet) ? slot.planet.name : getNpcPlanetDisplayName(slot.planet) }}
@@ -494,7 +494,7 @@
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    <!-- NPC难度等级徽章 -->
+                    <!-- NPC難度等級徽章 -->
                     <Badge
                       v-if="getNpcDifficultyLevel(slot.planet) !== null"
                       :variant="getDifficultyBadgeVariant(getNpcDifficultyLevel(slot.planet))"
@@ -503,7 +503,7 @@
                     >
                       Lv.{{ getNpcDifficultyLevel(slot.planet) }}
                     </Badge>
-                    <!-- 残骸场徽章 -->
+                    <!-- 殘骸場徽章 -->
                     <Popover v-if="getDebrisFieldAt(currentGalaxy, currentSystem, slot.position)">
                       <PopoverTrigger as-child>
                         <Badge
@@ -536,7 +536,7 @@
                         </div>
                       </PopoverContent>
                     </Popover>
-                    <!-- 矿脉储量徽章 -->
+                    <!-- 礦脈儲量徽章 -->
                     <Popover v-if="getOreDeposits(slot.planet)">
                       <PopoverTrigger as-child>
                         <Badge
@@ -596,7 +596,7 @@
                       <span>{{ slot.moon.name }}</span>
                     </Badge>
                   </div>
-                  <!-- PC端：坐标 -->
+                  <!-- PC端：座標 -->
                   <p class="text-xs text-muted-foreground">
                     [{{ slot.planet.position.galaxy }}:{{ slot.planet.position.system }}:{{ slot.planet.position.position }}]
                   </p>
@@ -604,7 +604,7 @@
                 <!-- 空位置 -->
                 <div v-else class="space-y-1">
                   <div class="text-sm text-muted-foreground">{{ t('galaxyView.emptySlot') }}</div>
-                  <!-- 残骸场徽章 - 空位置时也显示 -->
+                  <!-- 殘骸場徽章 - 空位置時也顯示 -->
                   <Popover v-if="getDebrisFieldAt(currentGalaxy, currentSystem, slot.position)">
                     <PopoverTrigger as-child>
                       <Badge
@@ -641,7 +641,7 @@
               </div>
             </div>
 
-            <!-- 操作按钮 (PC端) -->
+            <!-- 操作按鈕 (PC端) -->
             <div class="hidden sm:flex gap-1 sm:gap-2 shrink-0">
               <TooltipProvider :delay-duration="300">
                 <Tooltip v-if="slot.planet && !isMyPlanet(slot.planet)">
@@ -736,7 +736,7 @@
       </CardContent>
     </Card>
 
-    <!-- 导弹攻击对话框 -->
+    <!-- 導彈攻擊對話方塊 -->
     <Dialog :open="missileDialogOpen" @update:open="missileDialogOpen = $event">
       <DialogContent class="max-w-md">
         <DialogHeader>
@@ -758,7 +758,7 @@
         </DialogHeader>
 
         <div v-if="gameStore.currentPlanet && missileTargetPlanet" class="space-y-5 py-2">
-          <!-- 导弹数量输入 -->
+          <!-- 導彈數量輸入 -->
           <div class="space-y-3">
             <Label class="text-sm font-medium">{{ t('galaxyView.missileCount') }}</Label>
             <div class="flex items-center gap-3">
@@ -780,7 +780,7 @@
             </div>
           </div>
 
-          <!-- 任务信息卡片 -->
+          <!-- 任務資訊卡片 -->
           <div class="rounded-lg border bg-muted/30 p-4 space-y-3">
             <div class="flex items-center justify-between text-sm">
               <div class="flex items-center gap-2 text-muted-foreground">
@@ -833,7 +833,7 @@
       </DialogContent>
     </Dialog>
 
-    <!-- 快速派遣对话框 -->
+    <!-- 快速派遣對話方塊 -->
     <AlertDialog :open="alertDialogOpen" @update:open="alertDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -849,7 +849,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 传感器阵列扫描对话框 -->
+    <!-- 感測器陣列掃描對話方塊 -->
     <Dialog :open="phalanxDialogOpen" @update:open="phalanxDialogOpen = $event">
       <DialogContent class="max-w-lg">
         <DialogHeader>
@@ -868,7 +868,7 @@
         </DialogHeader>
 
         <div class="space-y-4">
-          <!-- 扫描信息 -->
+          <!-- 掃描資訊 -->
           <div class="flex items-center justify-between text-sm">
             <span class="text-muted-foreground">{{ t('galaxyView.phalanxCost') }}:</span>
             <div class="flex items-center gap-1">
@@ -877,18 +877,18 @@
             </div>
           </div>
 
-          <!-- 扫描按钮 -->
+          <!-- 掃描按鈕 -->
           <Button v-if="phalanxScanResults.length === 0 && !phalanxScanning" @click="executePhalanxScan" class="w-full">
             <Radar class="h-4 w-4 mr-2" />
             {{ t('galaxyView.phalanxScan') }}
           </Button>
 
-          <!-- 扫描中 -->
+          <!-- 掃描中 -->
           <div v-if="phalanxScanning" class="flex items-center justify-center py-8">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
 
-          <!-- 扫描结果 -->
+          <!-- 掃描結果 -->
           <div v-if="!phalanxScanning && phalanxScanResults.length > 0" class="space-y-3">
             <div class="text-sm font-medium">
               {{ t('galaxyView.phalanxFleetDetected').replace('{count}', String(phalanxScanResults.length)) }}
@@ -925,7 +925,7 @@
             </div>
           </div>
 
-          <!-- 无舰队 -->
+          <!-- 無艦隊 -->
           <div
             v-if="!phalanxScanning && phalanxScanResults.length === 0 && phalanxDialogOpen"
             class="text-center py-4 text-muted-foreground"
@@ -1006,18 +1006,18 @@
   const route = useRoute()
   const { t } = useI18n()
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const alertDialogOpen = ref(false)
   const alertDialogTitle = ref('')
   const alertDialogMessage = ref('')
   const alertDialogConfirmAction = ref<(() => void) | null>(null)
 
-  // 导弹攻击对话框状态
+  // 導彈攻擊對話方塊狀態
   const missileDialogOpen = ref(false)
   const missileTargetPlanet = ref<Planet | null>(null)
   const missileCount = ref(1)
 
-  // 传感器阵列扫描对话框状态
+  // 感測器陣列掃描對話方塊狀態
   const phalanxDialogOpen = ref(false)
   const phalanxTargetPlanet = ref<Planet | null>(null)
   const phalanxScanResults = ref<FleetMission[]>([])
@@ -1028,10 +1028,10 @@
   const currentGalaxy = ref(1)
   const currentSystem = ref(1)
 
-  // 保存要高亮的NPC ID（从URL参数初始化，之后即使URL清除也保持）
+  // 儲存要高亮的NPC ID（從URL引數初始化，之後即使URL清除也保持）
   const highlightNpcId = ref<string | undefined>(undefined)
 
-  // 获取要高亮的NPC对象
+  // 獲取要高亮的NPC物件
   const highlightedNpc = computed(() => {
     if (!highlightNpcId.value) return null
     return npcStore.npcs.find(n => n.id === highlightNpcId.value) || null
@@ -1039,48 +1039,48 @@
 
   const systemSlots = ref<Array<{ position: number; planet: Planet | null; moon: Planet | null }>>([])
 
-  // 获取玩家的母星
+  // 獲取玩家的母星
   const homePlanet = computed(() => {
-    // 第一个非月球星球就是母星
+    // 第一個非月球星球就是母星
     return gameStore.player.planets.find(p => !p.isMoon)
   })
 
-  // 获取玩家所有非月球星球
+  // 獲取玩家所有非月球星球
   const myPlanets = computed(() => {
     return gameStore.player.planets.filter(p => !p.isMoon)
   })
 
-  // 检查当前星球是否有星际导弹
+  // 檢查當前星球是否有星際導彈
   const hasInterplanetaryMissiles = computed(() => {
     if (!gameStore.currentPlanet) return false
     return (gameStore.currentPlanet.defense['interplanetaryMissile'] || 0) > 0
   })
 
-  // 判断当前是否在母星所在星系
+  // 判斷當前是否在母星所在星系
   const isInHomePlanetSystem = computed(() => {
     if (!homePlanet.value) return false
     return currentGalaxy.value === homePlanet.value.position.galaxy && currentSystem.value === homePlanet.value.position.system
   })
 
   onMounted(() => {
-    // 从URL参数中读取并保存高亮NPC ID
+    // 從URL引數中讀取並儲存高亮NPC ID
     if (route.query.highlightNpc) {
       highlightNpcId.value = route.query.highlightNpc as string
     }
 
-    // 优先检查URL参数中的星系坐标
+    // 優先檢查URL引數中的星系座標
     const queryGalaxy = route.query.galaxy ? Number(route.query.galaxy) : null
     const querySystem = route.query.system ? Number(route.query.system) : null
 
     if (queryGalaxy && querySystem) {
-      // 如果URL中有坐标参数，跳转到指定星系
+      // 如果URL中有座標引數，跳轉到指定星系
       currentGalaxy.value = queryGalaxy
       currentSystem.value = querySystem
       selectedGalaxy.value = queryGalaxy
       selectedSystem.value = querySystem
       loadSystem()
     } else if (gameStore.currentPlanet) {
-      // 否则默认显示当前星球所在的星系
+      // 否則預設顯示當前星球所在的星系
       currentGalaxy.value = gameStore.currentPlanet.position.galaxy
       currentSystem.value = gameStore.currentPlanet.position.system
       selectedGalaxy.value = currentGalaxy.value
@@ -1093,7 +1093,7 @@
     const positions = gameLogic.generateSystemPositions(galaxy, system)
     return positions.map(pos => {
       const key = gameLogic.generatePositionKey(galaxy, system, pos.position)
-      // 先从玩家星球中查找（非月球），再从宇宙地图中查找
+      // 先從玩家星球中查詢（非月球），再從宇宙地圖中查詢
       const planet =
         gameStore.player.planets.find(
           p => !p.isMoon && p.position.galaxy === galaxy && p.position.system === system && p.position.position === pos.position
@@ -1101,10 +1101,10 @@
         universeStore.planets[key] ||
         null
 
-      // 查找该位置的月球（如果有星球的话）
+      // 查詢該位置的月球（如果有星球的話）
       let moon: Planet | null = null
       if (planet) {
-        // 从玩家星球中查找月球
+        // 從玩家星球中查詢月球
         moon = gameStore.player.planets.find(p => p.isMoon && p.parentPlanetId === planet.id) || null
       }
 
@@ -1112,19 +1112,19 @@
     })
   }
 
-  // 获取指定位置的残骸场
+  // 獲取指定位置的殘骸場
   const getDebrisFieldAt = (galaxy: number, system: number, position: number): DebrisField | null => {
     const debrisId = `debris_${galaxy}_${system}_${position}`
     return universeStore.debrisFields[debrisId] || null
   }
 
-  // 获取星球的矿脉储量信息
+  // 獲取星球的礦脈儲量資訊
   const getOreDeposits = (planet: Planet | null): OreDeposits | null => {
     if (!planet || planet.isMoon) return null
     return planet.oreDeposits || null
   }
 
-  // 格式化矿脉储量（短格式）
+  // 格式化礦脈儲量（短格式）
   const formatDepositShort = (value: number): string => {
     if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
     if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
@@ -1132,21 +1132,21 @@
     return String(Math.floor(value))
   }
 
-  // 获取矿脉储量百分比对应的颜色状态
+  // 獲取礦脈儲量百分比對應的顏色狀態
   const getDepositStatus = (deposits: OreDeposits, resourceType: 'metal' | 'crystal' | 'deuterium'): 'normal' | 'warning' | 'depleted' => {
     if (oreDepositLogic.isDepositDepleted(deposits, resourceType)) return 'depleted'
     if (oreDepositLogic.isDepositWarning(deposits, resourceType)) return 'warning'
     return 'normal'
   }
 
-  // 加载星系
+  // 載入星系
   const loadSystem = () => {
     currentGalaxy.value = selectedGalaxy.value
     currentSystem.value = selectedSystem.value
     systemSlots.value = getSystemPlanets(currentGalaxy.value, currentSystem.value)
   }
 
-  // 跳转到指定星球的星系
+  // 跳轉到指定星球的星系
   const goToPlanet = (planet: Planet) => {
     currentGalaxy.value = planet.position.galaxy
     currentSystem.value = planet.position.system
@@ -1155,13 +1155,13 @@
     systemSlots.value = getSystemPlanets(currentGalaxy.value, currentSystem.value)
   }
 
-  // 判断是否为我的星球
+  // 判斷是否為我的星球
   const isMyPlanet = (planet: Planet | null): boolean => {
     if (!planet) return false
     return planet.ownerId === gameStore.player.id
   }
 
-  // 判断星球是否属于高亮显示的NPC
+  // 判斷星球是否屬於高亮顯示的NPC
   const isHighlightedNpcPlanet = (planet: Planet | null): boolean => {
     if (!planet || !highlightNpcId.value) return false
     const npc = npcStore.npcs.find(n => n.id === highlightNpcId.value)
@@ -1169,10 +1169,10 @@
     return npc.planets.some(p => p.id === planet.id)
   }
 
-  // 获取星球所属的NPC
+  // 獲取星球所屬的NPC
   const getPlanetNPC = (planet: Planet | null) => {
     if (!planet || isMyPlanet(planet)) return null
-    // 通过坐标匹配，而不是ID，因为universeStore中的星球和npcStore中的星球可能是不同的对象
+    // 透過座標匹配，而不是ID，因為universeStore中的星球和npcStore中的星球可能是不同的物件
     return npcStore.npcs.find(npc =>
       npc.planets.some(
         p =>
@@ -1183,15 +1183,15 @@
     )
   }
 
-  // 获取外交关系
+  // 獲取外交關係
   const getRelation = (planet: Planet | null) => {
     const npc = getPlanetNPC(planet)
     if (!npc) return null
-    // 从NPC的relations中获取对玩家的关系
+    // 從NPC的relations中獲取對玩家的關係
     return npc.relations?.[gameStore.player.id]
   }
 
-  // 获取关系状态Badge样式
+  // 獲取關係狀態Badge樣式
   const getRelationBadgeVariant = (planet: Planet | null) => {
     const relation = getRelation(planet)
     if (!relation) return 'secondary'
@@ -1206,7 +1206,7 @@
     }
   }
 
-  // 获取关系状态文本
+  // 獲取關係狀態文字
   const getRelationStatusText = (planet: Planet | null) => {
     const relation = getRelation(planet)
     if (!relation) return t('diplomacy.status.neutral')
@@ -1221,13 +1221,13 @@
     }
   }
 
-  // 获取好感度值
+  // 獲取好感度值
   const getReputationValue = (planet: Planet | null): number | null => {
     const relation = getRelation(planet)
     return relation?.reputation ?? null
   }
 
-  // 获取好感度颜色
+  // 獲取好感度顏色
   const getReputationColor = (reputation: number | null) => {
     if (reputation === null) return 'text-muted-foreground'
     if (reputation >= 20) return 'text-green-600 dark:text-green-400'
@@ -1235,7 +1235,7 @@
     return 'text-muted-foreground'
   }
 
-  // 获取NPC星球的显示名称 - 使用"XXX的星球"格式，如果有备注则显示"NPC名称(备注)的星球"
+  // 獲取NPC星球的顯示名稱 - 使用"XXX的星球"格式，如果有備註則顯示"NPC名稱(備註)的星球"
   const getNpcPlanetDisplayName = (planet: Planet | null): string => {
     if (!planet) return ''
     const npc = getPlanetNPC(planet)
@@ -1246,25 +1246,25 @@
     return planet.name
   }
 
-  // 获取NPC难度等级
+  // 獲取NPC難度等級
   const getNpcDifficultyLevel = (planet: Planet | null): number | null => {
     const npc = getPlanetNPC(planet)
     return npc?.difficultyLevel ?? null
   }
 
-  // 获取NPC难度等级颜色
+  // 獲取NPC難度等級顏色
   const getDifficultyLevelColor = (level: number | null): string => {
     if (level === null) return 'text-muted-foreground'
     if (level <= 1) return 'text-green-600 dark:text-green-400' // 新手
-    if (level <= 2) return 'text-lime-600 dark:text-lime-400' // 简单
+    if (level <= 2) return 'text-lime-600 dark:text-lime-400' // 簡單
     if (level <= 3) return 'text-yellow-600 dark:text-yellow-400' // 普通
-    if (level <= 4) return 'text-orange-600 dark:text-orange-400' // 困难
-    if (level <= 5) return 'text-red-600 dark:text-red-400' // 专家
-    if (level <= 6) return 'text-purple-600 dark:text-purple-400' // 大师
-    return 'text-pink-600 dark:text-pink-400' // 传奇及以上
+    if (level <= 4) return 'text-orange-600 dark:text-orange-400' // 困難
+    if (level <= 5) return 'text-red-600 dark:text-red-400' // 專家
+    if (level <= 6) return 'text-purple-600 dark:text-purple-400' // 大師
+    return 'text-pink-600 dark:text-pink-400' // 傳奇及以上
   }
 
-  // 获取NPC难度等级Badge样式
+  // 獲取NPC難度等級Badge樣式
   const getDifficultyBadgeVariant = (level: number | null): 'default' | 'secondary' | 'destructive' | 'outline' => {
     if (level === null) return 'outline'
     if (level <= 2) return 'secondary'
@@ -1272,13 +1272,13 @@
     return 'destructive'
   }
 
-  // 切换到指定星球
+  // 切換到指定星球
   const switchToPlanet = (planetId: string) => {
     gameStore.currentPlanetId = planetId
     router.push('/')
   }
 
-  // AlertDialog 确认处理
+  // AlertDialog 確認處理
   const handleAlertDialogConfirm = () => {
     if (alertDialogConfirmAction.value) {
       alertDialogConfirmAction.value()
@@ -1286,7 +1286,7 @@
     alertDialogOpen.value = false
   }
 
-  // 显示星球操作
+  // 顯示星球操作
   const showPlanetActions = (planet: Planet | null, action: 'spy' | 'attack' | 'colonize' | 'recycle' | 'gift', position?: number) => {
     const targetPos = planet ? planet.position : { galaxy: currentGalaxy.value, system: currentSystem.value, position: position! }
     const coordinates = `${targetPos.galaxy}:${targetPos.system}:${targetPos.position}`
@@ -1310,11 +1310,11 @@
       message = t('galaxyView.giftPlanetMessage').replace('{coordinates}', coordinates)
     }
 
-    // 设置对话框状态
+    // 設定對話方塊狀態
     alertDialogTitle.value = title
     alertDialogMessage.value = message
     alertDialogConfirmAction.value = () => {
-      // 跳转到舰队页面并填充目标坐标
+      // 跳轉到艦隊頁面並填充目標座標
       router.push({
         path: '/fleet',
         query: {
@@ -1329,18 +1329,18 @@
     alertDialogOpen.value = true
   }
 
-  // 显示导弹攻击对话框
+  // 顯示導彈攻擊對話方塊
   const showMissileAttackDialog = (planet: Planet) => {
     missileTargetPlanet.value = planet
     missileCount.value = 1
     missileDialogOpen.value = true
   }
 
-  // 执行导弹攻击
+  // 執行導彈攻擊
   const launchMissileAttack = () => {
     if (!missileTargetPlanet.value || !gameStore.currentPlanet) return
 
-    // 导入missileLogic进行验证和执行
+    // 匯入missileLogic進行驗證和執行
     import('@/logic/missileLogic').then(missileLogic => {
       const validation = missileLogic.validateMissileLaunch(
         gameStore.currentPlanet!,
@@ -1356,7 +1356,7 @@
         return
       }
 
-      // 创建导弹攻击任务
+      // 建立導彈攻擊任務
       const missileAttack = missileLogic.createMissileAttack(
         gameStore.player.id,
         gameStore.currentPlanet!,
@@ -1365,30 +1365,30 @@
         missileCount.value
       )
 
-      // 扣除导弹
+      // 扣除導彈
       missileLogic.executeMissileLaunch(gameStore.currentPlanet!, missileCount.value)
 
-      // 添加到玩家的导弹攻击列表
+      // 新增到玩家的導彈攻擊列表
       gameStore.player.missileAttacks.push(missileAttack)
 
-      // 关闭对话框
+      // 關閉對話方塊
       missileDialogOpen.value = false
 
-      // 显示成功提示
+      // 顯示成功提示
       alertDialogTitle.value = t('common.success')
       alertDialogMessage.value = t('galaxyView.missileLaunched')
       alertDialogOpen.value = true
     })
   }
 
-  // 计算导弹射程
+  // 計算導彈射程
   const calculateMissileRange = () => {
     const impulseDriveLevel = gameStore.player.technologies['impulseDrive'] || 0
     if (impulseDriveLevel === 0) return 0
     return 5 * impulseDriveLevel - 1
   }
 
-  // 计算到目标的距离
+  // 計算到目標的距離
   const calculateDistance = (target: Planet | null): number => {
     if (!gameStore.currentPlanet || !target) return 0
     const from = gameStore.currentPlanet.position
@@ -1397,13 +1397,13 @@
     return Math.abs(from.system - to.system)
   }
 
-  // 格式化距离显示
+  // 格式化距離顯示
   const formatDistance = (distance: number): string => {
     if (!isFinite(distance)) return t('galaxyView.outOfRange')
     return `${distance} ${t('galaxyView.systems')}`
   }
 
-  // 格式化飞行时间
+  // 格式化飛行時間
   const formatFlightTime = (distance: number): string => {
     if (!isFinite(distance)) return t('galaxyView.outOfRange')
     const seconds = 30 + distance * 60
@@ -1412,9 +1412,9 @@
     return `${minutes}:${secs.toString().padStart(2, '0')}`
   }
 
-  // ========== 传感器阵列扫描功能 ==========
+  // ========== 感測器陣列掃描功能 ==========
 
-  // 获取拥有传感器阵列的月球列表
+  // 獲取擁有感測器陣列的月球列表
   const moonsWithPhalanx = computed(() => {
     return gameStore.player.planets.filter(p => {
       if (!p.isMoon) return false
@@ -1423,19 +1423,19 @@
     })
   })
 
-  // 检查是否可以扫描目标（需要有传感器阵列的月球在范围内）
+  // 檢查是否可以掃描目標（需要有感測器陣列的月球在範圍內）
   const canScanPlanet = (targetPlanet: Planet | null): boolean => {
     if (!targetPlanet) return false
     if (isMyPlanet(targetPlanet)) return false
 
-    // 检查是否有月球的传感器阵列可以扫描目标
+    // 檢查是否有月球的感測器陣列可以掃描目標
     return moonsWithPhalanx.value.some(moon => {
       const phalanxLevel = moon.buildings[BuildingType.SensorPhalanx] || 0
       return moonLogic.isInSensorPhalanxRange(moon.position, targetPlanet.position, phalanxLevel)
     })
   }
 
-  // 获取可以扫描目标的月球
+  // 獲取可以掃描目標的月球
   const getMoonForScan = (targetPlanet: Planet): Planet | null => {
     return (
       moonsWithPhalanx.value.find(moon => {
@@ -1445,10 +1445,10 @@
     )
   }
 
-  // 计算扫描消耗的氘（每次扫描消耗5000氘）
+  // 計算掃描消耗的氘（每次掃描消耗5000氘）
   const PHALANX_SCAN_COST = 5000
 
-  // 显示传感器阵列扫描对话框
+  // 顯示感測器陣列掃描對話方塊
   const showPhalanxScanDialog = (planet: Planet) => {
     phalanxTargetPlanet.value = planet
     phalanxScanResults.value = []
@@ -1456,19 +1456,19 @@
     phalanxDialogOpen.value = true
   }
 
-  // 根据星球ID获取星球坐标
+  // 根據星球ID獲取星球座標
   const getPlanetPositionById = (planetId: string): { galaxy: number; system: number; position: number } | null => {
-    // 先从玩家星球中查找
+    // 先從玩家星球中查詢
     const playerPlanet = gameStore.player.planets.find(p => p.id === planetId)
     if (playerPlanet) return playerPlanet.position
 
-    // 再从NPC星球中查找
+    // 再從NPC星球中查詢
     for (const npc of npcStore.npcs) {
       const npcPlanet = npc.planets.find(p => p.id === planetId)
       if (npcPlanet) return npcPlanet.position
     }
 
-    // 从宇宙地图中查找
+    // 從宇宙地圖中查詢
     for (const key in universeStore.planets) {
       const planet = universeStore.planets[key]
       if (planet && planet.id === planetId) return planet.position
@@ -1477,7 +1477,7 @@
     return null
   }
 
-  // 执行传感器阵列扫描
+  // 執行感測器陣列掃描
   const executePhalanxScan = () => {
     if (!phalanxTargetPlanet.value) return
 
@@ -1489,7 +1489,7 @@
       return
     }
 
-    // 检查氘是否足够
+    // 檢查氘是否足夠
     if (scanMoon.resources.deuterium < PHALANX_SCAN_COST) {
       alertDialogTitle.value = t('errors.scanFailed')
       alertDialogMessage.value = t('galaxyView.phalanxInsufficientDeuterium')
@@ -1502,22 +1502,22 @@
 
     phalanxScanning.value = true
 
-    // 模拟扫描延迟
+    // 模擬掃描延遲
     setTimeout(() => {
-      // 扫描NPC的舰队任务
+      // 掃描NPC的艦隊任務
       const targetPos = phalanxTargetPlanet.value!.position
       const npc = getPlanetNPC(phalanxTargetPlanet.value)
 
-      // 收集相关的舰队任务
+      // 收集相關的艦隊任務
       const detectedFleets: FleetMission[] = []
 
-      // 检查NPC的舰队任务
+      // 檢查NPC的艦隊任務
       if (npc) {
         npc.fleetMissions?.forEach(mission => {
-          // 获取出发地坐标
+          // 獲取出發地座標
           const originPos = getPlanetPositionById(mission.originPlanetId)
 
-          // 检查任务是否与目标星球相关（出发地或目的地）
+          // 檢查任務是否與目標星球相關（出發地或目的地）
           const isFromTarget =
             originPos &&
             originPos.galaxy === targetPos.galaxy &&
@@ -1534,7 +1534,7 @@
         })
       }
 
-      // 也检查玩家自己发往该星球的任务（自己的任务自己当然知道，但扫描也能看到）
+      // 也檢查玩家自己發往該星球的任務（自己的任務自己當然知道，但掃描也能看到）
       gameStore.player.fleetMissions?.forEach(mission => {
         const isToTarget =
           mission.targetPosition.galaxy === targetPos.galaxy &&
@@ -1551,7 +1551,7 @@
     }, 1000)
   }
 
-  // 获取任务类型文本
+  // 獲取任務型別文字
   const getMissionTypeText = (missionType: MissionType): string => {
     switch (missionType) {
       case MissionType.Attack:
@@ -1575,7 +1575,7 @@
     }
   }
 
-  // 格式化坐标
+  // 格式化座標
   const formatCoords = (pos: { galaxy: number; system: number; position: number }): string => {
     return `[${pos.galaxy}:${pos.system}:${pos.position}]`
   }

@@ -1,5 +1,5 @@
 <template>
-  <!-- 遮罩从标题下方开始，不遮挡名称 -->
+  <!-- 遮罩從標題下方開始，不遮擋名稱 -->
   <div
     v-if="!isUnlocked"
     class="absolute inset-x-0 top-20 sm:top-13 bottom-0 z-10 bg-background/70 backdrop-blur-[2px] rounded-b-lg flex items-center justify-center"
@@ -16,7 +16,7 @@
       </Button>
     </div>
 
-    <!-- 前置条件详情对话框 -->
+    <!-- 前置條件詳情對話方塊 -->
     <AlertDialog :open="requirementsDialogOpen" @update:open="requirementsDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -60,7 +60,7 @@
 
   interface Props {
     requirements?: Partial<Record<BuildingType | TechnologyType, number>>
-    currentLevel?: number // 当前建筑/科技等级，用于判断是否已解锁
+    currentLevel?: number // 當前建築/科技等級，用於判斷是否已解鎖
   }
 
   const props = defineProps<Props>()
@@ -68,7 +68,7 @@
   const { t } = useI18n()
   const { BUILDINGS, TECHNOLOGIES } = useGameConfig()
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const requirementsDialogOpen = ref(false)
   const requirementsDialogTitle = ref('')
   const requirementsDialogItems = ref<Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }>>([])
@@ -80,14 +80,14 @@
 
     const items: Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }> = []
     for (const [key, requiredLevel] of Object.entries(props.requirements)) {
-      // 检查是否为建筑类型
+      // 檢查是否為建築型別
       if (Object.values(BuildingType).includes(key as BuildingType)) {
         const buildingType = key as BuildingType
         const currentLevel = gameStore.currentPlanet.buildings[buildingType] || 0
         const name = BUILDINGS.value[buildingType]?.name || buildingType
         items.push({ name, requiredLevel, currentLevel, met: currentLevel >= requiredLevel })
       }
-      // 检查是否为科技类型
+      // 檢查是否為科技型別
       else if (Object.values(TechnologyType).includes(key as TechnologyType)) {
         const techType = key as TechnologyType
         const currentLevel = gameStore.player.technologies[techType] || 0

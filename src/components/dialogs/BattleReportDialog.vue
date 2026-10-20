@@ -14,9 +14,9 @@
       </template>
 
       <div v-if="report" class="space-y-4">
-        <!-- 战斗动画切换 -->
+        <!-- 戰鬥動畫切換 -->
         <div v-if="report.roundDetails && report.roundDetails.length > 0" class="flex items-center justify-between gap-2">
-          <!-- 左侧: 回合进度 (仅在动画模式下显示) -->
+          <!-- 左側: 回合進度 (僅在動畫模式下顯示) -->
           <div v-if="showAnimation && animationPlayerRef" class="flex items-center gap-1.5 text-sm text-muted-foreground">
             <span class="font-medium text-foreground">{{ animationPlayerRef.currentRoundIndex }}</span>
             <span>/</span>
@@ -24,14 +24,14 @@
             <span class="text-xs">{{ t('messagesView.roundsPlayed') }}</span>
           </div>
           <div v-else />
-          <!-- 右侧: 切换按钮 -->
+          <!-- 右側: 切換按鈕 -->
           <Button variant="outline" size="sm" @click="showAnimation = !showAnimation" class="gap-2">
             <component :is="showAnimation ? FileText : Clapperboard" class="h-4 w-4" />
             {{ showAnimation ? t('messagesView.showDetails') : t('messagesView.playAnimation') }}
           </Button>
         </div>
 
-        <!-- 战斗动画播放器 -->
+        <!-- 戰鬥動畫播放器 -->
         <BattleAnimationPlayer
           v-if="showAnimation && report.roundDetails && report.roundDetails.length > 0"
           ref="animationPlayerRef"
@@ -39,11 +39,11 @@
           @complete="onAnimationComplete"
         />
 
-        <!-- 详细信息（动画播放时隐藏） -->
+        <!-- 詳細資訊（動畫播放時隱藏） -->
         <template v-if="!showAnimation">
-          <!-- 战斗双方信息 -->
+          <!-- 戰鬥雙方資訊 -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 攻击方星球 -->
+            <!-- 攻擊方星球 -->
             <div class="p-4 bg-muted/50 rounded-lg border">
               <div class="flex items-center gap-3">
                 <div class="p-2 bg-background rounded-full border">
@@ -80,7 +80,7 @@
             </div>
           </div>
 
-          <!-- 胜利者 -->
+          <!-- 勝利者 -->
           <div class="text-center p-5 rounded-lg border" :class="getPlayerResultStyle()">
             <p class="text-xl font-bold">
               {{
@@ -92,11 +92,11 @@
             </p>
           </div>
 
-          <!-- 损失对比 -->
+          <!-- 損失對比 -->
           <div class="space-y-3">
             <h4 class="font-semibold text-sm">{{ t('messagesView.losses') }}</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- 攻击方损失 -->
+              <!-- 攻擊方損失 -->
               <div class="p-3 bg-muted/50 rounded-lg border">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-medium">{{ t('simulatorView.attacker') }}</span>
@@ -113,7 +113,7 @@
                 </div>
               </div>
 
-              <!-- 防守方损失 -->
+              <!-- 防守方損失 -->
               <div class="p-3 bg-muted/50 rounded-lg border">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-medium">{{ t('simulatorView.defender') }}</span>
@@ -147,11 +147,11 @@
             </div>
           </div>
 
-          <!-- 剩余单位 -->
+          <!-- 剩餘單位 -->
           <div v-if="hasAnyRemaining" class="space-y-3">
             <h4 class="font-semibold text-sm">{{ t('messagesView.remainingUnits') }}</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- 攻击方剩余 -->
+              <!-- 攻擊方剩餘 -->
               <div class="p-3 bg-muted/50 rounded-lg border">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-medium">{{ t('simulatorView.attacker') }}</span>
@@ -174,7 +174,7 @@
                 </div>
               </div>
 
-              <!-- 防守方剩余 -->
+              <!-- 防守方剩餘 -->
               <div class="p-3 bg-muted/50 rounded-lg border">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-medium">{{ t('simulatorView.defender') }}</span>
@@ -213,7 +213,7 @@
             </div>
           </div>
 
-          <!-- 掠夺资源 -->
+          <!-- 掠奪資源 -->
           <div
             v-if="report.plunder && (report.plunder.metal > 0 || report.plunder.crystal > 0 || report.plunder.deuterium > 0)"
             class="space-y-3"
@@ -247,7 +247,7 @@
             </div>
           </div>
 
-          <!-- 残骸场 -->
+          <!-- 殘骸場 -->
           <div v-if="report.debrisField && (report.debrisField.metal > 0 || report.debrisField.crystal > 0)" class="space-y-3">
             <div class="flex items-center gap-2">
               <Recycle class="h-4 w-4" />
@@ -274,7 +274,7 @@
                   </div>
                 </div>
               </div>
-              <!-- 月球生成概率 -->
+              <!-- 月球生成機率 -->
               <div v-if="report.moonChance && report.moonChance > 0" class="mt-3 pt-3 border-t">
                 <div class="flex items-center justify-center gap-2">
                   <Moon class="h-4 w-4" />
@@ -285,7 +285,7 @@
             </div>
           </div>
 
-          <!-- 回合详情 -->
+          <!-- 回合詳情 -->
           <div v-if="report.roundDetails && report.roundDetails.length > 0" class="space-y-3">
             <Button @click="showRoundDetails = !showRoundDetails" variant="outline" size="sm" class="w-full gap-2">
               <ListOrdered class="h-4 w-4" />
@@ -294,14 +294,14 @@
             </Button>
 
             <div v-if="showRoundDetails" class="relative pl-6 space-y-4">
-              <!-- 时间线 -->
+              <!-- 時間線 -->
               <div class="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
 
               <div v-for="detail in report.roundDetails" :key="detail.round" class="relative">
-                <!-- 时间线节点 -->
+                <!-- 時間線節點 -->
                 <div class="absolute -left-6 top-3 w-4 h-4 rounded-full bg-primary border-2 border-background shadow-md" />
 
-                <!-- 回合内容卡片 -->
+                <!-- 回合內容卡片 -->
                 <div class="border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
                   <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-2">
@@ -336,7 +336,7 @@
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <!-- 攻击方本回合损失 -->
+                    <!-- 攻擊方本回合損失 -->
                     <div class="bg-muted/50 rounded-lg p-3 border">
                       <p class="text-xs font-medium mb-2">{{ t('messagesView.attackerLosses') }}</p>
                       <div class="space-y-1">
@@ -354,7 +354,7 @@
                       </div>
                     </div>
 
-                    <!-- 防守方本回合损失 -->
+                    <!-- 防守方本回合損失 -->
                     <div class="bg-muted/50 rounded-lg p-3 border">
                       <p class="text-xs font-medium mb-2">{{ t('messagesView.defenderLosses') }}</p>
                       <div class="space-y-1">
@@ -431,45 +431,45 @@
   const animationPlayerRef = ref<InstanceType<typeof BattleAnimationPlayer> | null>(null)
 
   const onAnimationComplete = () => {
-    // 动画完成后可以选择自动切换到详情视图
+    // 動畫完成後可以選擇自動切換到詳情檢視
     // showAnimation.value = false
   }
 
-  // 获取攻击方星球信息
+  // 獲取攻擊方星球資訊
   const attackerPlanet = computed(() => {
     if (!props.report) return null
-    // 先从玩家星球中查找
+    // 先從玩家星球中查詢
     const playerPlanet = gameStore.player.planets.find(p => p.id === props.report!.attackerPlanetId)
     if (playerPlanet) return playerPlanet
-    // 再从宇宙星球地图中查找（包括 NPC 星球）
+    // 再從宇宙星球地圖中查詢（包括 NPC 星球）
     return Object.values(universeStore.planets).find(p => p.id === props.report!.attackerPlanetId)
   })
 
-  // 获取防守方星球信息
+  // 獲取防守方星球資訊
   const defenderPlanet = computed(() => {
     if (!props.report) return null
-    // 先从玩家星球中查找
+    // 先從玩家星球中查詢
     const playerPlanet = gameStore.player.planets.find(p => p.id === props.report!.defenderPlanetId)
     if (playerPlanet) return playerPlanet
-    // 再从宇宙星球地图中查找（包括 NPC 星球）
+    // 再從宇宙星球地圖中查詢（包括 NPC 星球）
     return Object.values(universeStore.planets).find(p => p.id === props.report!.defenderPlanetId)
   })
 
-  // 判断玩家是攻击方还是防守方
+  // 判斷玩家是攻擊方還是防守方
   const isPlayerAttacker = computed(() => {
     if (!props.report) return false
     return gameStore.player.planets.some(p => p.id === props.report!.attackerPlanetId)
   })
 
-  // 判断玩家是否胜利
+  // 判斷玩家是否勝利
   const isPlayerVictory = computed(() => {
     if (!props.report) return false
     if (props.report.winner === 'draw') return false
-    // 玩家是攻击方且攻击方胜利，或者玩家是防守方且防守方胜利
+    // 玩家是攻擊方且攻擊方勝利，或者玩家是防守方且防守方勝利
     return (isPlayerAttacker.value && props.report.winner === 'attacker') || (!isPlayerAttacker.value && props.report.winner === 'defender')
   })
 
-  // 判断是否有任何剩余单位需要显示
+  // 判斷是否有任何剩餘單位需要顯示
   const hasAnyRemaining = computed(() => {
     if (!props.report) return false
     const hasAttackerRemaining = props.report.attackerRemaining && Object.keys(props.report.attackerRemaining).length > 0
@@ -495,7 +495,7 @@
     emit('update:open', newValue)
   })
 
-  // 获取玩家战斗结果样式
+  // 獲取玩家戰鬥結果樣式
   const getPlayerResultStyle = () => {
     if (!props.report) return 'bg-gray-50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'
     if (props.report.winner === 'draw')
@@ -505,19 +505,19 @@
     return 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-700 dark:text-red-300'
   }
 
-  // 获取攻击方损失总数
+  // 獲取攻擊方損失總數
   const getTotalLossCount = (losses: Record<string, number>): number => {
     return Object.values(losses).reduce((sum, count) => sum + count, 0)
   }
 
-  // 获取防守方损失总数
+  // 獲取防守方損失總數
   const getTotalDefenderLossCount = (losses: { fleet: Record<string, number>; defense: Record<string, number> }): number => {
     const fleetLoss = Object.values(losses.fleet || {}).reduce((sum, count) => sum + count, 0)
     const defenseLoss = Object.values(losses.defense || {}).reduce((sum, count) => sum + count, 0)
     return fleetLoss + defenseLoss
   }
 
-  // 获取防守方剩余总数
+  // 獲取防守方剩餘總數
   const getTotalDefenderRemainingCount = (remaining: { fleet?: Record<string, number>; defense?: Record<string, number> }): number => {
     const fleetCount = Object.values(remaining.fleet || {}).reduce((sum, count) => sum + count, 0)
     const defenseCount = Object.values(remaining.defense || {}).reduce((sum, count) => sum + count, 0)

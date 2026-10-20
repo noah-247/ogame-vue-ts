@@ -1,6 +1,6 @@
 <template>
   <div v-if="planet" class="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
-    <!-- 星球信息 -->
+    <!-- 星球資訊 -->
     <div class="text-center">
       <h1 class="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 flex items-center justify-center gap-2">
         {{ planet.name }}
@@ -9,11 +9,11 @@
       <p class="text-xs sm:text-sm text-muted-foreground">
         {{ t('planet.position') }}: [{{ planet.position.galaxy }}:{{ planet.position.system }}:{{ planet.position.position }}]
       </p>
-      <!-- 温度信息 -->
+      <!-- 溫度資訊 -->
       <p v-if="planet.temperature && !planet.isMoon" class="text-xs sm:text-sm text-muted-foreground">
         {{ t('planet.temperature') }}: {{ planet.temperature.min }}°C {{ t('common.to') }} {{ planet.temperature.max }}°C
       </p>
-      <!-- 月球信息 -->
+      <!-- 月球資訊 -->
       <div v-if="!planet.isMoon && moon" class="mt-2">
         <Button @click="switchToMoon" variant="outline" size="sm">
           {{ t('planet.switchToMoon') }}
@@ -22,24 +22,24 @@
       <div v-if="planet.isMoon" class="mt-2">
         <Button @click="switchToParentPlanet" variant="outline" size="sm">{{ t('planet.backToPlanet') }}</Button>
       </div>
-      <!-- 放弃殖民地按钮 -->
+      <!-- 放棄殖民地按鈕 -->
       <div v-if="canShowAbandonButton" class="mt-4">
         <Button @click="showAbandonDialog = true" variant="destructive" size="sm">
           {{ t('planet.abandonColony') }}
         </Button>
       </div>
-      <!-- 时间快转 -->
+      <!-- 時間快轉 -->
       <div class="mt-3 flex items-center justify-center gap-2 flex-wrap">
         <span class="text-xs sm:text-sm text-muted-foreground">{{ t('overview.timeSkip') }}</span>
         <Button @click="skipTime(1)" variant="outline" size="sm" :disabled="isSkipping">+1{{ t('resources.hour') }}</Button>
         <Button @click="skipTime(8)" variant="outline" size="sm" :disabled="isSkipping">+8{{ t('resources.hour') }}</Button>
         <Button @click="skipTime(24)" variant="outline" size="sm" :disabled="isSkipping">+24{{ t('resources.hour') }}</Button>
       </div>
-      <!-- 快转期间副官不值班（不收费） -->
+      <!-- 快轉期間副官不值班（不收費） -->
       <p class="mt-1 text-center text-xs text-muted-foreground">{{ t('overview.timeSkipAutopilotNote') }}</p>
     </div>
 
-    <!-- 放弃殖民地确认对话框 -->
+    <!-- 放棄殖民地確認對話方塊 -->
     <AlertDialog :open="showAbandonDialog" @update:open="showAbandonDialog = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -57,7 +57,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 错误提示对话框 -->
+    <!-- 錯誤提示對話方塊 -->
     <AlertDialog :open="showErrorDialog" @update:open="showErrorDialog = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -72,7 +72,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 资源管理 -->
+    <!-- 資源管理 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('overview.resourceOverview') }}</CardTitle>
@@ -84,7 +84,7 @@
             <TabsTrigger value="production">{{ t('overview.tabProduction') }}</TabsTrigger>
             <TabsTrigger value="consumption">{{ t('overview.tabConsumption') }}</TabsTrigger>
           </TabsList>
-          <!-- 概览标签页 -->
+          <!-- 概覽標籤頁 -->
           <TabsContent value="overview" class="mt-4">
             <Table>
               <TableHeader>
@@ -125,7 +125,7 @@
             </Table>
           </TabsContent>
 
-          <!-- 产量详情标签页 -->
+          <!-- 產量詳情標籤頁 -->
           <TabsContent value="production" class="mt-4">
             <div class="space-y-4">
               <div v-for="resourceType in resourceTypes" :key="resourceType.key" class="border-b last:border-b-0 pb-4 last:pb-0">
@@ -135,7 +135,7 @@
                 </div>
 
                 <div v-if="productionBreakdown" class="ml-6 space-y-1 text-sm">
-                  <!-- 电力有多个来源 -->
+                  <!-- 電力有多個來源 -->
                   <template v-if="resourceType.key === 'energy' && productionBreakdown.energy.sources">
                     <div v-for="(source, idx) in productionBreakdown.energy.sources" :key="idx" class="flex justify-between">
                       <span class="text-muted-foreground">
@@ -149,7 +149,7 @@
                     </div>
                   </template>
 
-                  <!-- 其他资源单一建筑产量 -->
+                  <!-- 其他資源單一建築產量 -->
                   <template v-else>
                     <div class="flex justify-between">
                       <span class="text-muted-foreground">
@@ -172,7 +172,7 @@
                     </span>
                   </div>
 
-                  <!-- 最终产量 -->
+                  <!-- 最終產量 -->
                   <div class="flex justify-between font-semibold pt-1 border-t mt-1">
                     <span>{{ t('overview.totalProduction') }}</span>
                     <span class="text-green-600 dark:text-green-400">
@@ -184,10 +184,10 @@
             </div>
           </TabsContent>
 
-          <!-- 消耗详情标签页 -->
+          <!-- 消耗詳情標籤頁 -->
           <TabsContent value="consumption" class="mt-4">
             <div class="space-y-2">
-              <!-- 各建筑消耗 -->
+              <!-- 各建築消耗 -->
               <div
                 v-for="consumptionType in consumptionTypes"
                 :key="consumptionType.key"
@@ -203,7 +203,7 @@
                 </span>
               </div>
 
-              <!-- 总消耗 -->
+              <!-- 總消耗 -->
               <div v-if="consumptionBreakdown" class="flex justify-between font-semibold pt-2 border-t">
                 <span>{{ t('overview.totalConsumption') }}</span>
                 <span class="text-red-600 dark:text-red-400">
@@ -211,7 +211,7 @@
                 </span>
               </div>
 
-              <!-- 无消耗提示 -->
+              <!-- 無消耗提示 -->
               <div v-if="consumptionBreakdown && consumptionBreakdown.total === 0" class="text-sm text-muted-foreground text-center py-2">
                 {{ t('overview.noConsumption') }}
               </div>
@@ -221,7 +221,7 @@
       </CardContent>
     </Card>
 
-    <!-- 舰队信息 -->
+    <!-- 艦隊資訊 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('overview.fleetInfo') }}</CardTitle>
@@ -274,19 +274,19 @@
   const { SHIPS } = useGameConfig()
   const planet = computed(() => gameStore.currentPlanet)
 
-  // 一键时间快转：派发事件，由 App.vue 的 timeSkip 统一结算未来 N 小时
+  // 一鍵時間快轉：派發事件，由 App.vue 的 timeSkip 統一結算未來 N 小時
   const isSkipping = ref(false)
   const skipTime = (hours: number) => {
     if (isSkipping.value) return
     isSkipping.value = true
     window.dispatchEvent(new CustomEvent('time-skip', { detail: { hours } }))
-    // 结算以同步状态变更为主，短暂锁定按钮防止重复点击
+    // 結算以同步狀態變更為主，短暫鎖定按鈕防止重複點選
     setTimeout(() => {
       isSkipping.value = false
     }, 1500)
   }
 
-  // 获取科技加成
+  // 獲取科技加成
   const techBonuses = computed(() => ({
     mineralResearchLevel: gameStore.player.technologies[TechnologyType.MineralResearch] || 0,
     crystalResearchLevel: gameStore.player.technologies[TechnologyType.CrystalResearch] || 0,
@@ -304,19 +304,19 @@
     return scaleNumber(resourceLogic.calculateEnergyConsumption(planet.value), gameStore.gameSpeed)
   })
 
-  // 资源产量详细breakdown
+  // 資源產量詳細breakdown
   const productionBreakdown = computed(() => {
     if (!planet.value) return null
     return resourceLogic.calculateProductionBreakdown(planet.value, gameStore.player.officers, getGameNow(), gameStore.gameSpeed, techBonuses.value)
   })
 
-  // 资源消耗详细breakdown
+  // 資源消耗詳細breakdown
   const consumptionBreakdown = computed(() => {
     if (!planet.value) return null
     return resourceLogic.calculateConsumptionBreakdown(planet.value, gameStore.gameSpeed)
   })
 
-  // 资源类型配置
+  // 資源型別配置
   const resourceTypes = [
     { key: 'metal' as const },
     { key: 'crystal' as const },
@@ -325,13 +325,13 @@
     { key: 'darkMatter' as const }
   ]
 
-  // 消耗类型配置
+  // 消耗型別配置
   const consumptionTypes = [
-    // 资源建筑
+    // 資源建築
     { key: 'metalMine' as const },
     { key: 'crystalMine' as const },
     { key: 'deuteriumSynthesizer' as const },
-    // 设施建筑
+    // 設施建築
     { key: 'roboticsFactory' as const },
     { key: 'naniteFactory' as const },
     { key: 'shipyard' as const },
@@ -339,12 +339,12 @@
     { key: 'missileSilo' as const },
     { key: 'terraformer' as const },
     { key: 'darkMatterCollector' as const },
-    // 月球建筑
+    // 月球建築
     { key: 'sensorPhalanx' as const },
     { key: 'jumpGate' as const }
   ]
 
-  // 月球相关
+  // 月球相關
   const moon = computed(() => {
     if (!planet.value || planet.value.isMoon) return null
     return getMoonForPlanet(planet.value.id)
@@ -354,35 +354,35 @@
     return gameStore.player.planets.find(p => p.isMoon && p.parentPlanetId === planetId) || null
   }
 
-  // 切换到月球
+  // 切換到月球
   const switchToMoon = () => {
     if (moon.value) {
       gameStore.currentPlanetId = moon.value.id
     }
   }
 
-  // 切换回母星
+  // 切換回母星
   const switchToParentPlanet = () => {
     if (planet.value?.parentPlanetId) {
       gameStore.currentPlanetId = planet.value.parentPlanetId
     }
   }
 
-  // 放弃殖民地相关
+  // 放棄殖民地相關
   const showAbandonDialog = ref(false)
   const showErrorDialog = ref(false)
   const errorMessage = ref('')
 
-  // 是否显示放弃按钮（非主星才显示）
+  // 是否顯示放棄按鈕（非主星才顯示）
   const canShowAbandonButton = computed(() => {
     if (!planet.value) return false
-    // 找到主星（第一个非月球星球）
+    // 找到主星（第一個非月球星球）
     const mainPlanet = gameStore.player.planets.find(p => !p.isMoon)
-    // 当前星球不是主星时才显示放弃按钮
+    // 當前星球不是主星時才顯示放棄按鈕
     return mainPlanet && mainPlanet.id !== planet.value.id
   })
 
-  // 处理放弃殖民地
+  // 處理放棄殖民地
   const handleAbandonColony = () => {
     if (!planet.value) return
 
@@ -394,13 +394,13 @@
       return
     }
 
-    // 记录当前星球ID用于后续切换
+    // 記錄當前星球ID用於後續切換
     const abandonedPlanetId = planet.value.id
 
-    // 执行放弃
+    // 執行放棄
     gameStore.player.planets = planetLogic.abandonColony(gameStore.player.planets, abandonedPlanetId)
 
-    // 切换到主星
+    // 切換到主星
     const mainPlanet = gameStore.player.planets.find(p => !p.isMoon)
     if (mainPlanet) {
       gameStore.currentPlanetId = mainPlanet.id

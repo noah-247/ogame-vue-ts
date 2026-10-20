@@ -18,17 +18,17 @@
   import { Button } from '@/components/ui/button'
   import { ChevronUp } from 'lucide-vue-next'
 
-  // 显示阈值（滚动超过这个距离才显示按钮）
+  // 顯示閾值（滾動超過這個距離才顯示按鈕）
   const SCROLL_THRESHOLD = 300
 
   const isVisible = ref(false)
 
-  // 监听滚动事件
+  // 監聽滾動事件
   const handleScroll = () => {
     isVisible.value = window.scrollY > SCROLL_THRESHOLD
   }
 
-  // 丝滑返回顶部
+  // 絲滑返回頂部
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -38,7 +38,7 @@
 
   onMounted(() => {
     window.addEventListener('scroll', handleScroll, { passive: true })
-    // 初始检查
+    // 初始檢查
     handleScroll()
   })
 

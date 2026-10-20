@@ -1,7 +1,7 @@
 <template>
   <div v-if="activeAlerts.length > 0" class="bg-destructive/10 border-b border-destructive/20">
     <div class="px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
-      <!-- 警告图标和汇总信息 -->
+      <!-- 警告圖示和彙總資訊 -->
       <div class="flex items-center gap-2 flex-1 min-w-0">
         <AlertTriangle class="h-5 w-5 text-destructive shrink-0 animate-pulse" />
         <div class="flex-1 min-w-0">
@@ -14,7 +14,7 @@
         </div>
       </div>
 
-      <!-- 查看按钮 -->
+      <!-- 檢視按鈕 -->
       <Button @click="openAlertPanel" variant="outline" size="sm" class="shrink-0">
         {{ t('common.view') }}
       </Button>
@@ -38,7 +38,7 @@
   const gameStore = useGameStore()
   const { t } = useI18n()
 
-  // 强制更新倒计时
+  // 強制更新倒計時
   const now = ref(getGameNow())
   let updateInterval: ReturnType<typeof setInterval> | null = null
 
@@ -52,17 +52,17 @@
     if (updateInterval) clearInterval(updateInterval)
   })
 
-  // 获取活跃的警报（未到达的）
+  // 獲取活躍的警報（未到達的）
   const activeAlerts = computed(() => {
     return (gameStore.player.incomingFleetAlerts || [])
       .filter(alert => alert.arrivalTime > now.value)
       .sort((a, b) => a.arrivalTime - b.arrivalTime)
   })
 
-  // 最近的警报
+  // 最近的警報
   const nearestAlert = computed(() => activeAlerts.value[0] || null)
 
-  // 统计各类型警报数量
+  // 統計各型別警報數量
   const alertCounts = computed(() => {
     const counts = { spy: 0, attack: 0, recycle: 0, other: 0 }
     activeAlerts.value.forEach(alert => {
@@ -79,7 +79,7 @@
     return counts
   })
 
-  // 生成警报汇总文本
+  // 生成警報彙總文字
   const getAlertSummary = (): string => {
     const parts: string[] = []
     if (alertCounts.value.attack > 0) {

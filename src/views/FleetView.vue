@@ -1,11 +1,11 @@
 <template>
   <div v-if="planet" class="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
-    <!-- 未解锁遮罩 -->
+    <!-- 未解鎖遮罩 -->
     <UnlockRequirement :required-building="BuildingType.Shipyard" :required-level="1" />
 
     <h1 class="text-2xl sm:text-3xl font-bold">{{ t('fleetView.title') }}</h1>
 
-    <!-- 标签切换 -->
+    <!-- 標籤切換 -->
     <Tabs v-model="activeTab" class="w-full">
       <TabsList :class="['grid', 'w-full', showJumpGateTab ? 'grid-cols-3' : 'grid-cols-2']">
         <TabsTrigger v-for="tab in visibleTabs" :key="tab.value" :value="tab.value">
@@ -17,9 +17,9 @@
         </TabsTrigger>
       </TabsList>
 
-      <!-- 派遣舰队 -->
+      <!-- 派遣艦隊 -->
       <TabsContent value="send" class="mt-4 space-y-4">
-        <!-- 舰队任务槽位信息 -->
+        <!-- 艦隊任務槽位資訊 -->
         <Card>
           <CardContent class="py-4">
             <div class="flex justify-between items-center">
@@ -29,7 +29,7 @@
           </CardContent>
         </Card>
 
-        <!-- 舰队预设 -->
+        <!-- 艦隊預設 -->
         <Card>
           <CardHeader>
             <div class="flex justify-between items-center">
@@ -100,7 +100,7 @@
           </CardContent>
         </Card>
 
-        <!-- 选择舰队 -->
+        <!-- 選擇艦隊 -->
         <Card>
           <CardHeader>
             <CardTitle>{{ t('fleetView.selectFleet') }}</CardTitle>
@@ -129,7 +129,7 @@
           </CardContent>
         </Card>
 
-        <!-- 目标坐标 -->
+        <!-- 目標座標 -->
         <Card>
           <CardHeader>
             <CardTitle>{{ t('fleetView.targetCoordinates') }}</CardTitle>
@@ -141,7 +141,7 @@
                 <Input :id="coord.key" v-model.number="targetPosition[coord.key]" type="number" :min="1" :max="coord.max" placeholder="1" />
               </div>
             </div>
-            <!-- 目标类型选择（行星/月球） -->
+            <!-- 目標型別選擇（行星/月球） -->
             <div v-if="hasMoonAtTargetPosition" class="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <span class="text-sm font-medium">{{ t('fleetView.targetType') }}:</span>
               <div class="flex gap-2">
@@ -158,7 +158,7 @@
           </CardContent>
         </Card>
 
-        <!-- 任务类型 -->
+        <!-- 任務型別 -->
         <Card>
           <CardHeader>
             <CardTitle>{{ t('fleetView.missionType') }}</CardTitle>
@@ -179,7 +179,7 @@
           </CardContent>
         </Card>
 
-        <!-- 探险区域选择（仅探险任务） -->
+        <!-- 探險區域選擇（僅探險任務） -->
         <Card v-if="selectedMission === MissionType.Expedition">
           <CardHeader>
             <CardTitle>{{ t('fleetView.expeditionZone') }}</CardTitle>
@@ -220,13 +220,13 @@
           </CardContent>
         </Card>
 
-        <!-- 运输资源（仅运输任务） -->
+        <!-- 運輸資源（僅運輸任務） -->
         <Card v-if="selectedMission === MissionType.Transport">
           <CardHeader>
             <CardTitle>{{ t('fleetView.transportResources') }}</CardTitle>
           </CardHeader>
           <CardContent>
-            <!-- 赠送模式切换（仅当目标是NPC星球时显示） -->
+            <!-- 贈送模式切換（僅當目標是NPC星球時顯示） -->
             <div v-if="targetNpc" class="mb-4 p-3 border rounded-lg bg-muted/50">
               <div class="flex items-center gap-2 mb-2">
                 <Checkbox id="gift-mode" v-model:checked="isGiftMode" />
@@ -265,7 +265,7 @@
           </CardContent>
         </Card>
 
-        <!-- 任务信息 -->
+        <!-- 任務資訊 -->
         <Card>
           <CardHeader>
             <CardTitle>{{ t('fleetView.missionInfo') }}</CardTitle>
@@ -288,11 +288,11 @@
           </CardContent>
         </Card>
 
-        <!-- 派遣按钮 -->
+        <!-- 派遣按鈕 -->
         <Button @click="handleSendFleet" :disabled="!canSendFleet()" class="w-full" size="lg">{{ t('fleetView.sendFleet') }}</Button>
       </TabsContent>
 
-      <!-- 飞行任务 -->
+      <!-- 飛行任務 -->
       <TabsContent value="missions" class="mt-4 space-y-4">
         <Empty v-if="totalMissionsCount === 0" class="border rounded-lg">
           <EmptyContent>
@@ -301,7 +301,7 @@
           </EmptyContent>
         </Empty>
 
-        <!-- 舰队任务 -->
+        <!-- 艦隊任務 -->
         <Card v-for="mission in gameStore.player.fleetMissions" :key="mission.id">
           <CardHeader>
             <div class="flex justify-between items-start">
@@ -324,7 +324,7 @@
             </div>
           </CardHeader>
           <CardContent class="space-y-3">
-            <!-- 舰队组成 -->
+            <!-- 艦隊組成 -->
             <div>
               <p class="text-xs sm:text-sm font-medium mb-2">{{ t('fleetView.fleetComposition') }}:</p>
               <div class="flex flex-wrap gap-2">
@@ -334,7 +334,7 @@
               </div>
             </div>
 
-            <!-- 携带资源 -->
+            <!-- 攜帶資源 -->
             <div v-if="hasCargoResources(mission.cargo)">
               <p class="text-xs sm:text-sm font-medium mb-2">{{ t('fleetView.carryingResources') }}:</p>
               <div class="flex flex-wrap gap-2 text-xs">
@@ -347,7 +347,7 @@
               </div>
             </div>
 
-            <!-- 进度条 -->
+            <!-- 進度條 -->
             <div class="space-y-2">
               <div class="flex justify-between text-xs sm:text-sm">
                 <span>{{ mission.status === 'outbound' ? t('fleetView.arrivalTime') : t('fleetView.returnTime') }}:</span>
@@ -380,7 +380,7 @@
           </CardContent>
         </Card>
 
-        <!-- 导弹攻击任务 -->
+        <!-- 導彈攻擊任務 -->
         <Card v-for="missileAttack in flyingMissileAttacks" :key="missileAttack.id">
           <CardHeader>
             <div class="flex justify-between items-start">
@@ -401,13 +401,13 @@
             </div>
           </CardHeader>
           <CardContent class="space-y-3">
-            <!-- 导弹数量 -->
+            <!-- 導彈數量 -->
             <div>
               <p class="text-xs sm:text-sm font-medium mb-2">{{ t('galaxyView.missileCount') }}:</p>
               <Badge variant="outline">{{ missileAttack.missileCount }}</Badge>
             </div>
 
-            <!-- 进度条 -->
+            <!-- 進度條 -->
             <div class="space-y-2">
               <div class="flex justify-between text-xs sm:text-sm">
                 <span>{{ t('fleetView.arrivalTime') }}:</span>
@@ -419,9 +419,9 @@
         </Card>
       </TabsContent>
 
-      <!-- 跳跃门 -->
+      <!-- 跳躍門 -->
       <TabsContent v-if="showJumpGateTab" value="jumpGate" class="mt-4 space-y-4">
-        <!-- 跳跃门状态 -->
+        <!-- 跳躍門狀態 -->
         <Card>
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
@@ -431,7 +431,7 @@
             <CardDescription>{{ t('fleetView.jumpGateDescription') }}</CardDescription>
           </CardHeader>
           <CardContent>
-            <!-- 冷却状态 -->
+            <!-- 冷卻狀態 -->
             <div v-if="!jumpGateReady" class="p-4 bg-muted/50 rounded-lg">
               <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                 <Clock class="h-4 w-4" />
@@ -443,7 +443,7 @@
               </div>
               <Progress :model-value="100 - (jumpGateCooldownRemaining / 3600000) * 100" class="mt-2" />
             </div>
-            <!-- 就绪状态 -->
+            <!-- 就緒狀態 -->
             <div v-else class="p-4 bg-green-500/10 rounded-lg">
               <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
                 <Check class="h-4 w-4" />
@@ -453,7 +453,7 @@
           </CardContent>
         </Card>
 
-        <!-- 选择目标月球 -->
+        <!-- 選擇目標月球 -->
         <Card v-if="jumpGateReady">
           <CardHeader>
             <CardTitle>{{ t('fleetView.jumpGateSelectTarget') }}</CardTitle>
@@ -484,7 +484,7 @@
           </CardContent>
         </Card>
 
-        <!-- 选择传送舰队 -->
+        <!-- 選擇傳送艦隊 -->
         <Card v-if="jumpGateReady && selectedJumpGateTarget">
           <CardHeader>
             <CardTitle>{{ t('fleetView.jumpGateSelectFleet') }}</CardTitle>
@@ -510,7 +510,7 @@
               </div>
             </div>
 
-            <!-- 传送按钮 -->
+            <!-- 傳送按鈕 -->
             <div class="mt-6">
               <Button @click="executeJumpGateTransfer" :disabled="!canExecuteJumpGate" class="w-full">
                 <Zap class="h-4 w-4 mr-2" />
@@ -522,7 +522,7 @@
       </TabsContent>
     </Tabs>
 
-    <!-- 提示对话框 -->
+    <!-- 提示對話方塊 -->
     <AlertDialog :open="alertDialogOpen" @update:open="alertDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -538,7 +538,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 预设名称对话框 -->
+    <!-- 預設名稱對話方塊 -->
     <AlertDialog :open="showPresetNameDialog" @update:open="showPresetNameDialog = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -653,7 +653,7 @@
   const { SHIPS } = useGameConfig()
   const planet = computed(() => gameStore.currentPlanet)
 
-  // 创建默认空舰队映射
+  // 建立預設空艦隊對映
   const createEmptyFleet = (): Partial<Fleet> => {
     const fleet: Partial<Fleet> = {}
     for (const type of Object.values(ShipType)) {
@@ -662,29 +662,29 @@
     return fleet
   }
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const alertDialogOpen = ref(false)
   const alertDialogTitle = ref('')
   const alertDialogMessage = ref('')
   const alertDialogCallback = ref<(() => void) | null>(null)
 
-  // 当前时间（响应式）
+  // 當前時間（響應式）
   const currentTime = ref(getGameNow())
   let timeInterval: number | null = null
 
-  // 计算最大舰队任务槽位
+  // 計算最大艦隊任務槽位
   const maxFleetMissions = computed(() => {
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const computerTechLevel = gameStore.player.technologies[TechnologyType.ComputerTechnology] || 0
     return publicLogic.getMaxFleetMissions(bonuses.additionalFleetSlots, computerTechLevel)
   })
 
-  // 飞行中的导弹攻击
+  // 飛行中的導彈攻擊
   const flyingMissileAttacks = computed(() => {
     return gameStore.player.missileAttacks?.filter(m => m.status === 'flying') || []
   })
 
-  // 总任务数量（舰队任务 + 导弹攻击）
+  // 總任務數量（艦隊任務 + 導彈攻擊）
   const totalMissionsCount = computed(() => {
     return gameStore.player.fleetMissions.length + flyingMissileAttacks.value.length
   })
@@ -698,11 +698,11 @@
     { value: 'jumpGate', labelKey: 'jumpGate' }
   ] as const
 
-  // 跳跃门相关
+  // 跳躍門相關
   const selectedJumpGateTarget = ref<typeof planet.value | null>(null)
   const jumpGateFleet = ref<Partial<Fleet>>(createEmptyFleet())
 
-  // 是否显示跳跃门标签页（当前在月球上且有跳跃门）
+  // 是否顯示跳躍門標籤頁（當前在月球上且有跳躍門）
   const showJumpGateTab = computed(() => {
     if (!planet.value) return false
     if (!planet.value.isMoon) return false
@@ -710,23 +710,23 @@
     return jumpGateLevel > 0
   })
 
-  // 跳跃门是否就绪（冷却完成）
+  // 跳躍門是否就緒（冷卻完成）
   const jumpGateReady = computed(() => {
     if (!planet.value) return false
     return moonLogic.isJumpGateReady(planet.value)
   })
 
-  // 跳跃门剩余冷却时间
+  // 跳躍門剩餘冷卻時間
   const jumpGateCooldownRemaining = computed(() => {
     if (!planet.value) return 0
     return moonLogic.getJumpGateCooldownRemaining(planet.value)
   })
 
-  // 可用的目标月球（有跳跃门且冷却完成的其他月球）
+  // 可用的目標月球（有跳躍門且冷卻完成的其他月球）
   const availableJumpGateMoons = computed(() => {
     if (!planet.value) return []
     return gameStore.player.planets.filter(p => {
-      if (p.id === planet.value?.id) return false // 排除当前月球
+      if (p.id === planet.value?.id) return false // 排除當前月球
       if (!p.isMoon) return false
       const jumpGateLevel = p.buildings[BuildingType.JumpGate] || 0
       if (jumpGateLevel <= 0) return false
@@ -734,22 +734,22 @@
     })
   })
 
-  // 检查目标月球的跳跃门是否就绪
+  // 檢查目標月球的跳躍門是否就緒
   const isJumpGateMoonReady = (moon: typeof planet.value) => {
     if (!moon) return false
     return moonLogic.isJumpGateReady(moon)
   }
 
-  // 是否可以执行跳跃门传送
+  // 是否可以執行跳躍門傳送
   const canExecuteJumpGate = computed(() => {
     if (!planet.value || !selectedJumpGateTarget.value) return false
     if (!jumpGateReady.value) return false
-    // 检查是否选择了至少一艘舰船
+    // 檢查是否選擇了至少一艘艦船
     const totalShips = Object.values(jumpGateFleet.value).reduce((sum, count) => sum + (count || 0), 0)
     return totalShips > 0
   })
 
-  // 执行跳跃门传送
+  // 執行跳躍門傳送
   const executeJumpGateTransfer = () => {
     if (!planet.value || !selectedJumpGateTarget.value) return
     if (!canExecuteJumpGate.value) return
@@ -757,30 +757,30 @@
     const sourceMoon = planet.value
     const targetMoon = selectedJumpGateTarget.value
 
-    // 转移舰队
+    // 轉移艦隊
     Object.entries(jumpGateFleet.value).forEach(([shipType, count]) => {
       if (count && count > 0) {
         const ship = shipType as ShipType
-        // 从源月球扣除
+        // 從源月球扣除
         if (sourceMoon.fleet[ship] >= count) {
           sourceMoon.fleet[ship] -= count
-          // 添加到目标月球
+          // 新增到目標月球
           targetMoon.fleet[ship] = (targetMoon.fleet[ship] || 0) + count
         }
       }
     })
 
-    // 设置两个跳跃门的冷却时间
+    // 設定兩個跳躍門的冷卻時間
     moonLogic.useJumpGate(sourceMoon)
     moonLogic.useJumpGate(targetMoon)
 
-    // 重置跳跃门舰队选择
+    // 重置跳躍門艦隊選擇
     Object.keys(jumpGateFleet.value).forEach(key => {
       jumpGateFleet.value[key as ShipType] = 0
     })
     selectedJumpGateTarget.value = null
 
-    // 显示成功对话框
+    // 顯示成功對話方塊
     alertDialogTitle.value = t('fleetView.jumpGateSuccess')
     alertDialogMessage.value = t('fleetView.jumpGateSuccessMessage', {
       target: `${targetMoon.name} [${targetMoon.position.galaxy}:${targetMoon.position.system}:${targetMoon.position.position}]`
@@ -789,7 +789,7 @@
     alertDialogOpen.value = true
   }
 
-  // 可见的标签页（根据是否有跳跃门动态显示）
+  // 可見的標籤頁（根據是否有跳躍門動態顯示）
   const visibleTabs = computed(() => {
     if (showJumpGateTab.value) {
       return fleetTabs
@@ -797,16 +797,16 @@
     return fleetTabs.filter(tab => tab.value !== 'jumpGate')
   })
 
-  // 选择的舰队
+  // 選擇的艦隊
   const selectedFleet = ref<Partial<Fleet>>(createEmptyFleet())
 
-  // 目标坐标
+  // 目標座標
   const targetPosition = ref({ galaxy: 1, system: 1, position: 1 })
 
-  // 目标是否为月球（用于区分同坐标的行星和月球）
+  // 目標是否為月球（用於區分同坐標的行星和月球）
   const targetIsMoon = ref(false)
 
-  // 检查目标位置是否有月球（玩家自己的）
+  // 檢查目標位置是否有月球（玩家自己的）
   const hasMoonAtTargetPosition = computed(() => {
     return gameStore.player.planets.some(
       p =>
@@ -817,25 +817,25 @@
     )
   })
 
-  // 坐标字段配置
+  // 座標欄位配置
   const coordinateFields: { key: keyof typeof targetPosition.value; max: number }[] = [
     { key: 'galaxy', max: 9 },
     { key: 'system', max: 10 },
     { key: 'position', max: 10 }
   ]
 
-  // 选择的任务类型
+  // 選擇的任務型別
   const selectedMission = ref<MissionType>(MissionType.Attack)
 
-  // 探险区域选择
+  // 探險區域選擇
   const selectedExpeditionZone = ref<ExpeditionZone>(ExpeditionZone.NearSpace)
 
-  // 获取玩家的天体物理学等级
+  // 獲取玩家的天體物理學等級
   const astrophysicsLevel = computed(() => {
     return gameStore.player.technologies[TechnologyType.Astrophysics] || 0
   })
 
-  // 可用的探险区域（基于天体物理学等级）
+  // 可用的探險區域（基於天體物理學等級）
   const availableExpeditionZones = computed(() => {
     return Object.values(ExpeditionZone).map(zone => ({
       zone,
@@ -844,30 +844,30 @@
     }))
   })
 
-  // 运输资源
+  // 運輸資源
   const cargo = ref({ metal: 0, crystal: 0, deuterium: 0, darkMatter: 0, energy: 0 })
 
-  // 货物资源字段配置
+  // 貨物資源欄位配置
   type CargoKey = 'metal' | 'crystal' | 'deuterium' | 'darkMatter'
   const cargoResourceFields: { key: CargoKey }[] = [{ key: 'metal' }, { key: 'crystal' }, { key: 'deuterium' }, { key: 'darkMatter' }]
 
-  // 从 URL query 参数初始化
+  // 從 URL query 引數初始化
   onMounted(() => {
-    // 启动定时器更新当前时间
+    // 啟動定時器更新當前時間
     timeInterval = window.setInterval(() => {
       currentTime.value = getGameNow()
     }, 1000) // 每秒更新一次
 
     const { galaxy, system, position, mission, gift } = route.query
 
-    // 如果有参数，填充数据
+    // 如果有引數，填充資料
     if (galaxy || system || position) {
-      // 设置目标坐标
+      // 設定目標座標
       if (galaxy) targetPosition.value.galaxy = Number(galaxy)
       if (system) targetPosition.value.system = Number(system)
       if (position) targetPosition.value.position = Number(position)
 
-      // 设置任务类型
+      // 設定任務型別
       if (mission === 'spy') {
         selectedMission.value = MissionType.Spy
       } else if (mission === 'attack') {
@@ -877,24 +877,24 @@
       } else if (mission === 'recycle') {
         selectedMission.value = MissionType.Recycle
       } else if (gift === '1') {
-        // 如果有gift参数，设置为运输任务并启用赠送模式
+        // 如果有gift引數，設定為運輸任務並啟用贈送模式
         selectedMission.value = MissionType.Transport
         isGiftMode.value = true
       }
 
-      // 自动切换到派遣舰队标签
+      // 自動切換到派遣艦隊標籤
       activeTab.value = 'send'
     }
   })
 
-  // 清理定时器
+  // 清理定時器
   onUnmounted(() => {
     if (timeInterval) {
       clearInterval(timeInterval)
     }
   })
 
-  // 检查目标是否为NPC星球
+  // 檢查目標是否為NPC星球
   const targetNpc = computed(() => {
     return npcStore.npcs.find(npc =>
       npc.planets.some(
@@ -906,17 +906,17 @@
     )
   })
 
-  // 是否为赠送模式
+  // 是否為贈送模式
   const isGiftMode = ref(false)
 
-  // 舰队预设相关状态
+  // 艦隊預設相關狀態
   const MAX_PRESETS = 5
   const editingPresetId = ref<string | null>(null)
   const editingPresetName = ref('')
   const showPresetNameDialog = ref(false)
   const pendingPresetAction = ref<'save' | 'rename' | null>(null)
 
-  // 获取预设列表
+  // 獲取預設列表
   const fleetPresets = computed(() => gameStore.player.fleetPresets || [])
 
   // 生成唯一ID
@@ -924,7 +924,7 @@
     return generateId('fleet_preset')
   }
 
-  // 保存当前配置为预设
+  // 儲存當前配置為預設
   const saveAsPreset = () => {
     if (fleetPresets.value.length >= MAX_PRESETS) {
       alertDialogTitle.value = t('fleetView.presetLimitReached')
@@ -934,7 +934,7 @@
       return
     }
 
-    // 检查是否有选择舰船
+    // 檢查是否有選擇艦船
     const hasShips = Object.values(selectedFleet.value).some(count => count > 0)
     if (!hasShips) {
       alertDialogTitle.value = t('fleetView.presetError')
@@ -949,11 +949,11 @@
     showPresetNameDialog.value = true
   }
 
-  // 确认保存预设
+  // 確認儲存預設
   const confirmSavePreset = () => {
     if (!editingPresetName.value.trim()) return
 
-    // 只保存数量大于0的舰船
+    // 只儲存數量大於0的艦船
     const fleetToSave: Partial<Fleet> = {}
     for (const [shipType, count] of Object.entries(selectedFleet.value)) {
       if (count && count > 0) {
@@ -961,7 +961,7 @@
       }
     }
 
-    // 只保存数量大于0的资源
+    // 只儲存數量大於0的資源
     const cargoToSave: Partial<Resources> | undefined =
       selectedMission.value === MissionType.Transport
         ? {
@@ -976,7 +976,7 @@
       id: generatePresetId(),
       name: editingPresetName.value.trim(),
       fleet: fleetToSave,
-      // 不再保存坐标，预设只保存舰队配置
+      // 不再儲存座標，預設只儲存艦隊配置
       missionType: selectedMission.value,
       cargo: cargoToSave
     }
@@ -991,21 +991,21 @@
     pendingPresetAction.value = null
   }
 
-  // 加载预设
+  // 載入預設
   const loadPreset = (preset: FleetPreset) => {
-    // 加载舰队配置
+    // 載入艦隊配置
     Object.values(ShipType).forEach(key => {
       selectedFleet.value[key] = preset.fleet[key] || 0
     })
 
-    // 不再加载坐标，保留用户当前输入的坐标
+    // 不再載入座標，保留使用者當前輸入的座標
 
-    // 加载任务类型
+    // 載入任務型別
     if (preset.missionType) {
       selectedMission.value = preset.missionType
     }
 
-    // 加载运输资源
+    // 載入運輸資源
     if (preset.cargo && preset.missionType === MissionType.Transport) {
       cargo.value = {
         metal: preset.cargo.metal || 0,
@@ -1017,7 +1017,7 @@
     }
   }
 
-  // 更新预设（点击预设后修改内容）
+  // 更新預設（點選預設後修改內容）
   const updatePreset = (presetId: string) => {
     const presetIndex = gameStore.player.fleetPresets?.findIndex(p => p.id === presetId)
     if (presetIndex === undefined || presetIndex === -1) return
@@ -1034,7 +1034,7 @@
     const existingPreset = gameStore.player.fleetPresets![presetIndex]
     if (!existingPreset) return
 
-    // 只保存数量大于0的舰船
+    // 只儲存數量大於0的艦船
     const fleetToSave: Partial<Fleet> = {}
     for (const [shipType, count] of Object.entries(selectedFleet.value)) {
       if (count && count > 0) {
@@ -1042,7 +1042,7 @@
       }
     }
 
-    // 只保存数量大于0的资源
+    // 只儲存數量大於0的資源
     const cargoToSave: Partial<Resources> | undefined =
       selectedMission.value === MissionType.Transport
         ? {
@@ -1057,7 +1057,7 @@
       id: existingPreset.id,
       name: existingPreset.name,
       fleet: fleetToSave,
-      // 不再保存坐标
+      // 不再儲存座標
       missionType: selectedMission.value,
       cargo: cargoToSave
     }
@@ -1066,20 +1066,20 @@
     editingPresetId.value = null
   }
 
-  // 开始编辑预设名称
+  // 開始編輯預設名稱
   const startRenamePreset = (preset: FleetPreset) => {
-    // 保存要重命名的预设ID，但不进入编辑内容模式
+    // 儲存要重新命名的預設ID，但不進入編輯內容模式
     editingPresetName.value = preset.name
     pendingPresetAction.value = 'rename'
-    // 使用临时变量存储要重命名的预设ID
+    // 使用臨時變數儲存要重新命名的預設ID
     renameTargetPresetId.value = preset.id
     showPresetNameDialog.value = true
   }
 
-  // 要重命名的预设ID（与编辑预设内容分开）
+  // 要重新命名的預設ID（與編輯預設內容分開）
   const renameTargetPresetId = ref<string | null>(null)
 
-  // 确认重命名预设
+  // 確認重新命名預設
   const confirmRenamePreset = () => {
     if (!editingPresetName.value.trim() || !renameTargetPresetId.value) return
 
@@ -1094,7 +1094,7 @@
     pendingPresetAction.value = null
   }
 
-  // 删除预设
+  // 刪除預設
   const deletePreset = (presetId: string) => {
     const preset = gameStore.player.fleetPresets?.find(p => p.id === presetId)
     if (!preset) return
@@ -1110,7 +1110,7 @@
     alertDialogOpen.value = true
   }
 
-  // 处理预设名称对话框确认
+  // 處理預設名稱對話方塊確認
   const handlePresetNameConfirm = () => {
     if (pendingPresetAction.value === 'save') {
       confirmSavePreset()
@@ -1119,19 +1119,19 @@
     }
   }
 
-  // 监听目标NPC变化，当目标不再是NPC时自动禁用赠送模式
+  // 監聽目標NPC變化，當目標不再是NPC時自動禁用贈送模式
   watch(targetNpc, newValue => {
     if (!newValue && isGiftMode.value) {
       isGiftMode.value = false
     }
   })
 
-  // 计算赠送的预估好感度增加值
+  // 計算贈送的預估好感度增加值
   const calculateGiftReputation = (): number => {
     return diplomaticLogic.calculateGiftReputationGain(cargo.value)
   }
 
-  // 可用任务类型
+  // 可用任務型別
   const availableMissions = computed(() => [
     { type: MissionType.Attack, name: t('fleetView.attackMission'), icon: Sword },
     { type: MissionType.Transport, name: t('fleetView.transport'), icon: Package },
@@ -1143,19 +1143,19 @@
     { type: MissionType.Destroy, name: t('fleetView.destroy'), icon: Skull }
   ])
 
-  // 获取任务名称
+  // 獲取任務名稱
   const getMissionName = (type: MissionType): string => {
     const mission = availableMissions.value.find(m => m.type === type)
     return mission?.name || type
   }
 
-  // 获取星球名称
+  // 獲取星球名稱
   const getPlanetName = (planetId: string): string => {
     const p = gameStore.player.planets.find(p => p.id === planetId)
     return p?.name || t('fleetView.unknownPlanet')
   }
 
-  // 计算总载货量
+  // 計算總載貨量
   const getTotalCargoCapacity = (): number => {
     let total = 0
     for (const [shipType, count] of Object.entries(selectedFleet.value)) {
@@ -1167,23 +1167,23 @@
     return total
   }
 
-  // 计算总货物
+  // 計算總貨物
   const getTotalCargo = (): number => {
     return cargo.value.metal + cargo.value.crystal + cargo.value.deuterium + cargo.value.darkMatter
   }
 
-  // 检查是否有携带资源
+  // 檢查是否有攜帶資源
   const hasCargoResources = (cargoData: Resources): boolean => {
     return cargoData.metal > 0 || cargoData.crystal > 0 || cargoData.deuterium > 0 || cargoData.darkMatter > 0
   }
 
-  // 计算燃料消耗（包含货物重量影响）
+  // 計算燃料消耗（包含貨物重量影響）
   const getFuelConsumption = (): number => {
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     return shipLogic.calculateFleetFuelConsumption(selectedFleet.value, bonuses.fuelConsumptionReduction, cargo.value)
   }
 
-  // 计算飞行时间
+  // 計算飛行時間
   const getFlightTime = (): number => {
     if (!planet.value) return 0
     const distance = fleetLogic.calculateDistance(planet.value.position, targetPosition.value)
@@ -1191,7 +1191,7 @@
     const minSpeed = shipLogic.calculateFleetMinSpeed(selectedFleet.value, bonuses.fleetSpeedBonus)
     let flightTime = fleetLogic.calculateFlightTime(distance, minSpeed)
 
-    // 探险任务应用区域飞行时间倍率
+    // 探險任務應用區域飛行時間倍率
     if (selectedMission.value === MissionType.Expedition) {
       const zoneConfig = EXPEDITION_ZONES[selectedExpeditionZone.value]
       flightTime = Math.floor(flightTime * zoneConfig.flightTimeMultiplier)
@@ -1200,17 +1200,17 @@
     return flightTime
   }
 
-  // 检查是否可以派遣
+  // 檢查是否可以派遣
   const canSendFleet = (): { valid: boolean; errorKey?: string } => {
-    // 检查是否选择了舰船
+    // 檢查是否選擇了艦船
     const hasShips = Object.values(selectedFleet.value).some(count => count > 0)
     if (!hasShips) return { valid: false, errorKey: 'fleetView.noShipsSelected' }
 
-    // 检查是否派遣到自己的星球
-    // 回收任务、部署任务和运输任务除外：
-    // - 回收任务：可能回收同位置的残骸
-    // - 部署任务：可能部署到自己的月球
-    // - 运输任务：可能从行星向同位置的月球运输资源（OGame规则允许）
+    // 檢查是否派遣到自己的星球
+    // 回收任務、部署任務和運輸任務除外：
+    // - 回收任務：可能回收同位置的殘骸
+    // - 部署任務：可能部署到自己的月球
+    // - 運輸任務：可能從行星向同位置的月球運輸資源（OGame規則允許）
     if (
       planet.value &&
       selectedMission.value !== MissionType.Recycle &&
@@ -1226,21 +1226,21 @@
       }
     }
 
-    // 检查载货量
+    // 檢查載貨量
     if (selectedMission.value === MissionType.Transport) {
       if (getTotalCargo() > getTotalCargoCapacity()) {
         return { valid: false, errorKey: 'fleetView.cargoExceedsCapacity' }
       }
     }
 
-    // 检查殖民船
+    // 檢查殖民船
     if (selectedMission.value === MissionType.Colonize) {
       if (!selectedFleet.value[ShipType.ColonyShip] || (selectedFleet.value[ShipType.ColonyShip] ?? 0) < 1) {
         return { valid: false, errorKey: 'fleetView.noColonyShip' }
       }
     }
 
-    // 检查回收任务是否有残骸
+    // 檢查回收任務是否有殘骸
     if (selectedMission.value === MissionType.Recycle) {
       const debrisId = `debris_${targetPosition.value.galaxy}_${targetPosition.value.system}_${targetPosition.value.position}`
       const debrisField = universeStore.debrisFields[debrisId]
@@ -1249,7 +1249,7 @@
       }
     }
 
-    // 检查毁灭任务是否有死星
+    // 檢查毀滅任務是否有死星
     if (selectedMission.value === MissionType.Destroy) {
       if (!selectedFleet.value[ShipType.Deathstar] || (selectedFleet.value[ShipType.Deathstar] ?? 0) < 1) {
         return { valid: false, errorKey: 'fleetView.noDeathstar' }
@@ -1278,7 +1278,7 @@
     )
     if (!validation.valid) return false
 
-    // 追踪燃料消耗（同时计入资源消耗和燃料统计）
+    // 追蹤燃料消耗（同時計入資源消耗和燃料統計）
     if (validation.fuelNeeded && validation.fuelNeeded > 0) {
       gameLogic.trackResourceConsumption(gameStore.player, { deuterium: validation.fuelNeeded })
       gameLogic.trackFuelConsumption(gameStore.player, validation.fuelNeeded)
@@ -1291,7 +1291,7 @@
     const minSpeed = shipLogic.calculateFleetMinSpeed(fleet, bonuses.fleetSpeedBonus)
     let flightTime = fleetLogic.calculateFlightTime(distance, minSpeed)
 
-    // 探险任务应用区域飞行时间倍率
+    // 探險任務應用區域飛行時間倍率
     if (missionType === MissionType.Expedition) {
       const zoneConfig = EXPEDITION_ZONES[selectedExpeditionZone.value]
       flightTime = Math.floor(flightTime * zoneConfig.flightTimeMultiplier)
@@ -1307,18 +1307,18 @@
       flightTime
     )
 
-    // 如果目标是月球，设置标记
+    // 如果目標是月球，設定標記
     if (isMoonTarget) {
       mission.targetIsMoon = true
     }
 
-    // 如果是赠送模式，标记任务
+    // 如果是贈送模式，標記任務
     if (missionType === MissionType.Transport && isGiftMode.value && targetNpc.value) {
       mission.isGift = true
       mission.giftTargetNpcId = targetNpc.value.id
     }
 
-    // 如果是探险任务，设置探险区域
+    // 如果是探險任務，設定探險區域
     if (missionType === MissionType.Expedition) {
       mission.expeditionZone = selectedExpeditionZone.value
     }
@@ -1327,11 +1327,11 @@
     return true
   }
 
-  // 派遣舰队
+  // 派遣艦隊
   const handleSendFleet = () => {
     if (!planet.value) return
 
-    // 验证是否可以派遣
+    // 驗證是否可以派遣
     const validation = canSendFleet()
     if (!validation.valid) {
       alertDialogTitle.value = t('fleetView.sendFailed')
@@ -1340,7 +1340,7 @@
       return
     }
 
-    // 过滤出实际选择的舰船
+    // 過濾出實際選擇的艦船
     const fleet: Partial<Fleet> = {}
     for (const [shipType, count] of Object.entries(selectedFleet.value)) {
       if (count > 0) {
@@ -1357,7 +1357,7 @@
     )
 
     if (success) {
-      // 重置选择
+      // 重置選擇
       Object.keys(selectedFleet.value).forEach(key => {
         selectedFleet.value[key as ShipType] = 0
       })
@@ -1377,7 +1377,7 @@
     return fleetLogic.recallFleetMission(mission, getGameNow())
   }
 
-  // 召回舰队
+  // 召回艦隊
   const handleRecallFleet = (missionId: string) => {
     const success = recallFleet(missionId)
     if (!success) {
@@ -1388,15 +1388,15 @@
     }
   }
 
-  // 处理终止任务（返航中）
+  // 處理終止任務（返航中）
   const handleAbortMission = (missionId: string) => {
     const mission = gameStore.player.fleetMissions.find(m => m.id === missionId)
     if (!mission) return
 
-    // 计算损失资源总量
+    // 計算損失資源總量
     const totalResources = mission.cargo.metal + mission.cargo.crystal + mission.cargo.deuterium + mission.cargo.darkMatter
 
-    // 计算舰队总数
+    // 計算艦隊總數
     const totalShips = Object.values(mission.fleet).reduce((sum, count) => sum + count, 0)
 
     alertDialogTitle.value = t('fleetView.abortMissionTitle')
@@ -1410,7 +1410,7 @@
     alertDialogOpen.value = true
   }
 
-  // 终止任务（不返还任何东西）
+  // 終止任務（不返還任何東西）
   const abortMission = (missionId: string) => {
     const missionIndex = gameStore.player.fleetMissions.findIndex(m => m.id === missionId)
     if (missionIndex > -1) {
@@ -1422,7 +1422,7 @@
     }
   }
 
-  // 处理 AlertDialog 确认
+  // 處理 AlertDialog 確認
   const handleAlertConfirm = () => {
     if (alertDialogCallback.value) {
       alertDialogCallback.value()
@@ -1431,14 +1431,14 @@
     alertDialogOpen.value = false
   }
 
-  // 获取任务剩余时间
+  // 獲取任務剩餘時間
   const getRemainingTime = (mission: any): number => {
     const now = currentTime.value
     const targetTime = mission.status === 'outbound' ? mission.arrivalTime : mission.returnTime
     return Math.max(0, (targetTime - now) / 1000)
   }
 
-  // 获取任务进度
+  // 獲取任務進度
   const getMissionProgress = (mission: any): number => {
     const now = currentTime.value
     if (mission.status === 'outbound') {
@@ -1453,13 +1453,13 @@
     }
   }
 
-  // 获取导弹任务剩余时间
+  // 獲取導彈任務剩餘時間
   const getMissileRemainingTime = (missileAttack: any): number => {
     const now = currentTime.value
     return Math.max(0, (missileAttack.arrivalTime - now) / 1000)
   }
 
-  // 获取导弹任务进度
+  // 獲取導彈任務進度
   const getMissileProgress = (missileAttack: any): number => {
     const now = currentTime.value
     const total = missileAttack.arrivalTime - missileAttack.launchTime

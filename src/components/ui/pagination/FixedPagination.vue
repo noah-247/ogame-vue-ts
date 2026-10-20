@@ -1,7 +1,7 @@
 <template>
   <div v-if="totalPages > 1" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
     <div class="flex items-center gap-2">
-      <!-- 上一页按钮 - 圆形胶囊 -->
+      <!-- 上一頁按鈕 - 圓形膠囊 -->
       <button
         v-if="currentPage > 1"
         @click="emit('update:page', currentPage - 1)"
@@ -10,7 +10,7 @@
         <ChevronLeft class="h-5 w-5" />
       </button>
 
-      <!-- 页码 - 椭圆形胶囊 -->
+      <!-- 頁碼 - 橢圓形膠囊 -->
       <div
         class="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-full py-2 px-3 shadow-lg flex items-center gap-1"
       >
@@ -25,7 +25,7 @@
         </button>
       </div>
 
-      <!-- 下一页按钮 - 圆形胶囊 -->
+      <!-- 下一頁按鈕 - 圓形膠囊 -->
       <button
         v-if="currentPage < totalPages"
         @click="emit('update:page', currentPage + 1)"
@@ -57,7 +57,7 @@
 
   const currentPage = computed(() => props.page)
 
-  // 生成页码列表 - 最多显示指定数量页码，不含省略号
+  // 生成頁碼列表 - 最多顯示指定數量頁碼，不含省略號
   const pageNumbers = computed(() => {
     const pages: number[] = []
     const { totalPages, maxVisible } = props
@@ -71,7 +71,7 @@
       let start = current - Math.floor(maxVisible / 2)
       let end = current + Math.floor(maxVisible / 2)
 
-      // 边界调整
+      // 邊界調整
       if (start < 1) {
         start = 1
         end = maxVisible

@@ -35,11 +35,11 @@
             @click="handleNotificationClick(notification)"
           >
             <div class="flex items-center gap-3">
-              <!-- 左侧：事件图标 -->
+              <!-- 左側：事件圖示 -->
               <div class="shrink-0">
                 <component :is="getNotificationIcon(notification)" class="h-5 w-5" :class="getNotificationIconColor(notification)" />
               </div>
-              <!-- 中间：主要信息 -->
+              <!-- 中間：主要資訊 -->
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="font-medium text-sm truncate">{{ getNotificationNpcName(notification) }}</span>
@@ -51,7 +51,7 @@
                   {{ getNotificationTitle(notification) }}
                 </p>
               </div>
-              <!-- 右侧：额外信息和时间 -->
+              <!-- 右側：額外資訊和時間 -->
               <div class="shrink-0 text-right">
                 <span
                   v-if="getNotificationExtra(notification)"
@@ -64,7 +64,7 @@
                   {{ formatRelativeTime((Date.now() - notification.timestamp) / 1000, t) }}{{ t('diplomacy.ago') }}
                 </span>
               </div>
-              <!-- 未读标记 -->
+              <!-- 未讀標記 -->
               <span v-if="!notification.read" class="h-2 w-2 rounded-full bg-destructive shrink-0" />
             </div>
           </div>
@@ -78,7 +78,7 @@
     </PopoverContent>
   </Popover>
 
-  <!-- 外交报告详情对话框 -->
+  <!-- 外交報告詳情對話方塊 -->
   <Dialog :open="detailDialogOpen && selectedNotification?.type === 'diplomatic'" @update:open="detailDialogOpen = $event">
     <DialogContent class="max-w-2xl">
       <DialogHeader>
@@ -97,7 +97,7 @@
       </DialogHeader>
 
       <div v-if="selectedReport" class="space-y-4">
-        <!-- NPC信息 -->
+        <!-- NPC資訊 -->
         <div class="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-1">
@@ -124,9 +124,9 @@
           </p>
         </div>
 
-        <!-- 关系变化 (仅当有 reputationChange 时显示) -->
+        <!-- 關係變化 (僅當有 reputationChange 時顯示) -->
         <div v-if="selectedReport.reputationChange !== undefined" class="grid grid-cols-2 gap-4">
-          <!-- 好感度变化 -->
+          <!-- 好感度變化 -->
           <div class="space-y-2">
             <h4 class="font-semibold text-sm">{{ t('diplomacy.reputationChange') }}</h4>
             <div class="p-3 bg-muted/30 rounded-md">
@@ -157,7 +157,7 @@
             </div>
           </div>
 
-          <!-- 关系状态变化 -->
+          <!-- 關係狀態變化 -->
           <div v-if="selectedReport.oldStatus && selectedReport.newStatus" class="space-y-2">
             <h4 class="font-semibold text-sm">{{ t('diplomacy.statusChange') }}</h4>
             <div class="p-3 bg-muted/30 rounded-md">
@@ -196,7 +196,7 @@
     </DialogContent>
   </Dialog>
 
-  <!-- 贸易提议详情对话框 -->
+  <!-- 貿易提議詳情對話方塊 -->
   <Dialog :open="detailDialogOpen && selectedNotification?.type === 'trade'" @update:open="detailDialogOpen = $event">
     <DialogContent class="max-w-lg">
       <DialogHeader>
@@ -210,7 +210,7 @@
       </DialogHeader>
 
       <div v-if="selectedTradeOffer" class="space-y-4">
-        <!-- NPC信息卡片 -->
+        <!-- NPC資訊卡片 -->
         <div class="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-1">
@@ -225,9 +225,9 @@
           </div>
         </div>
 
-        <!-- 交易内容 -->
+        <!-- 交易內容 -->
         <div class="grid grid-cols-2 gap-4">
-          <!-- 对方提供 -->
+          <!-- 對方提供 -->
           <div class="space-y-2">
             <h4 class="font-semibold text-sm flex items-center gap-1.5">
               <span class="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400"></span>
@@ -246,7 +246,7 @@
             </div>
           </div>
 
-          <!-- 对方要求 -->
+          <!-- 對方要求 -->
           <div class="space-y-2">
             <h4 class="font-semibold text-sm flex items-center gap-1.5">
               <span class="h-2 w-2 rounded-full bg-orange-500 dark:bg-orange-400"></span>
@@ -266,7 +266,7 @@
           </div>
         </div>
 
-        <!-- 交易比率和过期时间 -->
+        <!-- 交易比率和過期時間 -->
         <div class="p-3 bg-muted/30 rounded-md space-y-2">
           <div class="flex justify-between items-center text-sm">
             <span class="text-muted-foreground">{{ t('npcBehavior.trade.ratio') }}</span>
@@ -286,7 +286,7 @@
     </DialogContent>
   </Dialog>
 
-  <!-- 情报报告详情对话框 -->
+  <!-- 情報報告詳情對話方塊 -->
   <Dialog :open="detailDialogOpen && selectedNotification?.type === 'intel'" @update:open="detailDialogOpen = $event">
     <DialogContent class="max-w-lg">
       <DialogHeader>
@@ -300,7 +300,7 @@
       </DialogHeader>
 
       <div v-if="selectedIntelReport" class="space-y-4">
-        <!-- 来源NPC信息 -->
+        <!-- 來源NPC資訊 -->
         <div class="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-1">
@@ -315,9 +315,9 @@
           </div>
         </div>
 
-        <!-- 情报详情 -->
+        <!-- 情報詳情 -->
         <div class="grid grid-cols-2 gap-4">
-          <!-- 目标 -->
+          <!-- 目標 -->
           <div class="space-y-2">
             <h4 class="font-semibold text-sm">{{ t('npcBehavior.intel.target') }}</h4>
             <div class="p-3 bg-muted/30 rounded-md">
@@ -325,7 +325,7 @@
             </div>
           </div>
 
-          <!-- 情报类型 -->
+          <!-- 情報型別 -->
           <div class="space-y-2">
             <h4 class="font-semibold text-sm">{{ t('npcBehavior.intel.type') }}</h4>
             <div class="p-3 bg-muted/30 rounded-md">
@@ -341,11 +341,11 @@
           </div>
         </div>
 
-        <!-- 情报内容 -->
+        <!-- 情報內容 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm">{{ t('npcBehavior.intel.content') }}</h4>
           <div class="p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-md">
-            <!-- 舰队情报 -->
+            <!-- 艦隊情報 -->
             <div v-if="selectedIntelReport.intelType === 'enemyFleet' && selectedIntelReport.data.fleet" class="space-y-2">
               <div v-for="(count, ship) in selectedIntelReport.data.fleet" :key="ship" class="flex justify-between items-center text-sm">
                 <span class="text-muted-foreground">{{ t(`ships.${ship}`) }}</span>
@@ -355,7 +355,7 @@
                 {{ t('npcBehavior.intel.noFleet') }}
               </div>
             </div>
-            <!-- 资源情报 -->
+            <!-- 資源情報 -->
             <div v-else-if="selectedIntelReport.intelType === 'enemyResources' && selectedIntelReport.data.resources" class="space-y-2">
               <div v-if="selectedIntelReport.data.resources.metal" class="flex justify-between items-center text-sm">
                 <span class="text-muted-foreground">{{ t('resources.metal') }}</span>
@@ -370,7 +370,7 @@
                 <span class="font-medium text-green-500">{{ selectedIntelReport.data.resources.deuterium.toLocaleString() }}</span>
               </div>
             </div>
-            <!-- 移动情报 -->
+            <!-- 移動情報 -->
             <div v-else-if="selectedIntelReport.intelType === 'enemyMovement' && selectedIntelReport.data.movement" class="space-y-2">
               <div class="flex justify-between items-center text-sm">
                 <span class="text-muted-foreground">{{ t('npcBehavior.intel.targetPosition') }}</span>
@@ -385,7 +385,7 @@
                 <span class="font-medium">{{ selectedIntelReport.data.movement.missionType }}</span>
               </div>
             </div>
-            <!-- 默认 -->
+            <!-- 預設 -->
             <div v-else class="text-sm text-muted-foreground text-center">
               {{ t('npcBehavior.intel.noData') }}
             </div>
@@ -400,7 +400,7 @@
     </DialogContent>
   </Dialog>
 
-  <!-- 联合攻击邀请详情对话框 -->
+  <!-- 聯合攻擊邀請詳情對話方塊 -->
   <Dialog :open="detailDialogOpen && selectedNotification?.type === 'jointAttack'" @update:open="detailDialogOpen = $event">
     <DialogContent class="max-w-lg">
       <DialogHeader>
@@ -414,7 +414,7 @@
       </DialogHeader>
 
       <div v-if="selectedJointAttack" class="space-y-4">
-        <!-- 邀请方NPC信息 -->
+        <!-- 邀請方NPC資訊 -->
         <div class="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-1">
@@ -429,7 +429,7 @@
           </div>
         </div>
 
-        <!-- 攻击目标信息 -->
+        <!-- 攻擊目標資訊 -->
         <div class="space-y-2">
           <h4 class="font-semibold text-sm flex items-center gap-1.5">
             <Sword class="h-4 w-4 text-red-500" />
@@ -447,9 +447,9 @@
           </div>
         </div>
 
-        <!-- 收益和时限 -->
+        <!-- 收益和時限 -->
         <div class="grid grid-cols-2 gap-4">
-          <!-- 战利品分成 -->
+          <!-- 戰利品分成 -->
           <div class="space-y-2">
             <h4 class="font-semibold text-sm">{{ t('npcBehavior.jointAttack.lootShare') }}</h4>
             <div class="p-3 bg-orange-500/10 border border-orange-500/20 rounded-md text-center">
@@ -460,7 +460,7 @@
             </div>
           </div>
 
-          <!-- 过期时间 -->
+          <!-- 過期時間 -->
           <div class="space-y-2">
             <h4 class="font-semibold text-sm">{{ t('npcBehavior.jointAttack.expiresIn') }}</h4>
             <div class="p-3 bg-muted/30 rounded-md text-center">
@@ -500,7 +500,7 @@
   import NumberWithTooltip from '@/components/common/NumberWithTooltip.vue'
   import ResourceIcon from '@/components/common/ResourceIcon.vue'
 
-  // 统一通知类型
+  // 統一通知型別
   type NotificationType = 'diplomatic' | 'trade' | 'intel' | 'jointAttack'
 
   interface UnifiedNotification {
@@ -519,11 +519,11 @@
   const detailDialogOpen = ref(false)
   const selectedNotification = ref<UnifiedNotification | null>(null)
 
-  // 倒计时相关
+  // 倒計時相關
   const currentTime = ref(Date.now())
   let countdownTimer: ReturnType<typeof setInterval> | null = null
 
-  // 启动倒计时定时器
+  // 啟動倒計時定時器
   const startCountdownTimer = () => {
     if (countdownTimer) return
     countdownTimer = setInterval(() => {
@@ -531,7 +531,7 @@
     }, 1000)
   }
 
-  // 停止倒计时定时器
+  // 停止倒計時定時器
   const stopCountdownTimer = () => {
     if (countdownTimer) {
       clearInterval(countdownTimer)
@@ -539,7 +539,7 @@
     }
   }
 
-  // 监听对话框打开状态
+  // 監聽對話方塊開啟狀態
   watch(detailDialogOpen, open => {
     if (open) {
       startCountdownTimer()
@@ -548,12 +548,12 @@
     }
   })
 
-  // 组件卸载时清理
+  // 元件解除安裝時清理
   onUnmounted(() => {
     stopCountdownTimer()
   })
 
-  // 格式化倒计时（毫秒 -> HH:MM:SS 或 MM:SS）
+  // 格式化倒計時（毫秒 -> HH:MM:SS 或 MM:SS）
   const formatCountdown = (ms: number): string => {
     if (ms <= 0) return '00:00'
     const totalSeconds = Math.floor(ms / 1000)
@@ -566,7 +566,7 @@
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
 
-  // 选中的各类型数据（计算属性）
+  // 選中的各型別資料（計算屬性）
   const selectedReport = computed(() => {
     if (selectedNotification.value?.type === 'diplomatic') {
       return selectedNotification.value.data as DiplomaticReport
@@ -595,11 +595,11 @@
     return null
   })
 
-  // 统一所有通知到一个列表
+  // 統一所有通知到一個列表
   const allNotifications = computed((): UnifiedNotification[] => {
     const notifications: UnifiedNotification[] = []
 
-    // 外交报告
+    // 外交報告
     ;(gameStore.player.diplomaticReports || []).forEach(report => {
       notifications.push({
         id: report.id,
@@ -610,7 +610,7 @@
       })
     })
 
-    // 贸易提议（只显示pending状态的）
+    // 貿易提議（只顯示pending狀態的）
     ;(gameStore.player.tradeOffers || [])
       .filter(offer => offer.status === 'pending')
       .forEach(offer => {
@@ -623,7 +623,7 @@
         })
       })
 
-    // 情报报告
+    // 情報報告
     ;(gameStore.player.intelReports || []).forEach(report => {
       notifications.push({
         id: report.id,
@@ -634,7 +634,7 @@
       })
     })
 
-    // 联合攻击邀请（只显示pending状态的）
+    // 聯合攻擊邀請（只顯示pending狀態的）
     ;(gameStore.player.jointAttackInvites || [])
       .filter(invite => invite.status === 'pending')
       .forEach(invite => {
@@ -647,7 +647,7 @@
         })
       })
 
-    // 按时间倒序排序，取最近30条
+    // 按時間倒序排序，取最近30條
     return notifications.sort((a, b) => b.timestamp - a.timestamp).slice(0, 30)
   })
 
@@ -656,7 +656,7 @@
   })
 
   /**
-   * 获取NPC当前名称（通用）
+   * 獲取NPC當前名稱（通用）
    */
   const getNpcNameById = (npcId: string, fallbackName: string): string => {
     if (!npcStore.npcs?.length) return fallbackName
@@ -664,7 +664,7 @@
     const npc = npcStore.npcs.find(n => n.id === npcId)
     if (npc) return npc.name
 
-    // 尝试从旧名称中提取ID并查找
+    // 嘗試從舊名稱中提取ID並查詢
     const idMatch = fallbackName.match(/npc_\d+/)
     if (idMatch) {
       const extractedId = idMatch[0]
@@ -676,14 +676,14 @@
   }
 
   /**
-   * 获取NPC当前名称（外交报告专用）
+   * 獲取NPC當前名稱（外交報告專用）
    */
   const getNpcName = (report: DiplomaticReport): string => {
     return getNpcNameById(report.npcId || '', report.npcName)
   }
 
   /**
-   * 获取通知的NPC名称
+   * 獲取通知的NPC名稱
    */
   const getNotificationNpcName = (notification: UnifiedNotification): string => {
     switch (notification.type) {
@@ -709,7 +709,7 @@
   }
 
   /**
-   * 获取报告的消息参数，将 npcName 替换为当前名称
+   * 獲取報告的訊息引數，將 npcName 替換為當前名稱
    */
   const getMessageParams = (report: DiplomaticReport): Record<string, string | number> => {
     if (!report.messageParams) return {}
@@ -720,7 +720,7 @@
   }
 
   /**
-   * 获取通知图标
+   * 獲取通知圖示
    */
   const getNotificationIcon = (notification: UnifiedNotification) => {
     switch (notification.type) {
@@ -740,7 +740,7 @@
   }
 
   /**
-   * 获取通知图标颜色
+   * 獲取通知圖示顏色
    */
   const getNotificationIconColor = (notification: UnifiedNotification) => {
     switch (notification.type) {
@@ -760,7 +760,7 @@
   }
 
   /**
-   * 获取通知标题
+   * 獲取通知標題
    */
   const getNotificationTitle = (notification: UnifiedNotification): string => {
     switch (notification.type) {
@@ -780,7 +780,7 @@
   }
 
   /**
-   * 获取通知徽章变体
+   * 獲取通知徽章變體
    */
   const getNotificationBadgeVariant = (notification: UnifiedNotification) => {
     switch (notification.type) {
@@ -800,7 +800,7 @@
   }
 
   /**
-   * 获取通知徽章文字
+   * 獲取通知徽章文字
    */
   const getNotificationBadgeText = (notification: UnifiedNotification): string => {
     switch (notification.type) {
@@ -820,7 +820,7 @@
   }
 
   /**
-   * 获取通知的额外信息（右侧显示）
+   * 獲取通知的額外資訊（右側顯示）
    */
   const getNotificationExtra = (notification: UnifiedNotification): { text: string; colorClass: string } | null => {
     switch (notification.type) {
@@ -946,19 +946,19 @@
   }
 
   /**
-   * 处理通知点击 - 标记为已读并打开详情弹窗
+   * 處理通知點選 - 標記為已讀並開啟詳情彈窗
    */
   const handleNotificationClick = (notification: UnifiedNotification) => {
-    // 标记为已读
+    // 標記為已讀
     markNotificationAsRead(notification)
-    // 设置选中的通知
+    // 設定選中的通知
     selectedNotification.value = notification
-    // 打开对话框
+    // 開啟對話方塊
     detailDialogOpen.value = true
   }
 
   /**
-   * 标记单个通知为已读
+   * 標記單個通知為已讀
    */
   const markNotificationAsRead = (notification: UnifiedNotification) => {
     switch (notification.type) {
@@ -986,19 +986,19 @@
   }
 
   const markAllAsRead = () => {
-    // 标记所有外交报告
+    // 標記所有外交報告
     gameStore.player.diplomaticReports?.forEach(report => {
       report.read = true
     })
-    // 标记所有贸易提议
+    // 標記所有貿易提議
     gameStore.player.tradeOffers?.forEach(offer => {
       offer.read = true
     })
-    // 标记所有情报报告
+    // 標記所有情報報告
     gameStore.player.intelReports?.forEach(report => {
       report.read = true
     })
-    // 标记所有联合攻击邀请
+    // 標記所有聯合攻擊邀請
     gameStore.player.jointAttackInvites?.forEach(invite => {
       invite.read = true
     })
@@ -1021,7 +1021,7 @@
     router.push('/messages')
   }
 
-  // ========== 贸易提议详情方法 ==========
+  // ========== 貿易提議詳情方法 ==========
   const getTradeNpcName = (offer: TradeOffer): string => {
     return getNpcNameById(offer.npcId, offer.npcName)
   }
@@ -1035,7 +1035,7 @@
   const getTradeExpiresClass = (offer: TradeOffer): string => {
     const remaining = offer.expiresAt - currentTime.value
     if (remaining <= 0) return 'text-red-600 dark:text-red-400'
-    if (remaining < 3600000) return 'text-orange-600 dark:text-orange-400' // < 1小时
+    if (remaining < 3600000) return 'text-orange-600 dark:text-orange-400' // < 1小時
     return 'text-muted-foreground'
   }
 
@@ -1044,7 +1044,7 @@
     return `1:${ratio.toFixed(2)}`
   }
 
-  // ========== 情报报告详情方法 ==========
+  // ========== 情報報告詳情方法 ==========
   const getIntelFromNpcName = (report: IntelReport): string => {
     return getNpcNameById(report.fromNpcId, report.fromNpcName)
   }
@@ -1092,7 +1092,7 @@
     }
   }
 
-  // ========== 联合攻击邀请详情方法 ==========
+  // ========== 聯合攻擊邀請詳情方法 ==========
   const getJointAttackFromNpcName = (invite: JointAttackInvite): string => {
     return getNpcNameById(invite.fromNpcId, invite.fromNpcName)
   }
@@ -1115,7 +1115,7 @@
   const getJointAttackExpiresClass = (invite: JointAttackInvite): string => {
     const remaining = invite.expiresAt - currentTime.value
     if (remaining <= 0) return 'text-red-600 dark:text-red-400'
-    if (remaining < 3600000) return 'text-orange-600 dark:text-orange-400' // < 1小时
+    if (remaining < 3600000) return 'text-orange-600 dark:text-orange-400' // < 1小時
     return 'text-muted-foreground'
   }
 </script>

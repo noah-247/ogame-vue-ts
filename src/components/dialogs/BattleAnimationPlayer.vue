@@ -1,6 +1,6 @@
 <template>
   <div class="battle-animation-container">
-    <!-- 播放控制栏 -->
+    <!-- 播放控制欄 -->
     <div class="flex items-center justify-between gap-2 mb-4 p-3 bg-muted/50 rounded-lg border">
       <div class="flex items-center gap-2">
         <Button variant="outline" size="icon" @click="restart" :disabled="!canRestart">
@@ -35,16 +35,16 @@
       </div>
     </div>
 
-    <!-- 战斗场景 -->
+    <!-- 戰鬥場景 -->
     <div class="battle-scene relative overflow-hidden rounded-lg border bg-gradient-to-b from-slate-900 to-slate-950 p-4 min-h-[300px]">
       <!-- 星空背景 -->
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div v-for="i in 20" :key="i" class="star" :style="getStarStyle(i)" />
       </div>
 
-      <!-- 攻击方区域 -->
+      <!-- 攻擊方區域 -->
       <div class="relative z-10 flex justify-between items-center gap-4">
-        <!-- 攻击方舰队 -->
+        <!-- 攻擊方艦隊 -->
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-2">
             <Sword class="h-4 w-4 text-red-400" />
@@ -66,7 +66,7 @@
           </div>
         </div>
 
-        <!-- VS 标志 -->
+        <!-- VS 標誌 -->
         <div class="flex flex-col items-center gap-2">
           <div
             class="vs-badge w-12 h-12 rounded-full bg-yellow-500/20 border-2 border-yellow-500/50 flex items-center justify-center"
@@ -74,7 +74,7 @@
           >
             <Swords class="h-6 w-6 text-yellow-400" />
           </div>
-          <!-- 当前回合损失动画 -->
+          <!-- 當前回合損失動畫 -->
           <Transition name="damage-popup">
             <div v-if="showDamageNumbers" class="damage-numbers text-center">
               <div v-if="displayedLosses.attacker > 0" class="text-red-400 text-xs font-bold animate-bounce">
@@ -87,7 +87,7 @@
           </Transition>
         </div>
 
-        <!-- 防守方舰队 -->
+        <!-- 防守方艦隊 -->
         <div class="flex-1">
           <div class="flex items-center justify-end gap-2 mb-2">
             <span class="text-sm font-medium text-blue-400">{{ t('simulatorView.defender') }}</span>
@@ -112,7 +112,7 @@
         </div>
       </div>
 
-      <!-- 战斗日志 -->
+      <!-- 戰鬥日誌 -->
       <div class="battle-log mt-4 p-3 bg-black/30 rounded border border-white/10 max-h-32 overflow-y-auto">
         <div v-for="(log, index) in battleLogs" :key="index" class="text-xs mb-1" :class="log.type">
           <span class="text-muted-foreground">[{{ log.round }}]</span>
@@ -124,7 +124,7 @@
       </div>
     </div>
 
-    <!-- 战斗结果预览 (仅在完成时显示) -->
+    <!-- 戰鬥結果預覽 (僅在完成時顯示) -->
     <Transition name="fade">
       <div v-if="showResult" class="mt-4 p-4 rounded-lg border text-center" :class="resultStyle">
         <p class="text-lg font-bold">{{ resultText }}</p>
@@ -157,7 +157,7 @@
   const { t } = useI18n()
   const { SHIPS, DEFENSES } = useGameConfig()
 
-  // 播放状态
+  // 播放狀態
   const isPlaying = ref(false)
   const currentRoundIndex = ref(0)
   const speedMultiplier = ref('1')
@@ -165,31 +165,31 @@
   const showDamageNumbers = ref(false)
   const showResult = ref(false)
 
-  // 爆炸动画追踪
+  // 爆炸動畫追蹤
   const explodingShips = ref<{ side: 'attacker' | 'defender'; type: string }[]>([])
 
-  // 当前显示的损失数字（用于动画显示）
+  // 當前顯示的損失數字（用於動畫顯示）
   const displayedLosses = ref({ attacker: 0, defender: 0 })
 
-  // 战斗日志
+  // 戰鬥日誌
   interface BattleLog {
     round: number
     message: string
     type: 'attacker-loss' | 'defender-loss' | 'info'
   }
   const battleLogs = ref<BattleLog[]>([])
-  const MAX_LOGS = 100 // 限制日志数量，防止100回合战斗导致性能问题
+  const MAX_LOGS = 100 // 限制日誌數量，防止100回合戰鬥導致效能問題
 
-  // 添加日志的辅助函数，自动限制数量
+  // 新增日誌的輔助函式，自動限制數量
   const addBattleLog = (log: BattleLog) => {
     battleLogs.value.push(log)
-    // 如果超过最大数量，删除最旧的日志
+    // 如果超過最大數量，刪除最舊的日誌
     if (battleLogs.value.length > MAX_LOGS) {
       battleLogs.value = battleLogs.value.slice(-MAX_LOGS)
     }
   }
 
-  // 计算属性
+  // 計算屬性
   const totalRounds = computed(() => props.report.roundDetails?.length || props.report.rounds || 1)
 
   const canPlay = computed(() => currentRoundIndex.value < totalRounds.value)
@@ -197,7 +197,7 @@
   const canGoNext = computed(() => currentRoundIndex.value < totalRounds.value)
   const canRestart = computed(() => currentRoundIndex.value > 0 || battleLogs.value.length > 0)
 
-  // 当前回合的舰队状态（通过累计损失计算）
+  // 當前回合的艦隊狀態（透過累計損失計算）
   const currentAttackerFleet = computed(() => {
     const fleet: Partial<Fleet> = { ...props.report.attackerFleet }
     if (props.report.roundDetails) {
@@ -210,7 +210,7 @@
         }
       }
     }
-    // 过滤掉数量为0的
+    // 過濾掉數量為0的
     return Object.fromEntries(Object.entries(fleet).filter(([, count]) => count > 0))
   })
 
@@ -234,7 +234,7 @@
       }
     }
 
-    // 合并舰队和防御
+    // 合併艦隊和防禦
     const combined = {
       ...Object.fromEntries(Object.entries(fleet).filter(([, count]) => count > 0)),
       ...Object.fromEntries(Object.entries(defense).filter(([, count]) => count > 0))
@@ -246,7 +246,7 @@
     if (props.report.roundDetails && currentRoundIndex.value > 0) {
       return props.report.roundDetails[currentRoundIndex.value - 1]?.attackerRemainingPower || 0
     }
-    // 初始战斗力
+    // 初始戰鬥力
     return calculateFleetPower(props.report.attackerFleet)
   })
 
@@ -254,7 +254,7 @@
     if (props.report.roundDetails && currentRoundIndex.value > 0) {
       return props.report.roundDetails[currentRoundIndex.value - 1]?.defenderRemainingPower || 0
     }
-    // 初始战斗力
+    // 初始戰鬥力
     return calculateFleetPower(props.report.defenderFleet) + calculateDefensePower(props.report.defenderDefense)
   })
 
@@ -274,7 +274,7 @@
     return t('messagesView.defenderWins')
   })
 
-  // 辅助函数
+  // 輔助函式
   const calculateFleetPower = (fleet: Partial<Fleet>): number => {
     let power = 0
     for (const [shipType, count] of Object.entries(fleet)) {
@@ -328,7 +328,7 @@
 
   // 播放控制
   let playTimeoutId: ReturnType<typeof setTimeout> | null = null
-  let isPlayingRound = false // 防止重复执行
+  let isPlayingRound = false // 防止重複執行
 
   const togglePlay = () => {
     if (isPlaying.value) {
@@ -358,22 +358,22 @@
     if (!isPlaying.value) return
     if (playTimeoutId) clearTimeout(playTimeoutId)
 
-    // 使用 setTimeout 而非 setInterval，确保每回合顺序执行
+    // 使用 setTimeout 而非 setInterval，確保每回合順序執行
     playTimeoutId = setTimeout(async () => {
       if (!isPlaying.value) return
       if (currentRoundIndex.value < totalRounds.value) {
         await playRound()
-        scheduleNextRound() // 回合完成后再调度下一回合
+        scheduleNextRound() // 回合完成後再排程下一回合
       } else {
         pause()
         showResult.value = true
         emit('complete')
       }
-    }, 100) // 短暂延迟启动
+    }, 100) // 短暫延遲啟動
   }
 
   const playRound = async () => {
-    if (isPlayingRound) return // 防止重复执行
+    if (isPlayingRound) return // 防止重複執行
     if (currentRoundIndex.value >= totalRounds.value) return
 
     isPlayingRound = true
@@ -382,23 +382,23 @@
       const roundIndex = currentRoundIndex.value
       const roundData = props.report.roundDetails?.[roundIndex]
 
-      // 攻击动画阶段
+      // 攻擊動畫階段
       attackAnimationPhase.value = 'attack'
 
-      // 添加日志
+      // 新增日誌
       addBattleLog({
         round: roundIndex + 1,
         message: t('messagesView.roundStarted').replace('{round}', String(roundIndex + 1)),
         type: 'info'
       })
 
-      // 等待攻击动画
+      // 等待攻擊動畫
       await sleep(400 / speed)
 
-      // 伤害阶段
+      // 傷害階段
       attackAnimationPhase.value = 'damage'
 
-      // 计算当前回合的损失数字
+      // 計算當前回合的損失數字
       if (roundData) {
         const attackerLoss = Object.values(roundData.attackerLosses || {}).reduce((sum, count) => sum + count, 0)
         const defenderLoss =
@@ -411,7 +411,7 @@
       showDamageNumbers.value = true
 
       if (roundData) {
-        // 记录攻击方损失
+        // 記錄攻擊方損失
         for (const [shipType, count] of Object.entries(roundData.attackerLosses || {})) {
           if (count > 0) {
             explodingShips.value.push({ side: 'attacker', type: shipType })
@@ -425,7 +425,7 @@
           }
         }
 
-        // 记录防守方损失
+        // 記錄防守方損失
         for (const [shipType, count] of Object.entries(roundData.defenderLosses?.fleet || {})) {
           if (count > 0) {
             explodingShips.value.push({ side: 'defender', type: shipType })
@@ -453,17 +453,17 @@
         }
       }
 
-      // 等待伤害显示
+      // 等待傷害顯示
       await sleep(600 / speed)
 
-      // 清理状态
+      // 清理狀態
       attackAnimationPhase.value = 'idle'
       showDamageNumbers.value = false
       explodingShips.value = []
 
       currentRoundIndex.value++
     } finally {
-      // 确保锁始终被释放，即使发生错误
+      // 確保鎖始終被釋放，即使發生錯誤
       isPlayingRound = false
     }
   }
@@ -479,7 +479,7 @@
     if (currentRoundIndex.value > 0) {
       pause()
       currentRoundIndex.value--
-      // 移除该回合的日志
+      // 移除該回合的日誌
       battleLogs.value = battleLogs.value.filter(log => log.round <= currentRoundIndex.value)
       showResult.value = false
     }
@@ -500,7 +500,7 @@
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  // 监听速度变化
+  // 監聽速度變化
   watch(speedMultiplier, () => {
     if (isPlaying.value) {
       scheduleNextRound()
@@ -514,7 +514,7 @@
     }
   })
 
-  // 暴露给父组件
+  // 暴露給父元件
   defineExpose({
     currentRoundIndex,
     totalRounds

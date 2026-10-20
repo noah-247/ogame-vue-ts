@@ -6,13 +6,13 @@
         <DialogDescription class="sr-only">{{ t('privacy.title') }}</DialogDescription>
       </DialogHeader>
       <div class="flex-1 overflow-y-auto pr-2 space-y-4 text-sm">
-        <!-- 简介 -->
+        <!-- 簡介 -->
         <section>
           <h3 class="font-semibold mb-1">{{ t('privacy.sections.introduction.title') }}</h3>
           <p class="text-muted-foreground">{{ t('privacy.sections.introduction.content') }}</p>
         </section>
 
-        <!-- 数据收集 -->
+        <!-- 資料收集 -->
         <section>
           <h3 class="font-semibold mb-1">{{ t('privacy.sections.dataCollection.title') }}</h3>
           <p class="text-muted-foreground mb-1">{{ t('privacy.sections.dataCollection.content') }}</p>
@@ -23,25 +23,25 @@
           </ul>
         </section>
 
-        <!-- 数据存储 -->
+        <!-- 資料儲存 -->
         <section>
           <h3 class="font-semibold mb-1">{{ t('privacy.sections.dataStorage.title') }}</h3>
           <p class="text-muted-foreground">{{ t('privacy.sections.dataStorage.content') }}</p>
         </section>
 
-        <!-- 无服务器通信 -->
+        <!-- 無伺服器通訊 -->
         <section>
           <h3 class="font-semibold mb-1">{{ t('privacy.sections.noServer.title') }}</h3>
           <p class="text-muted-foreground">{{ t('privacy.sections.noServer.content') }}</p>
         </section>
 
-        <!-- 第三方服务 -->
+        <!-- 第三方服務 -->
         <section>
           <h3 class="font-semibold mb-1">{{ t('privacy.sections.thirdParty.title') }}</h3>
           <p class="text-muted-foreground">{{ t('privacy.sections.thirdParty.content') }}</p>
         </section>
 
-        <!-- 数据控制 -->
+        <!-- 資料控制 -->
         <section>
           <h3 class="font-semibold mb-1">{{ t('privacy.sections.dataControl.title') }}</h3>
           <p class="text-muted-foreground mb-1">{{ t('privacy.sections.dataControl.content') }}</p>
@@ -52,7 +52,7 @@
           </ul>
         </section>
 
-        <!-- 联系我们 -->
+        <!-- 聯絡我們 -->
         <section>
           <h3 class="font-semibold mb-1">{{ t('privacy.sections.contact.title') }}</h3>
           <p class="text-muted-foreground">
@@ -83,7 +83,7 @@
   import { Button } from '@/components/ui/button'
   import pkg from '../../../package.json'
 
-  // 双向绑定 open 状态
+  // 雙向繫結 open 狀態
   const open = defineModel<boolean>('open', { default: false })
 
   const { t } = useI18n()

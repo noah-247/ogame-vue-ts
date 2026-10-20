@@ -4,7 +4,7 @@
     :class="[statusClass, { 'cursor-pointer': isClickable, 'cursor-not-allowed': !isClickable }]"
     @click="handleClick"
   >
-    <!-- 节点主体 -->
+    <!-- 節點主體 -->
     <div
       :class="[
         'relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300',
@@ -12,20 +12,20 @@
         nodeBackgroundClass
       ]"
     >
-      <!-- Boss标记 -->
+      <!-- Boss標記 -->
       <div v-if="quest.isBoss" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
         <Skull class="w-3 h-3 text-white" />
       </div>
 
-      <!-- 分支标记 -->
+      <!-- 分支標記 -->
       <div v-if="quest.isBranch" class="absolute -top-1 -left-1 w-5 h-5 bg-blue-500 dark:bg-blue-400 rounded-full flex items-center justify-center">
         <GitBranch class="w-3 h-3 text-white" />
       </div>
 
-      <!-- 状态图标 -->
+      <!-- 狀態圖示 -->
       <component :is="statusIcon" :class="['w-6 h-6', iconClass]" />
 
-      <!-- 进度环 -->
+      <!-- 進度環 -->
       <svg v-if="status === QuestStatus.Active && progress > 0" class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
         <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" stroke-width="3" class="text-primary/30" />
         <circle
@@ -41,7 +41,7 @@
       </svg>
     </div>
 
-    <!-- 节点标题 -->
+    <!-- 節點標題 -->
     <div class="mt-2 text-center max-w-20">
       <p :class="['text-xs font-medium truncate', titleClass]">
         {{ t(quest.titleKey) }}
@@ -49,7 +49,7 @@
       <p v-if="status === QuestStatus.Active" class="text-[10px] text-primary">{{ progress }}%</p>
     </div>
 
-    <!-- 脉冲动画（可用状态） -->
+    <!-- 脈衝動畫（可用狀態） -->
     <div v-if="status === QuestStatus.Available" class="absolute inset-0 w-14 h-14 rounded-full animate-ping bg-blue-400/30 dark:bg-blue-300/30" />
   </div>
 </template>
@@ -72,24 +72,24 @@
 
   const { t } = useI18n()
 
-  // 计算任务状态
+  // 計算任務狀態
   const status = computed(() => {
     if (!props.progress) return QuestStatus.Locked
     return getQuestStatus(props.progress, props.quest.id)
   })
 
-  // 计算任务进度百分比
+  // 計算任務進度百分比
   const progress = computed(() => {
     if (!props.progress || status.value !== QuestStatus.Active) return 0
     return calculateQuestProgress(props.progress, props.quest.id)
   })
 
-  // 是否可点击
+  // 是否可點選
   const isClickable = computed(() => {
     return status.value !== QuestStatus.Locked
   })
 
-  // 状态样式类
+  // 狀態樣式類
   const statusClass = computed(() => {
     switch (status.value) {
       case QuestStatus.Completed:
@@ -103,7 +103,7 @@
     }
   })
 
-  // 节点背景样式
+  // 節點背景樣式
   const nodeBackgroundClass = computed(() => {
     switch (status.value) {
       case QuestStatus.Completed:
@@ -117,7 +117,7 @@
     }
   })
 
-  // 状态图标
+  // 狀態圖示
   const statusIcon = computed(() => {
     switch (status.value) {
       case QuestStatus.Completed:
@@ -131,7 +131,7 @@
     }
   })
 
-  // 图标样式
+  // 圖示樣式
   const iconClass = computed(() => {
     switch (status.value) {
       case QuestStatus.Completed:
@@ -145,7 +145,7 @@
     }
   })
 
-  // 标题样式
+  // 標題樣式
   const titleClass = computed(() => {
     switch (status.value) {
       case QuestStatus.Completed:
@@ -159,7 +159,7 @@
     }
   })
 
-  // 处理点击
+  // 處理點選
   const handleClick = () => {
     if (isClickable.value) {
       emit('select', props.quest.id)

@@ -1,6 +1,6 @@
 <template>
   <div v-if="planet" class="container mx-auto p-4 sm:p-6">
-    <!-- 未解锁遮罩 -->
+    <!-- 未解鎖遮罩 -->
     <UnlockRequirement :required-building="BuildingType.ResearchLab" :required-level="1" />
 
     <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">{{ t('researchView.title') }}</h1>
@@ -50,7 +50,7 @@
                   </span>
                 </div>
               </div>
-              <!-- 研究时间 -->
+              <!-- 研究時間 -->
               <div class="flex items-center gap-1.5 sm:gap-2">
                 <Clock class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <span class="font-medium text-xs sm:text-sm text-muted-foreground">{{ formatTime(getResearchTime(techType)) }}</span>
@@ -61,7 +61,7 @@
               {{ getResearchButtonText(techType) }}
             </Button>
 
-            <!-- 添加到等待队列按钮 -->
+            <!-- 新增到等待佇列按鈕 -->
             <Button v-if="canAddToWaitingQueue(techType)" @click="handleAddToWaiting(techType, $event)" variant="outline" class="w-full">
               {{ t('queue.addToWaiting') }}
             </Button>
@@ -70,7 +70,7 @@
       </Card>
     </div>
 
-    <!-- 提示对话框 -->
+    <!-- 提示對話方塊 -->
     <AlertDialog :open="alertDialogOpen" @update:open="alertDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -136,18 +136,18 @@
   const planet = computed(() => gameStore.currentPlanet)
   const player = computed(() => gameStore.player)
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const alertDialogOpen = ref(false)
   const alertDialogTitle = ref('')
   const alertDialogMessage = ref('')
   const alertDialogRequirements = ref<Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }>>([])
   const alertDialogShowRequirements = ref(false)
 
-  // 防抖状态：防止快速点击
+  // 防抖狀態：防止快速點選
   const isProcessing = ref(false)
-  const DEBOUNCE_DELAY = 300 // 防抖延迟（毫秒）
+  const DEBOUNCE_DELAY = 300 // 防抖延遲（毫秒）
 
-  // 资源类型配置（用于成本显示）
+  // 資源型別配置（用於成本顯示）
   const costResourceTypes = [
     { key: 'metal' as const },
     { key: 'crystal' as const },
@@ -166,7 +166,7 @@
     if (!validation.valid) return false
     const currentLevel = gameStore.player.technologies[techType] || 0
 
-    // 追踪资源消耗（在扣除前计算成本）
+    // 追蹤資源消耗（在扣除前計算成本）
     const cost = researchLogic.calculateTechnologyCost(techType, currentLevel + 1)
     gameLogic.trackResourceConsumption(gameStore.player, cost)
 
@@ -182,47 +182,47 @@
     return true
   }
 
-  // 检查升级前置条件是否满足
+  // 檢查升級前置條件是否滿足
   const checkUpgradeRequirements = (techType: TechnologyType): boolean => {
     if (!planet.value) return false
     const config = TECHNOLOGIES.value[techType]
     const currentLevel = getTechLevel(techType)
     const targetLevel = currentLevel + 1
 
-    // 获取目标等级的所有前置条件（包括等级门槛）
+    // 獲取目標等級的所有前置條件（包括等級門檻）
     const requirements = publicLogic.getLevelRequirements(config, targetLevel)
 
     if (!requirements || Object.keys(requirements).length === 0) return true
     return publicLogic.checkRequirements(planet.value, gameStore.player.technologies, requirements)
   }
 
-  // 获取研究按钮文本
+  // 獲取研究按鈕文字
   const getResearchButtonText = (techType: TechnologyType): string => {
     if (!planet.value) return t('researchView.research')
 
     const config = TECHNOLOGIES.value[techType]
     const currentLevel = getTechLevel(techType)
 
-    // 检查是否达到等级上限
+    // 檢查是否達到等級上限
     if (config.maxLevel !== undefined && currentLevel >= config.maxLevel) {
-      return t('researchView.maxLevelReached') // "等级已满"
+      return t('researchView.maxLevelReached') // "等級已滿"
     }
 
-    // 检查研究队列是否已满
+    // 檢查研究佇列是否已滿
     const maxQueue = publicLogic.getMaxResearchQueue(gameStore.player.technologies)
     if (player.value.researchQueue.length >= maxQueue) {
       return t('researchView.research')
     }
 
-    // 检查前置条件
+    // 檢查前置條件
     if (!checkUpgradeRequirements(techType)) {
-      return t('buildingsView.requirementsNotMet') // "条件不足"
+      return t('buildingsView.requirementsNotMet') // "條件不足"
     }
 
     return t('researchView.research') // "研究"
   }
 
-  // 获取前置条件列表
+  // 獲取前置條件列表
   const getRequirementsList = (
     techType: TechnologyType
   ): Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }> => {
@@ -230,21 +230,21 @@
     const currentLevel = getTechLevel(techType)
     const targetLevel = currentLevel + 1
 
-    // 获取目标等级的所有前置条件（包括等级门槛）
+    // 獲取目標等級的所有前置條件（包括等級門檻）
     const requirements = publicLogic.getLevelRequirements(config, targetLevel)
 
     if (!requirements || !planet.value) return []
 
     const items: Array<{ name: string; requiredLevel: number; currentLevel: number; met: boolean }> = []
     for (const [key, requiredLevel] of Object.entries(requirements)) {
-      // 检查是否为建筑类型
+      // 檢查是否為建築型別
       if (Object.values(BuildingType).includes(key as BuildingType)) {
         const bt = key as BuildingType
         const currentLevel = planet.value.buildings[bt] || 0
         const name = BUILDINGS.value[bt]?.name || bt
         items.push({ name, requiredLevel, currentLevel, met: currentLevel >= requiredLevel })
       }
-      // 检查是否为科技类型
+      // 檢查是否為科技型別
       else if (Object.values(TechnologyType).includes(key as TechnologyType)) {
         const tt = key as TechnologyType
         const currentLevel = gameStore.player.technologies[tt] || 0
@@ -257,14 +257,14 @@
 
   // 研究科技
   const handleResearch = (techType: TechnologyType, event: MouseEvent) => {
-    // 防抖：防止快速点击
+    // 防抖：防止快速點選
     if (isProcessing.value) return
     isProcessing.value = true
     setTimeout(() => {
       isProcessing.value = false
     }, DEBOUNCE_DELAY)
 
-    // 检查前置条件
+    // 檢查前置條件
     if (!checkUpgradeRequirements(techType)) {
       alertDialogTitle.value = t('common.requirementsNotMet')
       alertDialogRequirements.value = getRequirementsList(techType)
@@ -281,35 +281,35 @@
       alertDialogShowRequirements.value = false
       alertDialogOpen.value = true
     } else {
-      // 触发抛物线动画
+      // 觸發拋物線動畫
       triggerQueueAnimation(event, 'technology')
     }
   }
 
-  // 获取科技等级
+  // 獲取科技等級
   const getTechLevel = (techType: TechnologyType): number => {
     return player.value.technologies[techType] || 0
   }
 
-  // 检查是否可以研究
+  // 檢查是否可以研究
   const canResearch = (techType: TechnologyType): boolean => {
     if (!planet.value) return false
 
     const config = TECHNOLOGIES.value[techType]
     const currentLevel = getTechLevel(techType)
 
-    // 检查是否达到等级上限
+    // 檢查是否達到等級上限
     if (config.maxLevel !== undefined && currentLevel >= config.maxLevel) {
       return false
     }
 
-    // 检查队列中是否已存在该科技的研究任务
+    // 檢查佇列中是否已存在該科技的研究任務
     const existingQueueItem = player.value.researchQueue.find(item => item.type === 'technology' && item.itemType === techType)
     if (existingQueueItem) {
       return false
     }
 
-    // 检查研究队列是否已满
+    // 檢查研究佇列是否已滿
     const maxQueue = publicLogic.getMaxResearchQueue(gameStore.player.technologies)
     if (player.value.researchQueue.length >= maxQueue) {
       return false
@@ -330,13 +330,13 @@
     return researchLogic.calculateTechnologyCost(techType, targetLevel)
   }
 
-  // 获取研究时间（秒）
+  // 獲取研究時間（秒）
   const getResearchTime = (techType: TechnologyType): number => {
     if (!planet.value) return 0
     const currentLevel = getTechLevel(techType)
     const intergalacticResearchNetworkLevel = player.value.technologies[TechnologyType.IntergalacticResearchNetwork] || 0
 
-    // 计算有效研究实验室等级（考虑星际研究网络）
+    // 計算有效研究實驗室等級（考慮星際研究網路）
     let researchLabLevel: number
     if (intergalacticResearchNetworkLevel > 0) {
       researchLabLevel = researchLogic.calculateEffectiveLabLevel(
@@ -363,34 +363,34 @@
     )
   }
 
-  // 检查是否可以添加到等待队列
+  // 檢查是否可以新增到等待佇列
   const canAddToWaitingQueue = (techType: TechnologyType): boolean => {
     if (!planet.value) return false
 
     const config = TECHNOLOGIES.value[techType]
     const currentLevel = getTechLevel(techType)
 
-    // 计算目标等级：当前等级 + 正式队列中的升级数 + 等待队列中的升级数 + 1
+    // 計算目標等級：當前等級 + 正式佇列中的升級數 + 等待佇列中的升級數 + 1
     const upgradesInResearchQueue = player.value.researchQueue.filter(q => q.type === 'technology' && q.itemType === techType).length
     const waitingQueue = player.value.waitingResearchQueue || []
     const upgradesInWaitingQueue = waitingQueue.filter(q => q.type === 'technology' && q.itemType === techType).length
     const targetLevel = currentLevel + upgradesInResearchQueue + upgradesInWaitingQueue + 1
 
-    // 检查是否达到等级上限（使用计算后的目标等级）
+    // 檢查是否達到等級上限（使用計算後的目標等級）
     if (config.maxLevel !== undefined && targetLevel > config.maxLevel) {
       return false
     }
 
-    // 检查目标等级的前置条件是否满足
-    // 如果该科技已经在队列中（正式或等待），说明基本条件已满足，跳过检查
+    // 檢查目標等級的前置條件是否滿足
+    // 如果該科技已經在佇列中（正式或等待），說明基本條件已滿足，跳過檢查
     const alreadyInQueue = upgradesInResearchQueue > 0 || upgradesInWaitingQueue > 0
     if (!alreadyInQueue) {
-      // 第一次添加时，检查当前等级+1的前置条件
+      // 第一次新增時，檢查當前等級+1的前置條件
       if (!checkUpgradeRequirements(techType)) {
         return false
       }
     } else {
-      // 后续添加时，检查目标等级的前置条件
+      // 後續新增時，檢查目標等級的前置條件
       const requirements = publicLogic.getLevelRequirements(config, targetLevel)
       if (requirements && Object.keys(requirements).length > 0) {
         if (!publicLogic.checkRequirements(planet.value, gameStore.player.technologies, requirements)) {
@@ -399,8 +399,8 @@
       }
     }
 
-    // 科技可以多次排队（比如能源技术升级到2、3、4、5级）
-    // 只需要检查等待队列是否已满
+    // 科技可以多次排隊（比如能源技術升級到2、3、4、5級）
+    // 只需要檢查等待佇列是否已滿
     const maxWaitingQueue = waitingQueueLogic.getMaxResearchWaitingQueue(player.value.technologies)
     if (waitingQueue.length >= maxWaitingQueue) {
       return false
@@ -409,11 +409,11 @@
     return true
   }
 
-  // 添加到等待队列
+  // 新增到等待佇列
   const handleAddToWaiting = (techType: TechnologyType, event: MouseEvent) => {
     const currentLevel = getTechLevel(techType)
 
-    // 计算目标等级：当前等级 + 正式队列中的升级数 + 等待队列中的升级数 + 1
+    // 計算目標等級：當前等級 + 正式佇列中的升級數 + 等待佇列中的升級數 + 1
     const upgradesInResearchQueue = player.value.researchQueue.filter(q => q.type === 'technology' && q.itemType === techType).length
     const waitingQueue = player.value.waitingResearchQueue || []
     const upgradesInWaitingQueue = waitingQueue.filter(q => q.type === 'technology' && q.itemType === techType).length
@@ -430,7 +430,7 @@
       return
     }
 
-    // 触发抛物线动画
+    // 觸發拋物線動畫
     triggerQueueAnimation(event, 'technology')
 
     waitingQueueLogic.addToResearchWaitingQueue(player.value, item)

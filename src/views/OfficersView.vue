@@ -20,7 +20,7 @@
           <CardDescription class="text-xs sm:text-sm">{{ OFFICERS[officerType].description }}</CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
-          <!-- 状态信息 -->
+          <!-- 狀態資訊 -->
           <div v-if="isOfficerActive(officerType)" class="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
             <div class="space-y-1 text-xs sm:text-sm">
               <p class="font-medium text-blue-700 dark:text-blue-300">{{ t('officersView.activeStatus') }}</p>
@@ -102,7 +102,7 @@
             </div>
           </div>
 
-          <!-- 操作按钮 -->
+          <!-- 操作按鈕 -->
           <div class="flex flex-col sm:flex-row gap-2">
             <Button v-if="!isOfficerActive(officerType)" @click="handleHire(officerType)" :disabled="!canHire(officerType)" class="w-full">
               {{ t('officersView.hire') }} (7{{ t('officersView.days') }})
@@ -123,7 +123,7 @@
       </Card>
     </div>
 
-    <!-- 提示对话框 -->
+    <!-- 提示對話方塊 -->
     <AlertDialog :open="alertDialogOpen" @update:open="alertDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -138,7 +138,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 确认对话框 -->
+    <!-- 確認對話方塊 -->
     <AlertDialog :open="confirmDialogOpen" @update:open="confirmDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -189,12 +189,12 @@
   const gameStore = useGameStore()
   const planet = computed(() => gameStore.currentPlanet)
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const alertDialogOpen = ref(false)
   const alertDialogTitle = ref('')
   const alertDialogMessage = ref('')
 
-  // ConfirmDialog 状态
+  // ConfirmDialog 狀態
   const confirmDialogOpen = ref(false)
   const confirmDialogTitle = ref('')
   const confirmDialogMessage = ref('')
@@ -207,7 +207,7 @@
     confirmDialogOpen.value = false
   }
 
-  // 资源类型配置（用于成本显示）
+  // 資源型別配置（用於成本顯示）
   const costResourceTypes = [
     { key: 'metal' as const },
     { key: 'crystal' as const },
@@ -215,20 +215,20 @@
     { key: 'darkMatter' as const }
   ]
 
-  // 检查军官是否激活
+  // 檢查軍官是否啟用
   const isOfficerActive = (officerType: OfficerType): boolean => {
     const officer = gameStore.player.officers[officerType]
     const now = getGameNow()
     return officer.active && (!officer.expiresAt || officer.expiresAt > now)
   }
 
-  // 获取军官到期时间
+  // 獲取軍官到期時間
   const getOfficerExpiration = (officerType: OfficerType): number => {
     const officer = gameStore.player.officers[officerType]
     return officer.expiresAt || 0
   }
 
-  // 获取剩余时间（秒）
+  // 獲取剩餘時間（秒）
   const getRemainingTime = (officerType: OfficerType): number => {
     const officer = gameStore.player.officers[officerType]
     if (!officer.expiresAt) return 0
@@ -236,7 +236,7 @@
     return Math.max(0, Math.floor((officer.expiresAt - now) / 1000))
   }
 
-  // 检查是否可以招募
+  // 檢查是否可以招募
   const canHire = (officerType: OfficerType): boolean => {
     if (!planet.value) return false
 
@@ -255,14 +255,14 @@
     if (!resourceLogic.checkResourcesAvailable(gameStore.currentPlanet.resources, cost)) {
       return false
     }
-    // 追踪资源消耗（在扣除前）
+    // 追蹤資源消耗（在扣除前）
     gameLogic.trackResourceConsumption(gameStore.player, cost)
     resourceLogic.deductResources(gameStore.currentPlanet.resources, cost)
     gameStore.player.officers[officerType] = officerLogic.createActiveOfficer(officerType, duration)
     return true
   }
 
-  // 招募军官
+  // 招募軍官
   const handleHire = (officerType: OfficerType) => {
     confirmDialogTitle.value = t('officersView.hireTitle')
     confirmDialogMessage.value = t('officersView.hireMessage').replace('{name}', OFFICERS.value[officerType].name)
@@ -283,7 +283,7 @@
     if (!resourceLogic.checkResourcesAvailable(gameStore.currentPlanet.resources, cost)) {
       return false
     }
-    // 追踪资源消耗（在扣除前）
+    // 追蹤資源消耗（在扣除前）
     gameLogic.trackResourceConsumption(gameStore.player, cost)
     resourceLogic.deductResources(gameStore.currentPlanet.resources, cost)
     const now = getGameNow()
@@ -291,7 +291,7 @@
     return true
   }
 
-  // 续约军官
+  // 續約軍官
   const handleRenew = (officerType: OfficerType) => {
     confirmDialogTitle.value = t('officersView.renewTitle')
     confirmDialogMessage.value = t('officersView.renewMessage').replace('{name}', OFFICERS.value[officerType].name)
@@ -306,7 +306,7 @@
     confirmDialogOpen.value = true
   }
 
-  // 解雇军官
+  // 解僱軍官
   const handleDismiss = (officerType: OfficerType): void => {
     confirmDialogTitle.value = t('officersView.dismissTitle')
     confirmDialogMessage.value = t('officersView.dismissMessage').replace('{name}', OFFICERS.value[officerType].name)

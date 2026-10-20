@@ -14,7 +14,7 @@
       </template>
 
       <div v-if="report" class="space-y-4">
-        <!-- 目标星球信息 -->
+        <!-- 目標星球資訊 -->
         <div class="p-4 bg-muted/50 rounded-lg border">
           <div class="flex items-center gap-3">
             <div class="p-2 bg-background rounded-full border">
@@ -29,14 +29,14 @@
           </div>
         </div>
 
-        <!-- 资源 -->
+        <!-- 資源 -->
         <div class="space-y-3">
           <div class="flex items-center gap-2">
             <Coins class="h-4 w-4" />
             <h4 class="font-semibold text-sm">{{ t('messagesView.resources') }}</h4>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <!-- 金属 -->
+            <!-- 金屬 -->
             <div class="p-3 bg-muted/50 rounded-lg border">
               <div class="flex items-center gap-2 mb-1">
                 <ResourceIcon type="metal" size="sm" />
@@ -46,7 +46,7 @@
                 {{ formatNumber(report.resources.metal) }}
               </p>
             </div>
-            <!-- 晶体 -->
+            <!-- 晶體 -->
             <div class="p-3 bg-muted/50 rounded-lg border">
               <div class="flex items-center gap-2 mb-1">
                 <ResourceIcon type="crystal" size="sm" />
@@ -66,7 +66,7 @@
                 {{ formatNumber(report.resources.deuterium) }}
               </p>
             </div>
-            <!-- 暗物质 -->
+            <!-- 暗物質 -->
             <div class="p-3 bg-muted/50 rounded-lg border">
               <div class="flex items-center gap-2 mb-1">
                 <ResourceIcon type="darkMatter" size="sm" />
@@ -79,7 +79,7 @@
           </div>
         </div>
 
-        <!-- 舰队（如果有） -->
+        <!-- 艦隊（如果有） -->
         <div v-if="report.fleet && Object.keys(report.fleet).length > 0" class="space-y-3">
           <div class="flex items-center gap-2">
             <Rocket class="h-4 w-4" />
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <!-- 防御设施（如果有） -->
+        <!-- 防禦設施（如果有） -->
         <div v-if="report.defense && hasDefense(report.defense)" class="space-y-3">
           <div class="flex items-center gap-2">
             <Shield class="h-4 w-4" />
@@ -123,7 +123,7 @@
           </div>
         </div>
 
-        <!-- 建筑（如果有） -->
+        <!-- 建築（如果有） -->
         <div v-if="report.buildings && Object.keys(report.buildings).length > 0" class="space-y-3">
           <div class="flex items-center gap-2">
             <Building class="h-4 w-4" />
@@ -183,18 +183,18 @@
     emit('update:open', newValue)
   })
 
-  // 检查是否有防御设施
+  // 檢查是否有防禦設施
   const hasDefense = (defense: any): boolean => {
     if (!defense) return false
     return Object.values(defense).some((count: any) => count > 0)
   }
 
-  // 获取舰队总数
+  // 獲取艦隊總數
   const getTotalFleetCount = (fleet: Record<string, number>): number => {
     return Object.values(fleet).reduce((sum, count) => sum + count, 0)
   }
 
-  // 获取防御总数
+  // 獲取防禦總數
   const getTotalDefenseCount = (defense: Record<string, number>): number => {
     return Object.values(defense).reduce((sum, count) => sum + (count || 0), 0)
   }

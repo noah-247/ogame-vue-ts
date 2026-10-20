@@ -1,5 +1,5 @@
 <template>
-  <!-- 固定 aspect-square 占位：加载失败也不坍塌，避免下方卡片内容上跳（CLS） -->
+  <!-- 固定 aspect-square 佔位：載入失敗也不坍塌，避免下方卡片內容上跳（CLS） -->
   <div
     class="w-full aspect-square rounded-xl bg-muted/50 ring-1 ring-inset ring-black/10 dark:ring-white/10 overflow-hidden"
   >

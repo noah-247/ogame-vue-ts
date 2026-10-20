@@ -1,5 +1,5 @@
 <template>
-  <!-- 无权限时显示404 -->
+  <!-- 無權限時顯示404 -->
   <div v-if="!gameStore.player.isGMEnabled" class="container mx-auto p-4 sm:p-6 flex items-center justify-center min-h-[60vh]">
     <Empty class="border-0">
       <EmptyMedia>
@@ -18,14 +18,14 @@
     </Empty>
   </div>
 
-  <!-- 有权限时显示GM页面 -->
+  <!-- 有權限時顯示GM頁面 -->
   <div v-else class="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl sm:text-3xl font-bold">{{ t('gmView.title') }}</h1>
       <Badge variant="destructive">{{ t('gmView.adminOnly') }}</Badge>
     </div>
 
-    <!-- 星球选择 -->
+    <!-- 星球選擇 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('gmView.selectPlanet') }}</CardTitle>
@@ -44,7 +44,7 @@
       </CardContent>
     </Card>
 
-    <!-- 标签切换 -->
+    <!-- 標籤切換 -->
     <Tabs v-if="selectedPlanet" default-value="resources" class="w-full">
       <TabsList class="grid w-full" :style="{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }">
         <TabsTrigger v-for="tab in tabs" :key="tab.value" :value="tab.value">
@@ -52,7 +52,7 @@
         </TabsTrigger>
       </TabsList>
 
-      <!-- 资源 -->
+      <!-- 資源 -->
       <TabsContent value="resources" class="space-y-4">
         <Card>
           <CardHeader>
@@ -60,7 +60,7 @@
             <CardDescription>{{ t('gmView.resourcesDesc') }}</CardDescription>
           </CardHeader>
           <CardContent class="space-y-4">
-            <!-- 一键拉满按钮 -->
+            <!-- 一鍵拉滿按鈕 -->
             <Button @click="maxAllResources" variant="outline" class="w-full">
               {{ t('gmView.maxAllResources') }}
             </Button>
@@ -77,9 +77,9 @@
         </Card>
       </TabsContent>
 
-      <!-- 建筑/科技/舰船/防御/军官 - 统一配置渲染 -->
+      <!-- 建築/科技/艦船/防禦/軍官 - 統一配置渲染 -->
       <TabsContent v-for="section in gmSections" :key="section.tabValue" :value="section.tabValue" class="space-y-4">
-        <!-- 预设操作区 -->
+        <!-- 預設操作區 -->
         <Card v-if="isPresettableSection(section)" class="mb-4">
           <CardHeader class="pb-3">
             <CardTitle class="text-lg">{{ t('gmView.presets') || 'Presets' }}</CardTitle>
@@ -153,7 +153,7 @@
       </TabsContent>
     </Tabs>
 
-    <!-- NPC测试 -->
+    <!-- NPC測試 -->
     <Card class="border-primary">
       <CardHeader>
         <CardTitle>{{ t('gmView.npcTesting') || 'NPC Testing' }}</CardTitle>
@@ -213,7 +213,7 @@
       </CardContent>
     </Card>
 
-    <!-- 队列管理 -->
+    <!-- 佇列管理 -->
     <Card class="border-primary">
       <CardHeader>
         <CardTitle>{{ t('gmView.completeAllQueues') }}</CardTitle>
@@ -224,7 +224,7 @@
       </CardContent>
     </Card>
 
-    <!-- 危险操作 -->
+    <!-- 危險操作 -->
     <Card class="border-destructive">
       <CardHeader>
         <CardTitle class="text-destructive">{{ t('gmView.dangerZone') }}</CardTitle>
@@ -235,7 +235,7 @@
       </CardContent>
     </Card>
 
-    <!-- Reset Game 确认对话框 -->
+    <!-- Reset Game 確認對話方塊 -->
     <AlertDialog :open="resetDialogOpen" @update:open="handleResetDialogClose">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -251,7 +251,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 预设覆盖确认对话框 -->
+    <!-- 預設覆蓋確認對話方塊 -->
     <AlertDialog :open="presetOverwriteDialogOpen" @update:open="presetOverwriteDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -267,7 +267,7 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- AlertDialog 提示对话框 -->
+    <!-- AlertDialog 提示對話方塊 -->
     <AlertDialog :open="alertDialogOpen" @update:open="alertDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -323,7 +323,7 @@
   import { generateId } from '@/utils/id'
   import { Home, Trash2 } from 'lucide-vue-next'
 
-  // --- 预设系统 ---
+  // --- 預設系統 ---
   interface GMPreset {
     id: string
     name: string
@@ -362,7 +362,7 @@
     existingIndex: number
   }
 
-  // 校验预设结构，避免历史脏数据污染当前视图
+  // 校驗預設結構，避免歷史髒資料汙染當前檢視
   const isGMPreset = (value: unknown): value is GMPreset => {
     if (typeof value !== 'object' || value === null) {
       return false
@@ -372,7 +372,7 @@
     return typeof preset.id === 'string' && typeof preset.name === 'string' && typeof preset.values === 'object' && preset.values !== null
   }
 
-  // 只有建筑/科技/舰船/防御页支持预设
+  // 只有建築/科技/艦船/防禦頁支援預設
   const isPresettableSection = (section: GMSection): section is GMPresetSection => {
     return section.tabValue !== 'officers'
   }
@@ -388,7 +388,7 @@
     }
 
     try {
-      // 兼容旧版本或手动修改导致的损坏数据，避免页面因解析失败崩溃
+      // 相容舊版本或手動修改導致的損壞資料，避免頁面因解析失敗崩潰
       const parsed = JSON.parse(data)
       if (!Array.isArray(parsed)) {
         localStorage.removeItem(key)
@@ -396,7 +396,7 @@
       }
 
       const presets = parsed.filter(isGMPreset)
-      // 过滤掉结构不完整的预设，并顺手回写清理后的结果
+      // 過濾掉結構不完整的預設，並順手回寫清理後的結果
       if (presets.length !== parsed.length) {
         localStorage.setItem(key, JSON.stringify(presets))
       }
@@ -438,7 +438,7 @@
 
     const name = presetNames.value[section.tabValue]?.trim()
     if (!name) {
-      toast.error(t('gmView.presetNameRequired') || '请输入预设名称')
+      toast.error(t('gmView.presetNameRequired') || '請輸入預設名稱')
       return
     }
     
@@ -447,7 +447,7 @@
       values[item] = section.getValue(item)
     })
 
-    // 检查是否存在同名预设
+    // 檢查是否存在同名預設
     const presets = customPresets.value[section.tabValue]
     const existingIndex = presets.findIndex(p => p.name === name)
     
@@ -472,7 +472,7 @@
     savePresets(section.tabValue, presets)
     presetNames.value[section.tabValue] = ''
     selectedPresets.value[section.tabValue] = newPreset.id
-    toast.success(t('gmView.presetSaved') || '预设保存成功')
+    toast.success(t('gmView.presetSaved') || '預設儲存成功')
   }
 
   const handleConfirmOverwrite = () => {
@@ -483,7 +483,7 @@
     const presets = customPresets.value[section.tabValue]
 
     if (presets[existingIndex]) {
-      // 更新现有预设的值，保持ID不变
+      // 更新現有預設的值，保持ID不變
       presets[existingIndex].values = values
 
       savePresets(section.tabValue, presets)
@@ -491,7 +491,7 @@
       presetNames.value[section.tabValue] = ''
       selectedPresets.value[section.tabValue] = presets[existingIndex].id
 
-      toast.success(t('gmView.presetSaved') || '预设保存成功')
+      toast.success(t('gmView.presetSaved') || '預設儲存成功')
     }
     
     presetOverwriteDialogOpen.value = false
@@ -503,7 +503,7 @@
 
     const presetId = selectedPresets.value[section.tabValue]
     if (!presetId || presetId === 'default') {
-      toast.error(t('gmView.cannotDeleteDefault') || '无法删除默认预设')
+      toast.error(t('gmView.cannotDeleteDefault') || '無法刪除內建預設')
       return
     }
     
@@ -514,7 +514,7 @@
       presets.splice(index, 1)
       savePresets(section.tabValue, presets)
       selectedPresets.value[section.tabValue] = 'default'
-      toast.success(t('gmView.presetDeleted') || '预设已删除')
+      toast.success(t('gmView.presetDeleted') || '預設已刪除')
     }
   }
 
@@ -554,20 +554,20 @@
         })
       } else if (section.tabValue === 'ships') {
         if (!selectedPlanet.value) return
-        // 某些过滤场景下舰船列表可能为空，避免平均分配时除以 0
+        // 某些過濾場景下艦船列表可能為空，避免平均分配時除以 0
         if (!section.items.length) return
         
-        // 重新计算最大舰队仓储，确保数据是最新的
+        // 重新計算最大艦隊倉儲，確保資料是最新的
         const maxStorage = calculateMaxFleetStorage(selectedPlanet.value, gameStore.player.technologies)
 
-        // 将总容量平均分配给每种舰船
+        // 將總容量平均分配給每種艦船
         const storagePerShip = maxStorage / section.items.length
 
         section.items.forEach(item => {
           const usage = SHIPS.value[item as ShipType]?.storageUsage || 1
-          // 如果 usage 为 0 (如某些特殊单位)，则给予一个默认数量，或者跳过
+          // 如果 usage 為 0 (如某些特殊單位)，則給予一個預設數量，或者跳過
           if (usage <= 0) {
-             section.setValue(item, 100) // 防止除以0，给予固定值
+             section.setValue(item, 100) // 防止除以0，給予固定值
           } else {
              section.setValue(item, Math.floor(storagePerShip / usage))
           }
@@ -578,7 +578,7 @@
         const defaultMissileCount = Math.floor(missileCapacity / 2)
 
         section.items.forEach((item: string) => {
-          // 两种导弹都占用1格空间，默认各分配一半容量
+          // 兩種導彈都佔用1格空間，預設各分配一半容量
           if (item === DefenseType.AntiBallisticMissile || item === DefenseType.InterplanetaryMissile) {
             section.setValue(item, defaultMissileCount)
           } else {
@@ -586,18 +586,18 @@
           }
         })
       }
-      toast.success(t('gmView.presetApplied') || '默认预设应用成功')
+      toast.success(t('gmView.presetApplied') || '內建預設套用成功')
     } else {
       const customPreset = customPresets.value[section.tabValue].find((p: GMPreset) => p.id === presetId)
       if (customPreset) {
         Object.entries(customPreset.values).forEach(([k, v]) => {
           section.setValue(k, v as number)
         })
-        toast.success(t('gmView.presetApplied') || '预设应用成功')
+        toast.success(t('gmView.presetApplied') || '預設套用成功')
       }
     }
   }
-  // --- 预设系统结束 ---
+  // --- 預設系統結束 ---
 
   const router = useRouter()
   const gameStore = useGameStore()
@@ -606,7 +606,7 @@
   const { t } = useI18n()
   const { BUILDINGS, TECHNOLOGIES, SHIPS, DEFENSES, OFFICERS } = useGameConfig()
 
-  // 更新玩家积分的辅助函数
+  // 更新玩家積分的輔助函式
   const updatePlayerPoints = () => {
     gameStore.player.points = publicLogic.calculatePlayerPoints(gameStore.player)
   }
@@ -615,22 +615,22 @@
     router.push('/')
   }
 
-  // 默认选中当前正在游玩的星球
+  // 預設選中當前正在遊玩的星球
   const selectedPlanetId = ref<string>(gameStore.currentPlanetId || gameStore.player.planets[0]?.id || '')
   const officerDays = ref<Record<OfficerType, number>>({} as Record<OfficerType, number>)
   const selectedNPCId = ref<string>(npcStore.npcs[0]?.id || '')
   const targetPlanetIndex = ref<string>('0')
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const alertDialogOpen = ref(false)
   const alertDialogTitle = ref('')
   const alertDialogMessage = ref('')
   const alertDialogCallback = ref<(() => void) | null>(null)
 
-  // Reset Dialog 状态
+  // Reset Dialog 狀態
   const resetDialogOpen = ref(false)
 
-  // 初始化军官天数显示
+  // 初始化軍官天數顯示
   Object.values(OfficerType).forEach(officer => {
     const officerData = gameStore.player.officers[officer]
     if (officerData && officerData.expiresAt) {
@@ -812,17 +812,17 @@
     }
   ])
 
-  // 显示重置游戏确认对话框
+  // 顯示重置遊戲確認對話方塊
   const showResetConfirmDialog = () => {
-    // 暂停游戏
+    // 暫停遊戲
     gameStore.isPaused = true
     resetDialogOpen.value = true
   }
 
-  // 处理重置对话框关闭
+  // 處理重置對話方塊關閉
   const handleResetDialogClose = (open: boolean) => {
     if (!open) {
-      // 如果对话框关闭，恢复游戏
+      // 如果對話方塊關閉，恢復遊戲
       gameStore.isPaused = false
     }
     resetDialogOpen.value = open
@@ -834,7 +834,7 @@
     gameStore.isPaused = false
   }
 
-  // 确认重置游戏
+  // 確認重置遊戲
   const confirmResetGame = () => {
     gameStore.isPaused = true
     resetDialogOpen.value = false
@@ -848,7 +848,7 @@
     }
   }
 
-  // 显示AlertDialog的辅助函数
+  // 顯示AlertDialog的輔助函式
   const showAlert = (title: string, message: string, callback?: () => void) => {
     alertDialogTitle.value = title
     alertDialogMessage.value = message
@@ -856,7 +856,7 @@
     alertDialogOpen.value = true
   }
 
-  // AlertDialog确认处理
+  // AlertDialog確認處理
   const handleAlertConfirm = () => {
     alertDialogOpen.value = false
     if (alertDialogCallback.value) {
@@ -865,7 +865,7 @@
     }
   }
 
-  // NPC测试函数
+  // NPC測試函式
   const testNPCSpy = () => {
     if (!selectedNPC.value) {
       showAlert(t('gmView.selectNPCFirst') || 'Please select an NPC first', '')
@@ -881,7 +881,7 @@
 
     if (mission) {
       showAlert(t('gmView.npcWillSpyIn5s', { npcName: selectedNPC.value.name }), t('gmView.testSpyMessage'), () => {
-        // 加速任务到5秒后到达（在确认后执行，这样时间更准确）
+        // 加速任務到5秒後到達（在確認後執行，這樣時間更準確）
         npcBehaviorLogic.accelerateNPCMission(selectedNPC.value!, mission.id, 5, gameStore.player)
       })
     } else {
@@ -904,7 +904,7 @@
 
     if (mission) {
       showAlert(t('gmView.npcWillAttackIn5s', { npcName: selectedNPC.value.name }), t('gmView.testAttackMessage'), () => {
-        // 加速任务到5秒后到达（在确认后执行，这样时间更准确）
+        // 加速任務到5秒後到達（在確認後執行，這樣時間更準確）
         npcBehaviorLogic.accelerateNPCMission(selectedNPC.value!, mission.id, 5, gameStore.player)
       })
     } else {
@@ -927,7 +927,7 @@
 
     if (spyMission && attackMission) {
       showAlert(t('gmView.npcWillSpyAndAttack', { npcName: selectedNPC.value.name }), t('gmView.testSpyAndAttackMessage'), () => {
-        // 加速任务：侦查5秒后到达，攻击10秒后到达（在确认后执行，这样时间更准确）
+        // 加速任務：偵查5秒後到達，攻擊10秒後到達（在確認後執行，這樣時間更準確）
         npcBehaviorLogic.accelerateNPCMission(selectedNPC.value!, spyMission.id, 5, gameStore.player)
         npcBehaviorLogic.accelerateNPCMission(selectedNPC.value!, attackMission.id, 10, gameStore.player)
       })
@@ -946,24 +946,24 @@
     showAlert(t('gmView.acceleratedMissions', { count }), '')
   }
 
-  // 初始化NPC舰队
+  // 初始化NPC艦隊
   const initializeNPCFleet = () => {
     if (!selectedNPC.value) {
       showAlert(t('gmView.selectNPCFirst') || 'Please select an NPC first', '')
       return
     }
 
-    // 给NPC的第一个星球添加基础舰队
+    // 給NPC的第一個星球新增基礎艦隊
     const npcPlanet = selectedNPC.value.planets[0]
     if (!npcPlanet) {
       showAlert(t('gmView.npcNoPlanets'), '')
       return
     }
 
-    // 添加间谍探测器
+    // 新增間諜探測器
     npcPlanet.fleet[ShipType.EspionageProbe] = (npcPlanet.fleet[ShipType.EspionageProbe] || 0) + 100
 
-    // 添加战斗舰船
+    // 新增戰鬥艦船
     npcPlanet.fleet[ShipType.LightFighter] = (npcPlanet.fleet[ShipType.LightFighter] || 0) + 500
     npcPlanet.fleet[ShipType.HeavyFighter] = (npcPlanet.fleet[ShipType.HeavyFighter] || 0) + 300
     npcPlanet.fleet[ShipType.Cruiser] = (npcPlanet.fleet[ShipType.Cruiser] || 0) + 200
@@ -975,11 +975,11 @@
     showAlert(t('gmView.npcFleetInitialized', { npcName: selectedNPC.value.name }), t('gmView.npcFleetDetails'))
   }
 
-  // 一键拉满所有资源
+  // 一鍵拉滿所有資源
   const maxAllResources = () => {
     if (!selectedPlanet.value) return
 
-    // 计算当前星球的资源存储上限
+    // 計算當前星球的資源儲存上限
     const capacity = publicLogic.getResourceCapacity(selectedPlanet.value, gameStore.player.officers)
 
     selectedPlanet.value.resources.metal = capacity.metal
@@ -990,7 +990,7 @@
     toast.success(t('gmView.maxAllResourcesSuccess'))
   }
 
-  // 一键完成所有队列和任务
+  // 一鍵完成所有佇列和任務
   const completeAllQueues = () => {
     const now = getGameNow()
     let buildingCount = 0
@@ -998,11 +998,11 @@
     let missionCount = 0
     let missileCount = 0
 
-    // 完成所有星球的建筑队列
+    // 完成所有星球的建築佇列
     gameStore.player.planets.forEach(planet => {
       planet.buildQueue.forEach(item => {
         if (item.endTime > now) {
-          // 根据队列类型完成建筑/拆除/舰船/防御
+          // 根據佇列型別完成建築/拆除/艦船/防禦
           if (item.type === 'building') {
             planet.buildings[item.itemType as BuildingType] = item.targetLevel || 0
           } else if (item.type === 'demolish') {
@@ -1018,7 +1018,7 @@
       planet.buildQueue = []
     })
 
-    // 完成科技队列
+    // 完成科技佇列
     gameStore.player.researchQueue.forEach(item => {
       if (item.endTime > now && item.type === 'technology') {
         gameStore.player.technologies[item.itemType as TechnologyType] = item.targetLevel || 0
@@ -1027,32 +1027,32 @@
     })
     gameStore.player.researchQueue = []
 
-    // 完成所有飞行任务（设置到达时间为现在，让游戏逻辑自动处理）
+    // 完成所有飛行任務（設定到達時間為現在，讓遊戲邏輯自動處理）
     gameStore.player.fleetMissions.forEach(mission => {
       if (mission.status === 'outbound') {
-        // 计算原始飞行时间
+        // 計算原始飛行時間
         const originalFlightTime = mission.arrivalTime - mission.departureTime
-        // 将到达时间设置为现在减1毫秒，确保游戏逻辑能立即检测到
+        // 將到達時間設定為現在減1毫秒，確保遊戲邏輯能立即檢測到
         mission.arrivalTime = now - 1
-        // 同时更新返回时间为：现在 + 原始飞行时间 - 1毫秒
+        // 同時更新返回時間為：現在 + 原始飛行時間 - 1毫秒
         mission.returnTime = now + originalFlightTime - 1
         missionCount++
       } else if (mission.status === 'returning') {
-        // 返航中的任务设置返回时间为现在减1毫秒，确保游戏逻辑能立即检测到
+        // 返航中的任務設定返回時間為現在減1毫秒，確保遊戲邏輯能立即檢測到
         if (mission.returnTime) {
           mission.returnTime = now - 1
         }
         missionCount++
       } else if (mission.status === 'arrived') {
-        // 修复卡在 arrived 状态的任务
-        // 将状态改为 returning 并设置返回时间为现在
+        // 修復卡在 arrived 狀態的任務
+        // 將狀態改為 returning 並設定返回時間為現在
         mission.status = 'returning'
         mission.returnTime = now - 1
         missionCount++
       }
     })
 
-    // 完成所有NPC任务
+    // 完成所有NPC任務
     npcStore.npcs.forEach(npc => {
       if (npc.fleetMissions) {
         npc.fleetMissions.forEach(mission => {
@@ -1067,7 +1067,7 @@
       }
     })
 
-    // 完成所有导弹攻击（设置到达时间为现在，让游戏逻辑自动处理）
+    // 完成所有導彈攻擊（設定到達時間為現在，讓遊戲邏輯自動處理）
     gameStore.player.missileAttacks.forEach(attack => {
       if (attack.status === 'flying') {
         attack.arrivalTime = now - 1
@@ -1075,7 +1075,7 @@
       }
     })
 
-    // 更新玩家积分（因为建筑/科技/舰队/防御可能已改变）
+    // 更新玩家積分（因為建築/科技/艦隊/防禦可能已改變）
     updatePlayerPoints()
 
     toast.success(

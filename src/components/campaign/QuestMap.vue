@@ -1,24 +1,24 @@
 <template>
   <div class="quest-map-container relative">
-    <!-- 可缩放的地图区域 -->
+    <!-- 可縮放的地圖區域 -->
     <div
       ref="mapContainer"
       class="quest-map relative overflow-auto rounded-lg border bg-card/50 backdrop-blur-sm"
       :style="{ maxHeight: '450px' }"
     >
-      <!-- 可缩放内容包装器 -->
+      <!-- 可縮放內容包裝器 -->
       <div
         class="map-content origin-top-left transition-transform duration-200"
         :style="{ transform: `scale3d(${zoomLevel}, ${zoomLevel}, 1)`, minWidth: calculatedMapWidth + 'px', minHeight: calculatedMapHeight + 'px' }"
       >
-        <!-- SVG连接线 - 位置与节点容器对齐 -->
+        <!-- SVG連線線 - 位置與節點容器對齊 -->
         <svg
           class="absolute pointer-events-none"
           :style="{ left: 0, top: 0, width: calculatedMapWidth + 'px', height: calculatedMapHeight + 'px' }"
           :viewBox="`0 0 ${calculatedMapWidth} ${calculatedMapHeight}`"
         >
           <defs>
-            <!-- 渐变定义 - 垂直方向 -->
+            <!-- 漸變定義 - 垂直方向 -->
             <linearGradient id="line-gradient-active" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" style="stop-color: hsl(var(--primary)); stop-opacity: 0.5" />
               <stop offset="100%" style="stop-color: hsl(var(--primary)); stop-opacity: 1" />
@@ -32,7 +32,7 @@
               <stop offset="100%" style="stop-color: rgb(34, 197, 94); stop-opacity: 1" />
             </linearGradient>
 
-            <!-- 发光滤镜 -->
+            <!-- 發光濾鏡 -->
             <filter id="glow">
               <feGaussianBlur stdDeviation="2" result="coloredBlur" />
               <feMerge>
@@ -42,7 +42,7 @@
             </filter>
           </defs>
 
-          <!-- 连接线 -->
+          <!-- 連線線 -->
           <g>
             <template v-for="connection in questConnections" :key="connection.id">
               <path
@@ -54,7 +54,7 @@
                 :filter="connection.isActive ? 'url(#glow)' : 'none'"
                 class="transition-all duration-300"
               />
-              <!-- 流动动画点（激活状态） -->
+              <!-- 流動動畫點（啟用狀態） -->
               <circle v-if="connection.isActive" r="3" fill="#CDD1D7" class="animate-flow">
                 <animateMotion dur="2s" repeatCount="indefinite" :path="connection.path" />
               </circle>
@@ -62,7 +62,7 @@
           </g>
         </svg>
 
-        <!-- 任务节点 -->
+        <!-- 任務節點 -->
         <div class="relative" :style="{ width: calculatedMapWidth + 'px', height: calculatedMapHeight + 'px' }">
           <div v-for="quest in quests" :key="quest.id" class="absolute transition-all duration-300" :style="getNodeStyle(quest.id)">
             <QuestNode :quest="quest" :progress="progress" @select="handleQuestSelect" />
@@ -71,7 +71,7 @@
       </div>
     </div>
 
-    <!-- 地图控制 -->
+    <!-- 地圖控制 -->
     <div class="absolute bottom-4 right-4 flex gap-2">
       <Button variant="outline" size="icon-sm" @click="zoomIn">
         <ZoomIn class="h-4 w-4" />
@@ -84,7 +84,7 @@
       </Button>
     </div>
 
-    <!-- 图例 -->
+    <!-- 圖例 -->
     <div class="absolute top-4 left-4 flex flex-wrap gap-3 text-xs">
       <div class="flex items-center gap-1">
         <div class="w-3 h-3 rounded-full bg-green-500 dark:bg-green-400" />
@@ -126,26 +126,26 @@
 
   const { t } = useI18n()
 
-  // 地图容器引用
+  // 地圖容器引用
   const mapContainer = ref<HTMLElement | null>(null)
 
-  // 布局参数 - 从左到右的工作流布局
-  const nodeSize = 56 // 节点实际尺寸 (w-14 = 56px)
-  const nodeRadius = 28 // 节点半径
-  const horizontalGap = 120 // 水平间距（层级之间，包含连线空间）
-  const verticalGap = 40 // 垂直间距（同一层级内）
+  // 佈局引數 - 從左到右的工作流佈局
+  const nodeSize = 56 // 節點實際尺寸 (w-14 = 56px)
+  const nodeRadius = 28 // 節點半徑
+  const horizontalGap = 120 // 水平間距（層級之間，包含連線空間）
+  const verticalGap = 40 // 垂直間距（同一層級內）
   const paddingX = 80
   const paddingY = 60
 
-  // 缩放级别
+  // 縮放級別
   const zoomLevel = ref(1)
 
-  // 计算工作流布局的节点位置（从左到右）
+  // 計算工作流佈局的節點位置（從左到右）
   const nodePositions = computed(() => {
     const positions: Record<string, { x: number; y: number; level: number; index: number }> = {}
     const levels: Record<number, CampaignQuestConfig[]> = {}
 
-    // 根据任务的依赖关系计算层级
+    // 根據任務的依賴關係計算層級
     const calculateLevel = (quest: CampaignQuestConfig, visited: Set<string> = new Set()): number => {
       if (visited.has(quest.id)) return 0
       visited.add(quest.id)
@@ -166,7 +166,7 @@
       return maxParentLevel + 1
     }
 
-    // 为每个任务计算层级
+    // 為每個任務計算層級
     props.quests.forEach(quest => {
       const level = calculateLevel(quest)
       if (!levels[level]) {
@@ -175,7 +175,7 @@
       levels[level].push(quest)
     })
 
-    // 按 order 排序每个层级的任务
+    // 按 order 排序每個層級的任務
     Object.keys(levels).forEach(levelKey => {
       const level = parseInt(levelKey)
       const questsAtLevel = levels[level]
@@ -184,7 +184,7 @@
       }
     })
 
-    // 计算每个任务的位置（从左到右布局）
+    // 計算每個任務的位置（從左到右佈局）
     const levelKeys = Object.keys(levels)
       .map(Number)
       .sort((a, b) => a - b)
@@ -194,10 +194,10 @@
       if (!questsInLevel) return
 
       questsInLevel.forEach((quest, index) => {
-        // 水平位置（层级决定X坐标）
+        // 水平位置（層級決定X座標）
         const x = paddingX + level * (nodeSize + horizontalGap) + nodeRadius
 
-        // 垂直位置（同层级内的索引决定Y坐标）
+        // 垂直位置（同層級內的索引決定Y座標）
         const startY = paddingY + index * (nodeSize + verticalGap)
         const y = startY + nodeRadius
 
@@ -208,7 +208,7 @@
     return positions
   })
 
-  // 计算地图尺寸
+  // 計算地圖尺寸
   const calculatedMapWidth = computed(() => {
     const positions = Object.values(nodePositions.value)
     if (positions.length === 0) return 400
@@ -223,7 +223,7 @@
     return Math.max(maxY + paddingY + nodeRadius, 300)
   })
 
-  // 计算连接线
+  // 計算連線線
   interface Connection {
     id: string
     from: string
@@ -244,17 +244,17 @@
           const toPos = nodePositions.value[quest.id]
 
           if (fromPos && toPos) {
-            // 从节点右边缘出发，到下一个节点左边缘
+            // 從節點右邊緣出發，到下一個節點左邊緣
             const startX = fromPos.x + nodeRadius
             const startY = fromPos.y
             const endX = toPos.x - nodeRadius
             const endY = toPos.y
 
-            // 使用水平控制点创建平滑的S型曲线
+            // 使用水平控制點建立平滑的S型曲線
             const controlOffset = (endX - startX) / 2
             const path = `M ${startX} ${startY} C ${startX + controlOffset} ${startY}, ${endX - controlOffset} ${endY}, ${endX} ${endY}`
 
-            // 获取状态
+            // 獲取狀態
             const fromQuest = props.quests.find(q => q.id === requiredId)
             const fromStatus = props.progress && fromQuest ? getQuestStatus(props.progress, fromQuest.id) : QuestStatus.Locked
             const toStatus = props.progress ? getQuestStatus(props.progress, quest.id) : QuestStatus.Locked
@@ -276,7 +276,7 @@
     return connections
   })
 
-  // 获取连接线颜色
+  // 獲取連線線顏色
   const getConnectionStroke = (connection: Connection): string => {
     if (connection.isCompleted) {
       return 'rgb(34, 197, 94)'
@@ -284,11 +284,11 @@
     if (connection.isActive) {
       return 'hsl(var(--primary))'
     }
-    // 锁定状态使用更明显的灰色
+    // 鎖定狀態使用更明顯的灰色
     return 'rgba(156, 163, 175, 0.5)'
   }
 
-  // 获取节点样式（处理 undefined 情况）
+  // 獲取節點樣式（處理 undefined 情況）
   const getNodeStyle = (questId: string) => {
     const pos = nodePositions.value[questId]
     if (!pos) {
@@ -300,7 +300,7 @@
     }
   }
 
-  // 缩放控制
+  // 縮放控制
   const zoomIn = () => {
     zoomLevel.value = Math.min(zoomLevel.value * 1.2, 2)
   }
@@ -316,21 +316,21 @@
     }
   }
 
-  // 处理任务选择
+  // 處理任務選擇
   const handleQuestSelect = (questId: string) => {
     emit('selectQuest', questId)
   }
 
-  // 找到当前活动或可用的任务
+  // 找到當前活動或可用的任務
   const findActiveQuest = (): string | null => {
-    // 优先找 Active 状态的任务
+    // 優先找 Active 狀態的任務
     const activeQuest = props.quests.find(quest => {
       if (!props.progress) return false
       return getQuestStatus(props.progress, quest.id) === QuestStatus.Active
     })
     if (activeQuest) return activeQuest.id
 
-    // 其次找第一个 Available 状态的任务
+    // 其次找第一個 Available 狀態的任務
     const availableQuest = props.quests.find(quest => {
       if (!props.progress) return false
       return getQuestStatus(props.progress, quest.id) === QuestStatus.Available
@@ -340,7 +340,7 @@
     return null
   }
 
-  // 滚动到指定任务位置（居中显示）
+  // 滾動到指定任務位置（居中顯示）
   const scrollToQuest = (questId: string) => {
     const container = mapContainer.value
     if (!container) return
@@ -348,15 +348,15 @@
     const pos = nodePositions.value[questId]
     if (!pos) return
 
-    // 计算需要滚动的位置，使任务节点居中
+    // 計算需要滾動的位置，使任務節點居中
     const containerWidth = container.clientWidth
     const containerHeight = container.clientHeight
 
-    // 考虑缩放比例
+    // 考慮縮放比例
     const scaledX = pos.x * zoomLevel.value
     const scaledY = pos.y * zoomLevel.value
 
-    // 滚动到节点居中的位置
+    // 滾動到節點居中的位置
     const scrollLeft = Math.max(0, scaledX - containerWidth / 2)
     const scrollTop = Math.max(0, scaledY - containerHeight / 2)
 
@@ -367,7 +367,7 @@
     })
   }
 
-  // 组件挂载时滚动到活动任务
+  // 元件掛載時滾動到活動任務
   onMounted(async () => {
     await nextTick()
     const activeQuestId = findActiveQuest()

@@ -1,9 +1,9 @@
 <template>
   <div class="rounded-lg transition-shadow duration-300">
     <div class="p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer" @click="toggleExpand">
-      <!-- 桌面端：单行布局 -->
+      <!-- 桌面端：單行佈局 -->
       <div class="hidden sm:flex items-center gap-3">
-        <!-- 状态指示器 -->
+        <!-- 狀態指示器 -->
         <div
           class="w-2 h-2 rounded-full shrink-0"
           :class="{
@@ -13,12 +13,12 @@
           }"
         />
 
-        <!-- 名称和备注 -->
+        <!-- 名稱和備註 -->
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <span class="font-medium truncate">{{ npc.name }}</span>
             <span v-if="npc.note" class="text-muted-foreground text-sm truncate">({{ npc.note }})</span>
-            <!-- NPC难度等级徽章 -->
+            <!-- NPC難度等級徽章 -->
             <Badge
               v-if="npc.difficultyLevel"
               :variant="difficultyBadgeVariant"
@@ -44,7 +44,7 @@
           <span class="text-sm font-medium w-10 text-right" :class="reputationColor">{{ reputation > 0 ? '+' : '' }}{{ reputation }}</span>
         </div>
 
-        <!-- 操作按钮 -->
+        <!-- 操作按鈕 -->
         <div class="flex items-center gap-1 shrink-0">
           <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop="handleGiftResources" :title="t('diplomacy.actions.gift')">
             <Gift class="h-4 w-4" />
@@ -65,9 +65,9 @@
         </div>
       </div>
 
-      <!-- 移动端：两行布局 -->
+      <!-- 移動端：兩行佈局 -->
       <div class="sm:hidden space-y-2">
-        <!-- 第一行：状态、名称、展开箭头 -->
+        <!-- 第一行：狀態、名稱、展開箭頭 -->
         <div class="flex items-center gap-2">
           <div
             class="w-2 h-2 rounded-full shrink-0"
@@ -80,7 +80,7 @@
           <div class="flex-1 min-w-0 flex items-center gap-1 flex-wrap">
             <span class="font-medium truncate">{{ npc.name }}</span>
             <span v-if="npc.note" class="text-muted-foreground text-sm">({{ npc.note }})</span>
-            <!-- NPC难度等级徽章 (移动端) -->
+            <!-- NPC難度等級徽章 (移動端) -->
             <Badge
               v-if="npc.difficultyLevel"
               :variant="difficultyBadgeVariant"
@@ -93,16 +93,16 @@
           <ChevronDown class="h-4 w-4 text-muted-foreground transition-transform shrink-0" :class="{ 'rotate-180': isExpanded }" />
         </div>
 
-        <!-- 第二行：星球数、好感度、操作按钮 -->
+        <!-- 第二行：星球數、好感度、操作按鈕 -->
         <div class="flex items-center justify-between">
           <div class="text-xs text-muted-foreground">
             {{ npc.planets.length }} {{ t('diplomacy.planets') }}
             <span v-if="npc.allies && npc.allies.length > 0">· {{ npc.allies.length }} {{ t('diplomacy.allies') }}</span>
           </div>
           <div class="flex items-center gap-1">
-            <!-- 好感度数值 -->
+            <!-- 好感度數值 -->
             <span class="text-xs font-medium mr-1" :class="reputationColor">{{ reputation > 0 ? '+' : '' }}{{ reputation }}</span>
-            <!-- 操作按钮 -->
+            <!-- 操作按鈕 -->
             <Button variant="ghost" size="icon" class="h-7 w-7" @click.stop="handleGiftResources" :title="t('diplomacy.actions.gift')">
               <Gift class="h-3.5 w-3.5" />
             </Button>
@@ -123,9 +123,9 @@
       </div>
     </div>
 
-    <!-- 展开详情 -->
+    <!-- 展開詳情 -->
     <div v-if="isExpanded" class="ml-5 pl-3 border-l-2 border-muted py-2 space-y-2">
-      <!-- 盟友信息 -->
+      <!-- 盟友資訊 -->
       <div v-if="npc.allies && npc.allies.length > 0" class="flex items-center gap-2 flex-wrap">
         <span class="text-xs text-muted-foreground">{{ t('diplomacy.alliedWith') }}:</span>
         <Badge
@@ -141,7 +141,7 @@
         <Badge v-if="npc.allies.length > 5" variant="outline" class="text-xs">+{{ npc.allies.length - 5 }} {{ t('diplomacy.more') }}</Badge>
       </div>
 
-      <!-- 最近活动 -->
+      <!-- 最近活動 -->
       <div v-if="recentEvent" class="flex items-center gap-2 text-xs">
         <span class="text-muted-foreground">{{ t('diplomacy.lastEvent') }}:</span>
         <component :is="getEventIcon(recentEvent.reason)" class="h-3 w-3" />
@@ -152,7 +152,7 @@
       </div>
     </div>
 
-    <!-- 备注编辑对话框 -->
+    <!-- 備註編輯對話方塊 -->
     <Dialog v-model:open="noteDialogOpen">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
@@ -196,13 +196,13 @@
   const gameStore = useGameStore()
   const { t } = useI18n()
 
-  // 展开状态
+  // 展開狀態
   const isExpanded = ref(false)
   const toggleExpand = () => {
     isExpanded.value = !isExpanded.value
   }
 
-  // 备注对话框状态
+  // 備註對話方塊狀態
   const noteDialogOpen = ref(false)
   const noteInput = ref('')
 
@@ -222,30 +222,30 @@
   // 好感度值
   const reputation = computed(() => props.relation?.reputation || 0)
 
-  // 关系状态
+  // 關係狀態
   const status = computed(() => props.relation?.status || RelationStatus.Neutral)
 
-  // 好感度颜色
+  // 好感度顏色
   const reputationColor = computed(() => {
     if (reputation.value >= 20) return 'text-green-600 dark:text-green-400'
     if (reputation.value <= -20) return 'text-red-600 dark:text-red-400'
     return 'text-muted-foreground'
   })
 
-  // NPC难度等级颜色
+  // NPC難度等級顏色
   const difficultyLevelColor = computed(() => {
     const level = props.npc.difficultyLevel
     if (!level) return 'text-muted-foreground'
     if (level <= 1) return 'text-green-600 dark:text-green-400' // 新手
-    if (level <= 2) return 'text-lime-600 dark:text-lime-400' // 简单
+    if (level <= 2) return 'text-lime-600 dark:text-lime-400' // 簡單
     if (level <= 3) return 'text-yellow-600 dark:text-yellow-400' // 普通
-    if (level <= 4) return 'text-orange-600 dark:text-orange-400' // 困难
-    if (level <= 5) return 'text-red-600 dark:text-red-400' // 专家
-    if (level <= 6) return 'text-purple-600 dark:text-purple-400' // 大师
-    return 'text-pink-600 dark:text-pink-400' // 传奇及以上
+    if (level <= 4) return 'text-orange-600 dark:text-orange-400' // 困難
+    if (level <= 5) return 'text-red-600 dark:text-red-400' // 專家
+    if (level <= 6) return 'text-purple-600 dark:text-purple-400' // 大師
+    return 'text-pink-600 dark:text-pink-400' // 傳奇及以上
   })
 
-  // NPC难度等级Badge样式
+  // NPC難度等級Badge樣式
   const difficultyBadgeVariant = computed((): 'default' | 'secondary' | 'destructive' | 'outline' => {
     const level = props.npc.difficultyLevel
     if (!level) return 'outline'
@@ -260,14 +260,14 @@
     return props.relation.history[props.relation.history.length - 1]
   })
 
-  // 获取盟友名称
+  // 獲取盟友名稱
   const getAllyName = (allyId: string) => {
     const ally = npcStore.npcs.find(n => n.id === allyId)
     if (!ally) return allyId.substring(0, 8)
     return ally.note ? `${ally.name}(${ally.note})` : ally.name
   }
 
-  // 获取盟友边框样式
+  // 獲取盟友邊框樣式
   const getAllyBorderClass = (allyId: string) => {
     const ally = npcStore.npcs.find(n => n.id === allyId)
     if (!ally) return ''
@@ -285,7 +285,7 @@
     }
   }
 
-  // 获取事件图标
+  // 獲取事件圖示
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
       case DiplomaticEventType.GiftResources:
@@ -302,7 +302,7 @@
     }
   }
 
-  // 获取事件文本
+  // 獲取事件文字
   const getEventText = (eventType: string) => {
     switch (eventType) {
       case DiplomaticEventType.GiftResources:
@@ -320,7 +320,7 @@
     }
   }
 
-  // 赠送资源
+  // 贈送資源
   const handleGiftResources = () => {
     if (props.npc.planets.length > 0) {
       const targetPlanet = props.npc.planets[0]
@@ -338,7 +338,7 @@
     }
   }
 
-  // 查看星球
+  // 檢視星球
   const handleViewPlanets = () => {
     if (props.npc.planets.length > 0) {
       const targetPlanet = props.npc.planets[0]
@@ -355,7 +355,7 @@
     }
   }
 
-  // 滚动到盟友卡片
+  // 滾動到盟友卡片
   const scrollToAlly = (allyId: string) => {
     const event = new CustomEvent('scrollToNpc', { detail: { npcId: allyId }, bubbles: true })
     document.dispatchEvent(event)

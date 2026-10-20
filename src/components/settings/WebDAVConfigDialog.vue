@@ -9,7 +9,7 @@
       </DialogHeader>
 
       <div class="space-y-4 py-4">
-        <!-- 服务器地址 -->
+        <!-- 伺服器地址 -->
         <div class="space-y-2">
           <Label for="serverUrl">{{ t('settings.webdav.serverUrl') }}</Label>
           <Input
@@ -22,7 +22,7 @@
           </p>
         </div>
 
-        <!-- 用户名 -->
+        <!-- 使用者名稱 -->
         <div class="space-y-2">
           <Label for="username">{{ t('settings.webdav.username') }}</Label>
           <Input
@@ -32,7 +32,7 @@
           />
         </div>
 
-        <!-- 密码 -->
+        <!-- 密碼 -->
         <div class="space-y-2">
           <Label for="password">{{ t('settings.webdav.password') }}</Label>
           <Input
@@ -46,7 +46,7 @@
           </p>
         </div>
 
-        <!-- 存档路径 -->
+        <!-- 存檔路徑 -->
         <div class="space-y-2">
           <Label for="basePath">{{ t('settings.webdav.basePath') }}</Label>
           <Input
@@ -56,7 +56,7 @@
           />
         </div>
 
-        <!-- 测试结果 -->
+        <!-- 測試結果 -->
         <div v-if="testResult" :class="['p-3 rounded-md text-sm', testResult.success ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500']">
           {{ testResult.message }}
         </div>
@@ -126,7 +126,7 @@ const isConfigValid = computed(() => {
          config.value.password.trim() !== ''
 })
 
-// 加载已保存的配置
+// 載入已儲存的配置
 watch(isOpen, (open) => {
   if (open) {
     const saved = gameStore.webdavConfig

@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
-    <!-- 主视觉横幅 -->
+    <!-- 主視覺橫幅 -->
     <div class="w-full max-w-3xl mx-auto mb-8 animate-fade-in">
       <div class="relative rounded-2xl overflow-hidden border border-border/50 shadow-2xl">
         <img src="@/assets/welcome-hero.webp" alt="OGame fleet" class="w-full aspect-video object-cover" />
@@ -14,7 +14,7 @@
       </div>
     </div>
 
-    <!-- 开始游戏按钮 -->
+    <!-- 開始遊戲按鈕 -->
     <div class="flex flex-col gap-4 w-full max-w-xs mb-8">
       <Button size="lg" class="w-full text-lg h-14" @click="handleStartGame">
         <Rocket class="mr-2 h-5 w-5" />
@@ -22,9 +22,9 @@
       </Button>
     </div>
 
-    <!-- 底部操作按钮 -->
+    <!-- 底部操作按鈕 -->
     <div class="flex flex-wrap items-center justify-center gap-4">
-      <!-- 语言切换 -->
+      <!-- 語言切換 -->
       <Popover>
         <PopoverTrigger as-child>
           <Button variant="outline" size="sm">
@@ -48,13 +48,13 @@
         </PopoverContent>
       </Popover>
 
-      <!-- 隐私协议按钮 -->
+      <!-- 隱私協議按鈕 -->
       <Button variant="ghost" size="sm" @click="showPrivacyDialog = true">
         <Shield class="mr-2 h-4 w-4" />
         {{ t('settings.privacyPolicy') }}
       </Button>
 
-      <!-- 开源仓库链接（本 fork） -->
+      <!-- 開源倉庫連結（本 fork） -->
       <Button variant="ghost" size="sm" as-child>
         <a href="https://github.com/noah-247/ogame-vue-ts" target="_blank" rel="noopener">
           <Github class="mr-2 h-4 w-4" />
@@ -63,10 +63,10 @@
       </Button>
     </div>
 
-    <!-- 隐私协议弹窗 -->
+    <!-- 隱私協議彈窗 -->
     <PrivacyDialog v-model:open="showPrivacyDialog" />
 
-    <!-- 隐私协议同意确认弹窗（开始游戏时） -->
+    <!-- 隱私協議同意確認彈窗（開始遊戲時） -->
     <AlertDialog v-model:open="showAgreementDialog">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -133,18 +133,18 @@
 
   const availableLocales: Locale[] = ['zh-CN', 'zh-TW', 'en', 'de', 'ru', 'ko', 'ja']
 
-  // 处理开始游戏
+  // 處理開始遊戲
   const handleStartGame = () => {
-    // 如果已经同意过，直接进入总览页面
+    // 如果已經同意過，直接進入總覽頁面
     if (gameStore.player.privacyAgreed) {
       router.push('/overview')
     } else {
-      // 显示同意弹窗
+      // 顯示同意彈窗
       showAgreementDialog.value = true
     }
   }
 
-  // 确认开始游戏
+  // 確認開始遊戲
   const confirmStartGame = () => {
     if (privacyAgreed.value) {
       gameStore.player.privacyAgreed = true

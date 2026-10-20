@@ -1,11 +1,11 @@
 <template>
   <div v-if="planet" class="container mx-auto p-4 sm:p-6">
-    <!-- 未解锁遮罩 -->
+    <!-- 未解鎖遮罩 -->
     <UnlockRequirement :required-building="BuildingType.Shipyard" :required-level="1" />
 
     <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">{{ t('defenseView.title') }}</h1>
 
-    <!-- 导弹容量显示 -->
+    <!-- 導彈容量顯示 -->
     <div v-if="missileSiloCapacity > 0" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-muted/50 rounded-lg border">
       <div class="flex items-center justify-between">
         <div class="text-sm sm:text-base font-medium">{{ t('defenseView.missileCapacity') }}:</div>
@@ -136,7 +136,7 @@
               {{ t('defenseView.build') }}
             </Button>
 
-            <!-- 添加到等待队列按钮 -->
+            <!-- 新增到等待佇列按鈕 -->
             <Button
               v-if="canAddToWaitingQueue(defenseType)"
               @click="handleAddToWaiting(defenseType, $event)"
@@ -150,7 +150,7 @@
       </Card>
     </div>
 
-    <!-- 提示对话框 -->
+    <!-- 提示對話方塊 -->
     <AlertDialog :open="alertDialogOpen" @update:open="alertDialogOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -211,7 +211,7 @@
   const { DEFENSES } = useGameConfig()
   const planet = computed(() => gameStore.currentPlanet)
 
-  // 导弹容量相关计算
+  // 導彈容量相關計算
   const missileSiloCapacity = computed(() => {
     if (!planet.value) return 0
     return missileLogic.calculateMissileSiloCapacity(planet.value.buildings)
@@ -222,16 +222,16 @@
     return missileLogic.calculateCurrentMissileCount(planet.value.defense)
   })
 
-  // AlertDialog 状态
+  // AlertDialog 狀態
   const alertDialogOpen = ref(false)
   const alertDialogTitle = ref('')
   const alertDialogMessage = ref('')
 
-  // 防抖状态：防止快速点击
+  // 防抖狀態：防止快速點選
   const isProcessing = ref(false)
-  const DEBOUNCE_DELAY = 300 // 防抖延迟（毫秒）
+  const DEBOUNCE_DELAY = 300 // 防抖延遲（毫秒）
 
-  // 资源类型配置（用于成本显示）
+  // 資源型別配置（用於成本顯示）
   const costResourceTypes = [
     { key: 'metal' as const },
     { key: 'crystal' as const },
@@ -239,7 +239,7 @@
     { key: 'darkMatter' as const }
   ]
 
-  // 每种防御设施的建造数量
+  // 每種防禦設施的建造數量
   const quantities = ref<Record<DefenseType, number>>({
     [DefenseType.RocketLauncher]: 0,
     [DefenseType.LightLaser]: 0,
@@ -254,7 +254,7 @@
     [DefenseType.PlanetaryShield]: 0
   })
 
-  // 判断是否为护盾罩
+  // 判斷是否為護盾罩
   const isShieldDome = (defenseType: DefenseType): boolean => {
     return defenseType === DefenseType.SmallShieldDome || defenseType === DefenseType.LargeShieldDome
   }
@@ -265,7 +265,7 @@
     const validation = shipValidation.validateDefenseBuild(currentPlanet, defenseType, quantity, gameStore.player.technologies)
     if (!validation.valid) return { success: false, reason: validation.reason }
 
-    // 追踪资源消耗（在扣除前计算成本）
+    // 追蹤資源消耗（在扣除前計算成本）
     const totalCost = shipLogic.calculateDefenseCost(defenseType, quantity)
     gameLogic.trackResourceConsumption(gameStore.player, totalCost)
 
@@ -274,9 +274,9 @@
     return { success: true }
   }
 
-  // 建造防御设施
+  // 建造防禦設施
   const handleBuild = (defenseType: DefenseType, event: MouseEvent) => {
-    // 防抖：防止快速点击
+    // 防抖：防止快速點選
     if (isProcessing.value) return
     isProcessing.value = true
     setTimeout(() => {
@@ -297,20 +297,20 @@
       alertDialogMessage.value = result.reason ? t(result.reason) : t('defenseView.buildFailedMessage')
       alertDialogOpen.value = true
     } else {
-      // 触发抛物线动画
+      // 觸發拋物線動畫
       triggerQueueAnimation(event, 'defense')
       quantities.value[defenseType] = 0
     }
   }
 
-  // 检查是否可以建造
+  // 檢查是否可以建造
   const canBuild = (defenseType: DefenseType): boolean => {
     if (!planet.value) return false
 
     const quantity = quantities.value[defenseType]
     if (quantity <= 0) return false
 
-    // 护盾罩只能建造一个
+    // 護盾罩只能建造一個
     if (isShieldDome(defenseType)) {
       if (planet.value.defense[defenseType] > 0) return false
       if (quantity > 1) return false
@@ -333,7 +333,7 @@
     )
   }
 
-  // 计算总成本
+  // 計算總成本
   const getTotalCost = (defenseType: DefenseType) => {
     const quantity = quantities.value[defenseType]
     const config = DEFENSES.value[defenseType]
@@ -345,26 +345,26 @@
     }
   }
 
-  // 检查是否可以添加到等待队列
+  // 檢查是否可以新增到等待佇列
   const canAddToWaitingQueue = (defenseType: DefenseType): boolean => {
     if (!planet.value) return false
 
     const quantity = quantities.value[defenseType]
     if (quantity <= 0) return false
 
-    // 护盾罩只能建造一个
+    // 護盾罩只能建造一個
     if (isShieldDome(defenseType)) {
       if (planet.value.defense[defenseType] > 0) return false
       if (quantity > 1) return false
     }
 
-    // 检查前置条件是否满足
+    // 檢查前置條件是否滿足
     const config = DEFENSES.value[defenseType]
     if (!publicLogic.checkRequirements(planet.value, gameStore.player.technologies, config.requirements)) {
       return false
     }
 
-    // 检查等待队列是否已满
+    // 檢查等待佇列是否已滿
     const bonuses = officerLogic.calculateActiveBonuses(gameStore.player.officers, getGameNow())
     const maxWaitingQueue = waitingQueueLogic.getMaxBuildWaitingQueue(planet.value, bonuses.additionalBuildQueue)
     const waitingQueue = planet.value.waitingBuildQueue || []
@@ -372,11 +372,11 @@
       return false
     }
 
-    // 只有当建造按钮被禁用时（资源不足）才显示等待队列按钮
+    // 只有當建造按鈕被禁用時（資源不足）才顯示等待佇列按鈕
     return !canBuild(defenseType)
   }
 
-  // 添加到等待队列
+  // 新增到等待佇列
   const handleAddToWaiting = (defenseType: DefenseType, event: MouseEvent) => {
     if (!planet.value) return
 
@@ -393,7 +393,7 @@
       return
     }
 
-    // 触发抛物线动画
+    // 觸發拋物線動畫
     triggerQueueAnimation(event, 'defense')
 
     waitingQueueLogic.addToBuildWaitingQueue(planet.value, item)

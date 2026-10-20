@@ -4,14 +4,14 @@
       <h1 class="text-2xl font-bold">{{ t('nav.settings') }}</h1>
     </div>
 
-    <!-- 数据管理 -->
+    <!-- 資料管理 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('settings.dataManagement') }}</CardTitle>
         <CardDescription>{{ t('settings.dataManagementDesc') }}</CardDescription>
       </CardHeader>
       <CardContent class="space-y-4">
-        <!-- 导出数据 -->
+        <!-- 匯出資料 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('settings.exportData') }}</h3>
@@ -23,7 +23,7 @@
           </Button>
         </div>
 
-        <!-- 导入数据 -->
+        <!-- 匯入資料 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('settings.importData') }}</h3>
@@ -38,7 +38,7 @@
           </div>
         </div>
 
-        <!-- WebDAV 云同步 -->
+        <!-- WebDAV 雲同步 -->
         <div class="flex flex-col gap-3 p-4 border rounded-lg border-blue-500/30 bg-blue-500/5">
           <div class="flex items-center justify-between">
             <div class="space-y-1">
@@ -66,7 +66,7 @@
           <p v-else class="text-xs text-muted-foreground">{{ t('settings.webdav.notConfigured') }}</p>
         </div>
 
-        <!-- 清除数据 -->
+        <!-- 清除資料 -->
         <div class="flex items-center justify-between p-4 border rounded-lg border-destructive/50">
           <div class="space-y-1">
             <h3 class="font-medium text-destructive">{{ t('settings.clearData') }}</h3>
@@ -82,14 +82,14 @@
 
     <CloudSaveSettings />
 
-    <!-- 游戏设置 -->
+    <!-- 遊戲設定 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('settings.gameSettings') }}</CardTitle>
         <CardDescription>{{ t('settings.gameSettingsDesc') }}</CardDescription>
       </CardHeader>
       <CardContent class="space-y-4">
-        <!-- 游戏倍率 -->
+        <!-- 遊戲倍率 -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3">
           <div class="space-y-1 flex-1">
             <h3 class="font-medium">{{ t('settings.gameSpeed') }}</h3>
@@ -105,7 +105,7 @@
           </div>
         </div>
 
-        <!-- 游戏暂停 -->
+        <!-- 遊戲暫停 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('settings.gamePause') }}</h3>
@@ -117,7 +117,7 @@
           </Button>
         </div>
 
-        <!-- 战斗模式 -->
+        <!-- 戰鬥模式 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('settings.battleMode') }}</h3>
@@ -126,7 +126,7 @@
           <Switch :checked="gameStore.battleToFinish" @update:checked="(val: boolean) => (gameStore.battleToFinish = val)" />
         </div>
 
-        <!-- 玩家名称 -->
+        <!-- 玩家名稱 -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3">
           <div class="space-y-1 flex-1">
             <h3 class="font-medium">{{ t('settings.playerName') }}</h3>
@@ -142,7 +142,7 @@
           />
         </div>
 
-        <!-- NPC 名称语言 -->
+        <!-- NPC 名稱語言 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('settings.npcNameEnglish') }}</h3>
@@ -153,14 +153,14 @@
       </CardContent>
     </Card>
 
-    <!-- 通知设置 -->
+    <!-- 通知設定 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('settings.notifications') }}</CardTitle>
         <CardDescription>{{ t('settings.notificationsDesc') }}</CardDescription>
       </CardHeader>
       <CardContent class="space-y-4">
-        <!-- 浏览器通知 -->
+        <!-- 瀏覽器通知 -->
         <div class="flex flex-col gap-4 p-4 border rounded-lg" v-if="!Capacitor.isNativePlatform()">
           <div class="flex items-center justify-between">
             <div class="space-y-1">
@@ -170,7 +170,7 @@
             <Switch :checked="gameStore.notificationSettings?.browser" @update:checked="handleBrowserSwitch" />
           </div>
 
-          <!-- 页面聚焦时不发送 -->
+          <!-- 頁面聚焦時不傳送 -->
           <div
             class="flex items-center justify-between pl-4 border-l-2"
             :class="{ 'opacity-50 pointer-events-none': !gameStore.notificationSettings?.browser }"
@@ -184,7 +184,7 @@
           </div>
         </div>
 
-        <!-- 页面内通知 -->
+        <!-- 頁面內通知 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('settings.inAppNotifications') }}</h3>
@@ -193,7 +193,7 @@
           <Switch :checked="gameStore.notificationSettings?.inApp" @update:checked="(val: boolean) => updateInAppSetting(val)" />
         </div>
 
-        <!-- 具体通知类型 -->
+        <!-- 具體通知型別 -->
         <div class="border rounded-lg overflow-hidden" :class="{ 'opacity-50 pointer-events-none': areMainSwitchesOff }">
           <div
             class="flex items-center justify-between p-4 bg-muted/50 cursor-pointer select-none"
@@ -233,7 +233,7 @@
                 @update:checked="(val: boolean) => updateTypeSetting('research', val)"
               />
             </div>
-            <!-- 解锁通知 -->
+            <!-- 解鎖通知 -->
             <div class="flex items-center justify-between">
               <Label class="font-normal cursor-pointer" @click="toggleType('unlock')">{{ t('settings.unlockNotification') }}</Label>
               <Switch
@@ -246,14 +246,14 @@
       </CardContent>
     </Card>
 
-    <!-- 帮助提示设置 -->
+    <!-- 幫助提示設定 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('hints.hintsEnabled') }}</CardTitle>
         <CardDescription>{{ t('hints.hintsEnabledDesc') }}</CardDescription>
       </CardHeader>
       <CardContent class="space-y-4">
-        <!-- 启用/禁用提示 -->
+        <!-- 啟用/禁用提示 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('hints.hintsEnabled') }}</h3>
@@ -276,14 +276,14 @@
       </CardContent>
     </Card>
 
-    <!-- 显示设置 -->
+    <!-- 顯示設定 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('settings.displaySettings') }}</CardTitle>
         <CardDescription>{{ t('settings.displaySettingsDesc') }}</CardDescription>
       </CardHeader>
       <CardContent class="space-y-4">
-        <!-- 背景动画 -->
+        <!-- 背景動畫 -->
         <div class="flex items-center justify-between p-4 border rounded-lg">
           <div class="space-y-1">
             <h3 class="font-medium">{{ t('settings.backgroundAnimation') }}</h3>
@@ -294,7 +294,7 @@
       </CardContent>
     </Card>
 
-    <!-- 关于 -->
+    <!-- 關於 -->
     <Card>
       <CardHeader>
         <CardTitle>{{ t('settings.about') }}</CardTitle>
@@ -309,7 +309,7 @@
             <span class="text-muted-foreground">{{ t('settings.buildDate') }}:</span>
             <span class="font-medium">{{ pkg.buildDate }}</span>
           </div>
-          <!-- 检查更新按钮 -->
+          <!-- 檢查更新按鈕 -->
           <div class="pt-2">
             <Button @click="handleCheckVersion" variant="outline" size="sm" :disabled="isCheckingVersion || !canCheck" class="w-full">
               <RefreshCw class="mr-2 h-4 w-4" :class="{ 'animate-spin': isCheckingVersion }" />
@@ -320,7 +320,7 @@
           </div>
         </div>
 
-        <!-- 社区链接 -->
+        <!-- 社群連結 -->
         <div class="pt-2 border-t space-y-2">
           <h3 class="text-sm font-medium">{{ t('settings.community') }}</h3>
           <div class="flex flex-col gap-2">
@@ -349,7 +349,7 @@
       </CardContent>
     </Card>
 
-    <!-- 确认对话框 -->
+    <!-- 確認對話方塊 -->
     <AlertDialog :open="showConfirmDialog" @update:open="showConfirmDialog = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -363,16 +363,16 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- 更新对话框 -->
+    <!-- 更新對話方塊 -->
     <UpdateDialog v-model:open="showUpdateDialog" :version-info="updateInfo" />
 
-    <!-- 隐私协议弹窗 -->
+    <!-- 隱私協議彈窗 -->
     <PrivacyDialog v-model:open="showPrivacyDialog" />
 
-    <!-- WebDAV 配置对话框 -->
+    <!-- WebDAV 配置對話方塊 -->
     <WebDAVConfigDialog v-model:open="showWebDAVConfig" />
 
-    <!-- WebDAV 文件列表对话框 -->
+    <!-- WebDAV 檔案列表對話方塊 -->
     <WebDAVFileListDialog v-model:open="showWebDAVFiles" :config="webdavConfig" @select="handleWebDAVDownload" />
   </div>
 </template>
@@ -449,7 +449,7 @@
   const confirmMessage = ref('')
   let confirmCallback: (() => void) | null = null
 
-  // 玩家名称：每键即时保存（重整不丢）；空值时不弹回，失焦时才补默认名
+  // 玩家名稱：每鍵即時儲存（重整不丟）；空值時不彈回，失焦時才補預設名
   const normalizePlayerName = () => {
     if (!gameStore.player.name.trim()) {
       gameStore.player.name = t('common.playerName')
@@ -458,13 +458,13 @@
 
   const isTypesExpanded = ref(false)
 
-  // WebDAV 相关状态
+  // WebDAV 相關狀態
   const showWebDAVConfig = ref(false)
   const showWebDAVFiles = ref(false)
   const webdavConfig = computed(() => gameStore.webdavConfig)
   const isWebDAVUploading = ref(false)
 
-  // 确保通知设置存在
+  // 確保通知設定存在
   if (!gameStore.notificationSettings) {
     gameStore.notificationSettings = {
       browser: false,
@@ -479,7 +479,7 @@
     return !s?.browser && !s?.inApp
   })
 
-  // 当主开关关闭时自动折叠
+  // 當主開關關閉時自動摺疊
   // watch(areMainSwitchesOff, (val) => {
   //   if (val) isTypesExpanded.value = false
   // })
@@ -526,10 +526,10 @@
     }
   }
 
-  // 计算是否可以检查版本（主动检测：5分钟内不能重复检查）
+  // 計算是否可以檢查版本（主動檢測：5分鐘內不能重複檢查）
   const canCheck = computed(() => canCheckVersion(gameStore.player.lastManualUpdateCheck || 0))
 
-  // 计算剩余冷却时间
+  // 計算剩餘冷卻時間
   const updateCooldownTime = () => {
     if (canCheck.value) {
       cooldownTime.value = ''
@@ -552,7 +552,7 @@
     cooldownTime.value = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
-  // 每秒更新倒计时
+  // 每秒更新倒計時
   let cooldownInterval: ReturnType<typeof setInterval> | null = null
   onMounted(() => {
     updateCooldownTime()
@@ -571,15 +571,15 @@
     window.open(`https://qm.qq.com/q/${pkg.id}`, '_blank')
   }
 
-  // 隐私协议弹窗状态
+  // 隱私協議彈窗狀態
   const showPrivacyDialog = ref(false)
 
-  // 打开隐私协议弹窗
+  // 開啟隱私協議彈窗
   const openPrivacy = () => {
     showPrivacyDialog.value = true
   }
 
-  // 手动检查版本
+  // 手動檢查版本
   const showUpdateDialog = ref(false)
   const updateInfo = ref<VersionInfo | null>(null)
 
@@ -605,16 +605,16 @@
     }
   }
 
-  // 导出数据（包含游戏数据和地图数据）
+  // 匯出資料（包含遊戲資料和地圖資料）
   const handleExport = async () => {
     try {
       isExporting.value = true
 
-      // 获取游戏数据
+      // 獲取遊戲資料
       const gameData = localStorage.getItem(pkg.name)
-      // 获取地图数据
+      // 獲取地圖資料
       const universeData = localStorage.getItem(`${pkg.name}-universe`)
-      // 获取npc数据
+      // 獲取npc資料
       const npcData = localStorage.getItem(`${pkg.name}-npcs`)
 
       if (!gameData) {
@@ -622,7 +622,7 @@
         return
       }
 
-      // 合并数据
+      // 合併資料
       const exportData = {
         game: gameData,
         npcs: npcData,
@@ -632,9 +632,9 @@
       const fileName = `${pkg.name}-${new Date().toISOString().slice(0, 10)}-${Date.now()}.json`
       const jsonString = JSON.stringify(exportData, null, 2)
 
-      // Android/原生平台
+      // Android/原生平臺
       if (Capacitor.isNativePlatform()) {
-        // 尝试保存到公共 Downloads 目录
+        // 嘗試儲存到公共 Downloads 目錄
         try {
           const permStatus = await Filesystem.checkPermissions()
           if (permStatus.publicStorage === 'granted') {
@@ -648,7 +648,7 @@
             return
           }
 
-          // 尝试请求权限
+          // 嘗試請求權限
           const reqResult = await Filesystem.requestPermissions()
           if (reqResult.publicStorage === 'granted') {
             const result = await Filesystem.writeFile({
@@ -664,7 +664,7 @@
           console.warn('ExternalStorage failed, trying Documents:', extError)
         }
 
-        // 备选方案：保存到应用文档目录 (TapPlay 等沙盒环境)
+        // 備選方案：儲存到應用文件目錄 (TapPlay 等沙盒環境)
         try {
           const result = await Filesystem.writeFile({
             path: fileName,
@@ -678,7 +678,7 @@
           console.warn('Documents failed, trying Data:', docError)
         }
 
-        // 最后备选：保存到应用数据目录
+        // 最後備選：儲存到應用資料目錄
         try {
           const result = await Filesystem.writeFile({
             path: fileName,
@@ -692,7 +692,7 @@
           console.warn('Data directory failed:', dataError)
         }
 
-        // 所有文件系统方式都失败，尝试 Web Share API
+        // 所有檔案系統方式都失敗，嘗試 Web Share API
         if (navigator.share && navigator.canShare) {
           const file = new File([jsonString], fileName, { type: 'application/json' })
           if (navigator.canShare({ files: [file] })) {
@@ -705,7 +705,7 @@
           }
         }
 
-        // 最后的备选：复制到剪贴板
+        // 最後的備選：複製到剪貼簿
         try {
           await navigator.clipboard.writeText(jsonString)
           toast.success(t('settings.exportCopiedToClipboard'))
@@ -726,12 +726,12 @@
     }
   }
 
-  // 触发文件选择
+  // 觸發檔案選擇
   const triggerFileInput = () => {
     fileInputRef.value?.click()
   }
 
-  // 处理文件选择
+  // 處理檔案選擇
   const handleFileSelect = (event: Event) => {
     const file = (event.target as HTMLInputElement).files?.[0]
     if (!file) return
@@ -742,7 +742,7 @@
     confirmCallback = () => importData(file)
   }
 
-  // 导入数据（包含游戏数据和地图数据）
+  // 匯入資料（包含遊戲資料和地圖資料）
   const importData = async (file: File) => {
     try {
       const reader = new FileReader()
@@ -769,7 +769,7 @@
               return
             }
 
-            // 兼容旧版本：如果是旧格式（直接是字符串），只导入游戏数据
+            // 相容舊版本：如果是舊格式（直接是字串），只匯入遊戲資料
             if (typeof importData === 'string' || !importData.game) {
               try {
                 parseSave(result)
@@ -784,7 +784,7 @@
               return
             }
 
-            // 新格式：分别导入游戏数据和地图数据
+            // 新格式：分別匯入遊戲資料和地圖資料
             if (importData.game) {
               try {
                 parseSave(importData.game)
@@ -805,7 +805,7 @@
             }
 
             toast.success(t('settings.importSuccess'))
-            // 延迟刷新页面以让toast显示
+            // 延遲重新整理頁面以讓toast顯示
             setTimeout(() => window.location.reload(), 1000)
           } else {
             toast.error(t('settings.importFailed'))
@@ -822,7 +822,7 @@
     }
   }
 
-  // 清除数据
+  // 清除資料
   const handleClearData = () => {
     gameStore.isPaused = true
     confirmTitle.value = t('settings.clearConfirmTitle')
@@ -833,8 +833,8 @@
 
   const clearData = () => {
     gameStore.isPaused = true
-    // 先清一次；再用 pagehide 兜底——clear 和 reload 之间 game loop 的 tick
-    // 可能又把存档写回 localStorage，pagehide 是卸载前最后一道，可靠清除
+    // 先清一次；再用 pagehide 兜底——clear 和 reload 之間 game loop 的 tick
+    // 可能又把存檔寫回 localStorage，pagehide 是解除安裝前最後一道，可靠清除
     const wipe = () => { try { localStorage.clear() } catch {} }
     wipe()
     window.addEventListener('beforeunload', wipe)
@@ -843,12 +843,12 @@
       window.location.reload()
     } catch (error) {
       console.error('Failed to clear data:', error)
-      // 即使出错也尝试重新加载
+      // 即使出錯也嘗試重新載入
       window.location.reload()
     }
   }
 
-  // 增加游戏倍率
+  // 增加遊戲倍率
   const increaseSpeed = () => {
     if (gameStore.gameSpeed < 100) {
       gameStore.gameSpeed = Math.min(100, gameStore.gameSpeed + 0.5)
@@ -856,7 +856,7 @@
     }
   }
 
-  // 减少游戏倍率
+  // 減少遊戲倍率
   const decreaseSpeed = () => {
     if (gameStore.gameSpeed > 0.5) {
       gameStore.gameSpeed = Math.max(0.5, gameStore.gameSpeed - 0.5)
@@ -864,13 +864,13 @@
     }
   }
 
-  // 重置游戏倍率
+  // 重置遊戲倍率
   const resetSpeed = () => {
     gameStore.gameSpeed = 1
     toast.success(t('settings.speedReset'))
   }
 
-  // 切换游戏暂停状态
+  // 切換遊戲暫停狀態
   const togglePause = () => {
     gameStore.isPaused = !gameStore.isPaused
     if (gameStore.isPaused) {
@@ -880,7 +880,7 @@
     }
   }
 
-  // 切换 NPC 名称语言，并重命名现有 NPC
+  // 切換 NPC 名稱語言，並重新命名現有 NPC
   const toggleNpcNameLocale = (useEnglish: boolean) => {
     gameStore.npcNameLocale = useEnglish ? 'en' : 'auto'
     const locale = resolveNPCNameLocale(gameStore.npcNameLocale, gameStore.locale)
@@ -896,7 +896,7 @@
     toast.success(t('settings.npcNameUpdateSuccess', { count }))
   }
 
-  // 确认操作
+  // 確認操作
   const confirmAction = () => {
     if (confirmCallback) {
       confirmCallback()
@@ -910,7 +910,7 @@
     gameStore.isPaused = false
     confirmCallback = null
     showConfirmDialog.value = false
-    // 重置文件输入
+    // 重置檔案輸入
     if (fileInputRef.value) {
       fileInputRef.value.value = ''
     }
@@ -922,18 +922,18 @@
     toast.success(t('hints.resetHints'))
   }
 
-  // 更新背景设置
+  // 更新背景設定
   const updateBackgroundSetting = (val: boolean) => {
     gameStore.player.backgroundEnabled = val
   }
 
-  // WebDAV 上传
+  // WebDAV 上傳
   const handleWebDAVUpload = async () => {
     if (!webdavConfig.value) return
 
     isWebDAVUploading.value = true
     try {
-      // 获取游戏数据
+      // 獲取遊戲資料
       const gameData = localStorage.getItem(pkg.name)
       const universeData = localStorage.getItem(`${pkg.name}-universe`)
       const npcData = localStorage.getItem(`${pkg.name}-npcs`)
@@ -943,7 +943,7 @@
         return
       }
 
-      // 合并数据
+      // 合併資料
       const exportData = {
         game: gameData,
         npcs: npcData,
@@ -966,7 +966,7 @@
     }
   }
 
-  // WebDAV 下载
+  // WebDAV 下載
   const handleWebDAVDownload = async (fileName: string) => {
     if (!webdavConfig.value) return
 
@@ -978,7 +978,7 @@
         return
       }
 
-      // 确认导入
+      // 確認匯入
       confirmTitle.value = t('settings.importConfirmTitle')
       confirmMessage.value = t('settings.importConfirmMessage')
       showConfirmDialog.value = true
@@ -988,10 +988,10 @@
         try {
           const importData = JSON.parse(result.data!)
 
-          // M1 严格校验：版本与结构，损坏给明确错误（抛 SaveError，message 直接展示）
+          // M1 嚴格校驗：版本與結構，損壞給明確錯誤（拋 SaveError，message 直接展示）
           validateSaveImportBundle(importData)
 
-          // 兼容旧版本格式
+          // 相容舊版本格式
           if (typeof importData === 'string' || !importData.game) {
             localStorage.setItem(pkg.name, result.data!)
           } else {
