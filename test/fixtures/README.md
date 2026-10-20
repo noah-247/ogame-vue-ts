@@ -88,11 +88,11 @@ The one-off fixture generator used `node_modules/.bin/vite-node` with
 plugin used by `vite.config.ts` lacks `tinyglobby`. The generator was removed after
 preserving the fixtures' two-space indentation and trailing newlines.
 
-## 已知缺口（M1 处理）
+## 已知缺口（M1 處理）
 
-1. universe/npc 双 key 无版本信封、无迁移链，本次保持原有读写行为。
-2. 云存档/WebDAV 走独立通道、无严格校验，缺少 `parseSave` 级别的校验。
+1. universe/npc 雙 key 無版本信封、無遷移鏈，本次保持原有讀寫行為。
+2. 雲存檔/WebDAV 走獨立通道、無嚴格校驗，缺少 `parseSave` 級別的校驗。
 
-本次 M0 只覆盖主 key（`pkg.name`）的加解密/迁移/版本校验与写保护。
-Settings 本地导入的三个主 key 写入入口会先调用 `parseSave`，失败时提示并返回，
-不写主 key；上述独立通道和辅助 key 留到 M1 处理。
+本次 M0 只覆蓋主 key（`pkg.name`）的加解密/遷移/版本校驗與防寫。
+Settings 本地匯入的三個主 key 寫入入口會先呼叫 `parseSave`，失敗時提示並返回，
+不寫主 key；上述獨立通道和輔助 key 留到 M1 處理。

@@ -35,7 +35,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-/** 构造一个 v2 存档（无 autopilotContract 字段），可选带旧副官启用标记 */
+/** 構造一個 v2 存檔（無 autopilotContract 欄位），可選帶舊副官啟用標記 */
 const mkV2Save = (withAutopilot: boolean, empireAutopilot = false): Record<string, unknown> => {
   const save = JSON.parse(JSON.stringify(midGame)) as Record<string, unknown>
   save.version = 2
@@ -64,8 +64,8 @@ const mkV2Save = (withAutopilot: boolean, empireAutopilot = false): Record<strin
 const migratedPlayer = (save: Record<string, unknown>): Player =>
   (migrateSave(save).player as unknown) as Player
 
-describe('v2→v3 副官付费迁移', () => {
-  it('没有副官的存档：补默认合约（plan free / status inactive / autoRenew false），标记 notice 旗标', () => {
+describe('v2→v3 副官付費遷移', () => {
+  it('沒有副官的存檔：補預設合約（plan free / status inactive / autoRenew false），標記 notice 旗標', () => {
     const player = migratedPlayer(mkV2Save(false))
     const c = player.autopilotContract!
 
@@ -80,35 +80,35 @@ describe('v2→v3 副官付费迁移', () => {
     expect(hasLegacyAutopilotUsage(player)).toBe(false)
   })
 
-  it('旧存档有用副官：needsBillingConfirm=true，且 status 保持 inactive（不自动扣款）', () => {
+  it('舊存檔有用副官：needsBillingConfirm=true，且 status 保持 inactive（不自動扣款）', () => {
     const player = migratedPlayer(mkV2Save(true))
     const c = player.autopilotContract!
 
     expect(hasLegacyAutopilotUsage(player)).toBe(true)
     expect(c.needsBillingConfirm).toBe(true)
     expect(c.needsBillingNotice).toBe(false)
-    // 不自动开始扣款：status 仍是 inactive，不是 active
+    // 不自動開始扣款：status 仍是 inactive，不是 active
     expect(c.status).toBe('inactive')
     expect(canAutopilotWork(c)).toBe(false)
-    // payer 默认母星（第一颗星球），services 默认原本开过副官的星球
+    // payer 預設母星（第一顆星球），services 預設原本開過副官的星球
     expect(c.payerPlanetId).toBe('planet1')
     expect(c.servicePlanetIds).toEqual(['planet1'])
   })
 
-  it('帝国研究副官启用也算用过副官', () => {
+  it('帝國研究副官啟用也算用過副官', () => {
     const player = migratedPlayer(mkV2Save(false, true))
     expect(hasLegacyAutopilotUsage(player)).toBe(true)
     expect(player.autopilotContract!.needsBillingConfirm).toBe(true)
   })
 
-  it('幂等：迁移两次结果一致', () => {
+  it('冪等：遷移兩次結果一致', () => {
     const once = migrateSave(mkV2Save(true))
     const twice = migrateSave(once)
     expect(twice).toEqual(once)
     expect(twice.version).toBe(3)
   })
 
-  it('已有部分合约：只补缺字段，不覆盖已有值', () => {
+  it('已有部分合約：只補缺欄位，不覆蓋已有值', () => {
     const v2 = mkV2Save(false)
     ;(v2.player as Record<string, unknown>).autopilotContract = {
       plan: 'standard',
@@ -127,7 +127,7 @@ describe('v2→v3 副官付费迁移', () => {
     expect(c.needsBillingNotice).toBe(true)
   })
 
-  it('确认门：继续使用 → active/standard 开始计费，旗标清除', () => {
+  it('確認門：繼續使用 → active/standard 開始計費，旗標清除', () => {
     const player = migratedPlayer(mkV2Save(true))
     expect(shouldShowBillingConfirm(player)).toBe(true)
 
@@ -141,7 +141,7 @@ describe('v2→v3 副官付费迁移', () => {
     expect(shouldShowBillingConfirm(player)).toBe(false)
   })
 
-  it('确认门：暂停副官 → paused_manual 不扣款，旗标清除', () => {
+  it('確認門：暫停副官 → paused_manual 不扣款，旗標清除', () => {
     const player = migratedPlayer(mkV2Save(true))
 
     applyBillingConfirmation(player, 'pause')
@@ -152,7 +152,7 @@ describe('v2→v3 副官付费迁移', () => {
     expect(c.needsBillingNotice).toBe(false)
   })
 
-  it('确认门：选择后重读不重弹；notice 关闭后也不重弹', () => {
+  it('確認門：選擇後重讀不重彈；notice 關閉後也不重彈', () => {
     const confirmed = migratedPlayer(mkV2Save(true))
     applyBillingConfirmation(confirmed, 'pause')
     expect(shouldShowBillingConfirm(confirmed)).toBe(false)
@@ -165,7 +165,7 @@ describe('v2→v3 副官付费迁移', () => {
     expect(shouldShowBillingNotice(noticed)).toBe(false)
   })
 
-  it('序列化往返：合约字段（含旗标、累计值）不丢失', () => {
+  it('序列化往返：合約欄位（含旗標、累計值）不丟失', () => {
     const player = migratedPlayer(mkV2Save(true))
     applyBillingConfirmation(player, 'continue')
     const c = player.autopilotContract!
@@ -182,7 +182,7 @@ describe('v2→v3 副官付费迁移', () => {
     expect(console.error).not.toHaveBeenCalled()
   })
 
-  it('迁移后的 inactive 合约不会被计费（守卫）', () => {
+  it('遷移後的 inactive 合約不會被計費（守衛）', () => {
     const c = migratedPlayer(mkV2Save(true)).autopilotContract!
     expect(c.status).toBe('inactive')
     expect(canAutopilotWork(c)).toBe(false)

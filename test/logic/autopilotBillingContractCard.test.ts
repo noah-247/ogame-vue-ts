@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { computeHoursSupported, findInsufficientForResume } from '@/logic/autopilotBilling'
 
 /**
- * Phase 4：副官合约卡的可测逻辑层——
- * 可支撑小时（瓶颈判定）与「恢复值班」前的余款检查。
- * UI 渲染按 repo 既有惯例不做元件测试。
+ * Phase 4：副官合約卡的可測邏輯層——
+ * 可支撐小時（瓶頸判定）與「恢復值班」前的餘款檢查。
+ * UI 渲染按 repo 既有慣例不做元件測試。
  */
 
 describe('computeHoursSupported', () => {

@@ -36,7 +36,7 @@ const makeGame = () => {
   planet.buildings[BuildingType.CrystalStorage] = 10
   planet.buildings[BuildingType.DeuteriumTank] = 10
   player.planets.push(planet)
-  // v3 计费：副官工作需要 active 合约；既有行为测试默认挂一张有效合约
+  // v3 計費：副官工作需要 active 合約；既有行為測試預設掛一張有效合約
   player.autopilotContract = { ...createDefaultContract(planet.id, [planet.id]), status: 'active' as const }
   return { player, planet }
 }

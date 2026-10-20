@@ -13,6 +13,6 @@ export const monitoringPlanet = (overrides: Partial<Planet> = {}): Planet => ({
 export const monitoringPlayer = (planets: Planet[]): Player => ({
   id: 'player-1', name: 'Test', planets, technologies: {}, officers: {},
   researchQueue: [], waitingResearchQueue: [], fleetMissions: [],
-  // v3 计费：副官工作需要 active 合约；既有行为测试默认挂一张有效合约
+  // v3 計費：副官工作需要 active 合約；既有行為測試預設掛一張有效合約
   autopilotContract: { ...createDefaultContract(planets[0]?.id ?? 'planet-1', planets.map(p => p.id)), status: 'active' as const }
 }) as unknown as Player

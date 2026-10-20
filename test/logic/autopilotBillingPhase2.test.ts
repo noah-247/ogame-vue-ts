@@ -57,7 +57,7 @@ const makePlayer = (planets: Planet[], technologies: Partial<Record<TechnologyTy
     fleetMissions: []
   }) as unknown as Player
 
-/** 附带指定状态合约的玩家（缺省 = 无合约） */
+/** 附帶指定狀態合約的玩家（預設 = 無合約） */
 const withContract = (player: Player, status: AutopilotContract['status']): AutopilotContract => {
   const contract = { ...createDefaultContract('planet-1', ['planet-1']), status }
   player.autopilotContract = contract
@@ -81,8 +81,8 @@ const enableResearchAutopilot = (player: Player) => {
 const ctx = createDefaultContext()
 const NOW = 1_700_000_000_000
 
-describe('tickAutopilotPlanet 计费守卫（v3 §4.1）', () => {
-  it('无合约时不产生任何副官工作', () => {
+describe('tickAutopilotPlanet 計費守衛（v3 §4.1）', () => {
+  it('無合約時不產生任何副官工作', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 1 })
     const player = makePlayer([planet])
     enablePlanetAutopilot(planet)
@@ -94,7 +94,7 @@ describe('tickAutopilotPlanet 计费守卫（v3 §4.1）', () => {
     expect(planet.waitingBuildQueue).toHaveLength(0)
   })
 
-  it('合约 inactive 时不产生副官工作', () => {
+  it('合約 inactive 時不產生副官工作', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 1 })
     const player = makePlayer([planet])
     enablePlanetAutopilot(planet)
@@ -107,7 +107,7 @@ describe('tickAutopilotPlanet 计费守卫（v3 §4.1）', () => {
     expect(planet.waitingBuildQueue).toHaveLength(0)
   })
 
-  it('合约 paused_funds 时不产生副官工作', () => {
+  it('合約 paused_funds 時不產生副官工作', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 1 })
     const player = makePlayer([planet])
     enablePlanetAutopilot(planet)
@@ -120,7 +120,7 @@ describe('tickAutopilotPlanet 计费守卫（v3 §4.1）', () => {
     expect(planet.waitingBuildQueue).toHaveLength(0)
   })
 
-  it('合约 active 时副官正常工作（守卫放行）', () => {
+  it('合約 active 時副官正常工作（守衛放行）', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 1 })
     const player = makePlayer([planet])
     enablePlanetAutopilot(planet)
@@ -134,8 +134,8 @@ describe('tickAutopilotPlanet 计费守卫（v3 §4.1）', () => {
   })
 })
 
-describe('tickEmpireResearch 计费守卫', () => {
-  it('无合约时帝国研究副官不产生工作', () => {
+describe('tickEmpireResearch 計費守衛', () => {
+  it('無合約時帝國研究副官不產生工作', () => {
     const planet = makePlanet({
       [BuildingType.SolarPlant]: 2,
       [BuildingType.ResearchLab]: 1,
@@ -153,7 +153,7 @@ describe('tickEmpireResearch 计费守卫', () => {
     expect(player.waitingResearchQueue).toHaveLength(0)
   })
 
-  it('合约 active 时帝国研究副官正常工作', () => {
+  it('合約 active 時帝國研究副官正常工作', () => {
     const planet = makePlanet({
       [BuildingType.SolarPlant]: 2,
       [BuildingType.ResearchLab]: 1,
@@ -173,13 +173,13 @@ describe('tickEmpireResearch 计费守卫', () => {
   })
 })
 
-describe('waitingQueue 开工守卫（v3 §4.1）', () => {
-  it('无合约：autopilot 来源不开工，手動项（player/缺省）不受影响', () => {
+describe('waitingQueue 開工守衛（v3 §4.1）', () => {
+  it('無合約：autopilot 來源不開工，手動項（player/預設）不受影響', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 2 })
-    const player = makePlayer([planet]) // 无合约
+    const player = makePlayer([planet]) // 無合約
     const autopilotItem = { ...createBuildingWaitingItem(BuildingType.MetalMine, 1, planet.id), source: 'autopilot' as const, priority: 0 }
     const manualItem: WaitingQueueItem = { ...createBuildingWaitingItem(BuildingType.CrystalMine, 1, planet.id), source: 'player', priority: 1 }
-    const defaultItem: WaitingQueueItem = { ...createBuildingWaitingItem(BuildingType.SolarPlant, 3, planet.id), priority: 2 } // 缺省 = 手动
+    const defaultItem: WaitingQueueItem = { ...createBuildingWaitingItem(BuildingType.SolarPlant, 3, planet.id), priority: 2 } // 預設 = 手動
     planet.waitingBuildQueue = [autopilotItem, manualItem, defaultItem]
     setNow(NOW)
 
@@ -190,7 +190,7 @@ describe('waitingQueue 开工守卫（v3 §4.1）', () => {
     expect(planet.waitingBuildQueue[0]!.source).toBe('autopilot')
   })
 
-  it('合约 active：autopilot 来源正常开工', () => {
+  it('合約 active：autopilot 來源正常開工', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 2 })
     const player = makePlayer([planet])
     withContract(player, 'active')
@@ -204,9 +204,9 @@ describe('waitingQueue 开工守卫（v3 §4.1）', () => {
     expect(planet.waitingBuildQueue).toHaveLength(0)
   })
 
-  it('研究等待队列：无合约时 autopilot 来源不开工，手動项不受影响', () => {
+  it('研究等待佇列：無合約時 autopilot 來源不開工，手動項不受影響', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 2, [BuildingType.ResearchLab]: 1 })
-    const player = makePlayer([planet]) // 无合约
+    const player = makePlayer([planet]) // 無合約
     const autopilotItem = { ...createResearchWaitingItem(TechnologyType.EnergyTechnology, 1), source: 'autopilot' as const }
     const manualItem: WaitingQueueItem = { ...createResearchWaitingItem(TechnologyType.EnergyTechnology, 2), source: 'player' }
     player.waitingResearchQueue = [autopilotItem, manualItem]
@@ -218,32 +218,32 @@ describe('waitingQueue 开工守卫（v3 §4.1）', () => {
     expect(player.waitingResearchQueue).toEqual([autopilotItem])
   })
 
-  it('无合约时已开工项（buildQueue）不受影响，只挡新工作', () => {
+  it('無合約時已開工項（buildQueue）不受影響，只擋新工作', () => {
     const planet = makePlanet({ [BuildingType.SolarPlant]: 2 })
-    const player = makePlayer([planet]) // 无合约
+    const player = makePlayer([planet]) // 無合約
     const startedItem: WaitingQueueItem = {
       id: 'started-1', type: 'building', itemType: BuildingType.MetalMine, targetLevel: 1,
       priority: 0, addedTime: NOW, planetId: planet.id, source: 'autopilot'
     }
-    // 模拟已开工：已在正式队列（processGameUpdate 推进，不经过等待队列守卫）
+    // 模擬已開工：已在正式佇列（processGameUpdate 推進，不經過等待佇列守衛）
     planet.buildQueue = [{ id: 'bq-1', type: 'building', itemType: BuildingType.MetalMine, targetLevel: 1, startTime: NOW, endTime: NOW + 60000 } as never]
     planet.waitingBuildQueue = [startedItem]
     setNow(NOW)
 
     processPlanetWaitingQueue(planet, player, player.officers, 0)
 
-    expect(planet.buildQueue).toHaveLength(1) // 已开工继续
-    expect(planet.waitingBuildQueue).toEqual([startedItem]) // 新工作不开工
+    expect(planet.buildQueue).toHaveLength(1) // 已開工繼續
+    expect(planet.waitingBuildQueue).toEqual([startedItem]) // 新工作不開工
   })
 })
 
-describe('processBillingTick（tick 累加与结算）', () => {
+describe('processBillingTick（tick 累加與結算）', () => {
   const richResources = () => ({ metal: 1_000_000, crystal: 1_000_000, deuterium: 1_000_000 })
   const oneLevelInputs = () => [
     { metalMineLevel: 1, crystalMineLevel: 1, deuteriumMineLevel: 1, energyEfficiency: 1 }
-  ] // 费率 70/50/30 每小时
+  ] // 費率 70/50/30 每小時
 
-  it('不同 gameSpeed：10 虚拟秒 × 6 倍速 = 60 计费秒，结算 1 分钟并扣款', () => {
+  it('不同 gameSpeed：10 虛擬秒 × 6 倍速 = 60 計費秒，結算 1 分鐘並扣款', () => {
     const contract = withContract(makePlayer([]), 'active')
     const payer = richResources()
 
@@ -256,11 +256,11 @@ describe('processBillingTick（tick 累加与结算）', () => {
     expect(result.pausedForFunds).toBe(false)
     expect(contract.dutySecondsAcc).toBe(0)
     expect(payer.metal).toBe(999_999) // 70/60 ≈ 1.167 → 扣 1
-    expect(payer.crystal).toBe(1_000_000) // 50/60 < 1 → 扣 0，余数保留
+    expect(payer.crystal).toBe(1_000_000) // 50/60 < 1 → 扣 0，餘數保留
     expect(contract.totalConsumedMetal).toBe(1)
   })
 
-  it('快转 tick（isFastForward）不累加计费秒、不扣款（比照离线）', () => {
+  it('快轉 tick（isFastForward）不累加計費秒、不扣款（比照離線）', () => {
     const contract = withContract(makePlayer([]), 'active')
     const payer = richResources()
 
@@ -274,7 +274,7 @@ describe('processBillingTick（tick 累加与结算）', () => {
     expect(payer).toEqual(richResources())
   })
 
-  it('无合约/非 active/虚拟秒为 0 时跳过', () => {
+  it('無合約/非 active/虛擬秒為 0 時跳過', () => {
     const payer = richResources()
     const base = { gameSpeed: 1, isFastForward: false, servicePlanetInputs: oneLevelInputs(), payerResources: payer }
     expect(processBillingTick(undefined, { ...base, virtualSeconds: 60 }).settledMinutes).toBe(0)
@@ -286,10 +286,10 @@ describe('processBillingTick（tick 累加与结算）', () => {
     expect(payer).toEqual(richResources())
   })
 
-  it('余额不足 → paused_funds，小数累计冻结（余数不动）', () => {
+  it('餘額不足 → paused_funds，小數累計凍結（餘數不動）', () => {
     const contract = withContract(makePlayer([]), 'active')
-    contract.accruedMicroMetal = 123456 // 预置余数，结算失败后应原样保留
-    const payer = { metal: 0, crystal: 1_000_000, deuterium: 1_000_000 } // 金属不够扣 1
+    contract.accruedMicroMetal = 123456 // 預置餘數，結算失敗後應原樣保留
+    const payer = { metal: 0, crystal: 1_000_000, deuterium: 1_000_000 } // 金屬不夠扣 1
 
     const result = processBillingTick(contract, {
       virtualSeconds: 60, gameSpeed: 1, isFastForward: false,
@@ -298,14 +298,14 @@ describe('processBillingTick（tick 累加与结算）', () => {
 
     expect(result.pausedForFunds).toBe(true)
     expect(contract.status).toBe('paused_funds')
-    expect(contract.accruedMicroMetal).toBe(123456) // 冻结
+    expect(contract.accruedMicroMetal).toBe(123456) // 凍結
     expect(contract.totalConsumedMetal).toBe(0)
     expect(payer.metal).toBe(0)
   })
 })
 
 describe('toBillingPlanetInput', () => {
-  it('能源充足 → efficiency 1；停电（只建矿无能源）→ 0', () => {
+  it('能源充足 → efficiency 1；停電（只建礦無能源）→ 0', () => {
     const powered = makePlanet({ [BuildingType.SolarPlant]: 5, [BuildingType.MetalMine]: 3 })
     const blackout = makePlanet({ [BuildingType.MetalMine]: 3 })
 

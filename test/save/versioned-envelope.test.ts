@@ -14,7 +14,7 @@ import {
 } from '@/logic/saveMigration'
 import newGame from '../fixtures/new-game.json'
 
-describe('versioned save envelopes (universe / npcs 双 key 版本化)', () => {
+describe('versioned save envelopes (universe / npcs 雙 key 版本化)', () => {
   it('round-trips a versioned envelope', () => {
     const data = { planets: { '1:1:1': { id: 'x' } }, debrisFields: {} }
     const raw = wrapVersionedSave(data, UNIVERSE_SAVE_VERSION)
@@ -71,7 +71,7 @@ describe('validateGameSaveStructure', () => {
   })
 })
 
-describe('validateSaveImportBundle (WebDAV/文件导入严格校验)', () => {
+describe('validateSaveImportBundle (WebDAV/檔案匯入嚴格校驗)', () => {
   const validBundle = () => ({
     game: encryptData(newGame),
     universe: encryptData(wrapVersionedSave({ planets: {}, debrisFields: {} }, UNIVERSE_SAVE_VERSION)),
