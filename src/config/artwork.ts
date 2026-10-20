@@ -1,5 +1,5 @@
 /**
- * Vite 的 base 为 './'，图片路径使用相对路径，确保部署到子目录时正确加载。
+ * Vite 的 base 為 './'，圖片路徑使用相對路徑，確保部署到子目錄時正確載入。
  */
 import type { ShipType, DefenseType, BuildingType, OfficerType } from '@/types/game'
 

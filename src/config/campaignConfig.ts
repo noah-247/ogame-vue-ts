@@ -1,6 +1,6 @@
 /**
- * 战役配置 - 神秘探索主题
- * 包含5个章节，共25个任务
+ * 戰役配置 - 神秘探索主題
+ * 包含5個章節，共25個任務
  */
 
 import { BuildingType, TechnologyType, ShipType, ObjectiveType } from '@/types/game'
@@ -243,7 +243,7 @@ const chapter1Quests: CampaignQuestConfig[] = [
   }
 ]
 
-// ==================== 第二章：星际探索 ====================
+// ==================== 第二章：星際探索 ====================
 const chapter2Quests: CampaignQuestConfig[] = [
   {
     id: 'quest_2_1',
@@ -465,7 +465,7 @@ const chapter2Quests: CampaignQuestConfig[] = [
   }
 ]
 
-// ==================== 第三章：银河外交 ====================
+// ==================== 第三章：銀河外交 ====================
 const chapter3Quests: CampaignQuestConfig[] = [
   {
     id: 'quest_3_1',
@@ -641,7 +641,7 @@ const chapter3Quests: CampaignQuestConfig[] = [
   }
 ]
 
-// ==================== 第四章：暗影降临 ====================
+// ==================== 第四章：暗影降臨 ====================
 const chapter4Quests: CampaignQuestConfig[] = [
   {
     id: 'quest_4_1',
@@ -1021,7 +1021,7 @@ const chapter5Quests: CampaignQuestConfig[] = [
   }
 ]
 
-// ==================== 章节配置 ====================
+// ==================== 章節配置 ====================
 const chapters: CampaignChapterConfig[] = [
   {
     id: 'chapter_1',
@@ -1065,7 +1065,7 @@ const chapters: CampaignChapterConfig[] = [
   }
 ]
 
-// ==================== 主战役配置 ====================
+// ==================== 主戰役配置 ====================
 export const MAIN_CAMPAIGN: CampaignConfig = {
   id: 'main_campaign',
   nameKey: 'campaign.name',
@@ -1073,28 +1073,28 @@ export const MAIN_CAMPAIGN: CampaignConfig = {
   chapters
 }
 
-// 获取所有任务的扁平列表
+// 獲取所有任務的扁平列表
 export const getAllQuests = (): CampaignQuestConfig[] => {
   return MAIN_CAMPAIGN.chapters.flatMap(chapter => chapter.quests)
 }
 
-// 根据ID获取任务配置
+// 根據ID獲取任務配置
 export const getQuestById = (questId: string): CampaignQuestConfig | undefined => {
   return getAllQuests().find(quest => quest.id === questId)
 }
 
-// 根据章节获取任务列表
+// 根據章節獲取任務列表
 export const getQuestsByChapter = (chapterNumber: number): CampaignQuestConfig[] => {
   const chapter = MAIN_CAMPAIGN.chapters.find(c => c.number === chapterNumber)
   return chapter?.quests || []
 }
 
-// 获取章节配置
+// 獲取章節配置
 export const getChapterById = (chapterId: string): CampaignChapterConfig | undefined => {
   return MAIN_CAMPAIGN.chapters.find(chapter => chapter.id === chapterId)
 }
 
-// 获取总任务数
+// 獲取總任務數
 export const getTotalQuestCount = (): number => {
   return getAllQuests().length
 }

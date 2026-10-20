@@ -2,15 +2,15 @@ import type { Fleet, Resources } from './game'
 import { DefenseType } from './game'
 
 /**
- * Worker 消息类型
+ * Worker 訊息型別
  */
 export const WorkerMessageType = {
-  // 战斗模拟相关
+  // 戰鬥模擬相關
   SIMULATE_BATTLE: 'SIMULATE_BATTLE',
   CALCULATE_PLUNDER: 'CALCULATE_PLUNDER',
   CALCULATE_DEBRIS: 'CALCULATE_DEBRIS',
 
-  // 通用响应
+  // 通用響應
   SUCCESS: 'SUCCESS',
   ERROR: 'ERROR'
 } as const
@@ -18,7 +18,7 @@ export const WorkerMessageType = {
 export type WorkerMessageType = (typeof WorkerMessageType)[keyof typeof WorkerMessageType]
 
 /**
- * 战斗方数据
+ * 戰鬥方資料
  */
 export interface BattleSideData {
   ships: Partial<Fleet>
@@ -29,7 +29,7 @@ export interface BattleSideData {
 }
 
 /**
- * 战斗模拟结果
+ * 戰鬥模擬結果
  */
 export interface BattleSimulationResult {
   winner: 'attacker' | 'defender' | 'draw'
@@ -57,7 +57,7 @@ export interface BattleSimulationResult {
 }
 
 /**
- * Worker 消息基础接口
+ * Worker 訊息基礎介面
  */
 export interface WorkerMessageBase {
   id: string
@@ -65,14 +65,14 @@ export interface WorkerMessageBase {
 }
 
 /**
- * Worker 请求消息
+ * Worker 請求訊息
  */
 export interface WorkerRequestMessage extends WorkerMessageBase {
   payload: unknown
 }
 
 /**
- * Worker 响应消息
+ * Worker 響應訊息
  */
 export interface WorkerResponseMessage extends WorkerMessageBase {
   success: boolean
@@ -81,7 +81,7 @@ export interface WorkerResponseMessage extends WorkerMessageBase {
 }
 
 /**
- * 战斗模拟请求
+ * 戰鬥模擬請求
  */
 export interface SimulateBattleRequest extends WorkerRequestMessage {
   type: typeof WorkerMessageType.SIMULATE_BATTLE
@@ -93,7 +93,7 @@ export interface SimulateBattleRequest extends WorkerRequestMessage {
 }
 
 /**
- * 掠夺计算请求
+ * 掠奪計算請求
  */
 export interface CalculatePlunderRequest extends WorkerRequestMessage {
   type: typeof WorkerMessageType.CALCULATE_PLUNDER
@@ -104,7 +104,7 @@ export interface CalculatePlunderRequest extends WorkerRequestMessage {
 }
 
 /**
- * 残骸场计算请求
+ * 殘骸場計算請求
  */
 export interface CalculateDebrisRequest extends WorkerRequestMessage {
   type: typeof WorkerMessageType.CALCULATE_DEBRIS
@@ -118,6 +118,6 @@ export interface CalculateDebrisRequest extends WorkerRequestMessage {
 }
 
 /**
- * 所有 Worker 请求类型
+ * 所有 Worker 請求型別
  */
 export type WorkerRequest = SimulateBattleRequest | CalculatePlunderRequest | CalculateDebrisRequest

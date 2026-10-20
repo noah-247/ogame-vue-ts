@@ -1,11 +1,11 @@
 import { AchievementCategory, AchievementTier, type AchievementConfig } from '@/types/game'
 
 // 成就配置
-// 每个成就有5个等级：青铜、白银、黄金、铂金、钻石
-// 每个等级有对应的目标值和奖励（暗物质 + 积分）
+// 每個成就有5個等級：青銅、白銀、黃金、鉑金、鑽石
+// 每個等級有對應的目標值和獎勵（暗物質 + 積分）
 
 export const ACHIEVEMENTS: AchievementConfig[] = [
-  // ==================== 资源类成就 ====================
+  // ==================== 資源類成就 ====================
   {
     id: 'metalCollector',
     category: AchievementCategory.Resource,
@@ -77,7 +77,7 @@ export const ACHIEVEMENTS: AchievementConfig[] = [
     ]
   },
 
-  // ==================== 建造类成就 ====================
+  // ==================== 建造類成就 ====================
   {
     id: 'masterBuilder',
     category: AchievementCategory.Building,
@@ -135,7 +135,7 @@ export const ACHIEVEMENTS: AchievementConfig[] = [
     ]
   },
 
-  // ==================== 战斗类成就 ====================
+  // ==================== 戰鬥類成就 ====================
   {
     id: 'warmonger',
     category: AchievementCategory.Combat,
@@ -235,7 +235,7 @@ export const ACHIEVEMENTS: AchievementConfig[] = [
     ]
   },
 
-  // ==================== 任务类成就 ====================
+  // ==================== 任務類成就 ====================
   {
     id: 'pilot',
     category: AchievementCategory.Mission,
@@ -405,7 +405,7 @@ export const ACHIEVEMENTS: AchievementConfig[] = [
     ]
   },
 
-  // ==================== 外交类成就 ====================
+  // ==================== 外交類成就 ====================
   {
     id: 'diplomat',
     category: AchievementCategory.Diplomacy,
@@ -520,10 +520,10 @@ export const ACHIEVEMENTS: AchievementConfig[] = [
   }
 ]
 
-// 成就ID映射，方便快速查找
+// 成就ID對映，方便快速查詢
 export const ACHIEVEMENT_MAP: Record<string, AchievementConfig> = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]))
 
-// 按类别分组的成就
+// 按類別分組的成就
 export const ACHIEVEMENTS_BY_CATEGORY: Record<AchievementCategory, AchievementConfig[]> = {
   [AchievementCategory.Resource]: ACHIEVEMENTS.filter(a => a.category === AchievementCategory.Resource),
   [AchievementCategory.Building]: ACHIEVEMENTS.filter(a => a.category === AchievementCategory.Building),
@@ -532,7 +532,7 @@ export const ACHIEVEMENTS_BY_CATEGORY: Record<AchievementCategory, AchievementCo
   [AchievementCategory.Diplomacy]: ACHIEVEMENTS.filter(a => a.category === AchievementCategory.Diplomacy)
 }
 
-// 等级顺序（用于比较）
+// 等級順序（用於比較）
 export const TIER_ORDER: AchievementTier[] = [
   AchievementTier.Bronze,
   AchievementTier.Silver,
@@ -541,12 +541,12 @@ export const TIER_ORDER: AchievementTier[] = [
   AchievementTier.Diamond
 ]
 
-// 获取等级索引
+// 獲取等級索引
 export const getTierIndex = (tier: AchievementTier): number => {
   return TIER_ORDER.indexOf(tier)
 }
 
-// 获取下一个等级
+// 獲取下一個等級
 export const getNextTier = (tier: AchievementTier | null): AchievementTier | null => {
   if (tier === null) return AchievementTier.Bronze
   const index = getTierIndex(tier)
